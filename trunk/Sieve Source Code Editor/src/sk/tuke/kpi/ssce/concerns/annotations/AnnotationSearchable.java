@@ -1,13 +1,13 @@
 package sk.tuke.kpi.ssce.concerns.annotations;
 
 import javax.lang.model.type.DeclaredType;
-import sk.tuke.kpi.ssce.concerns.interfaces.Searchable;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  * Implementacia searchable pre anotacny typ.
  * @author Milan
  */
-public class AnnotationSearchable implements Searchable {
+public class AnnotationSearchable implements Concern {
     
     // so far only for later
     private final DeclaredType annotationType;
@@ -60,7 +60,7 @@ public class AnnotationSearchable implements Searchable {
     }
 
     @Override
-    public int compareTo(Searchable o) {
+    public int compareTo(Concern o) {
         if(o == null) {
             return -1;
         } else {

@@ -5,7 +5,7 @@ import org.netbeans.editor.BaseDocument;
 import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
-import sk.tuke.kpi.ssce.core.model.view.Code;
+import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
 
 /**
@@ -19,7 +19,7 @@ class SnippetToBeUpdated {
     private int end = -1;
     private JavaFile javaFile = null;
     private JavaFile imports = null;
-    private Code code = null;
+    private CodeSnippet code = null;
 
     public int getStart() {
         return start;
@@ -53,11 +53,11 @@ class SnippetToBeUpdated {
         this.imports = imports;
     }
 
-    public Code getCode() {
+    public CodeSnippet getCode() {
         return code;
     }
 
-    public void setCode(Code code) {
+    public void setCode(CodeSnippet code) {
         this.code = code;
     }
     
@@ -71,8 +71,8 @@ class SnippetToBeUpdated {
         if (start != -1 && end != -1) {
             try {
                 if (javaFile != null) {
-                    javaFile.setStartFile(doc, start);
-                    javaFile.setEndFile(doc, end);
+                    javaFile.setBeginInSJ(doc, start);
+                    javaFile.setEndInSJ(doc, end);
                 } else if (imports != null) {
                     imports.getImportsBinding().setStartPositionSieveDocument(doc, start);
                     imports.getImportsBinding().setEndPositionSieveDocument(doc, end);

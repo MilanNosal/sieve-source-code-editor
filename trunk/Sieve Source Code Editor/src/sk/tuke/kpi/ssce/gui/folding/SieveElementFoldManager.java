@@ -68,12 +68,12 @@ import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
 import sk.tuke.kpi.ssce.core.Constants;
 import sk.tuke.kpi.ssce.core.SSCEditorCore;
-import sk.tuke.kpi.ssce.core.model.view.Code;
+import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
-import sk.tuke.kpi.ssce.core.model.view.Model;
+import sk.tuke.kpi.ssce.core.model.view.ViewModel;
 import sk.tuke.kpi.ssce.core.utilities.JavaFileUtilities;
 import sk.tuke.kpi.ssce.core.utilities.IntentsUtilities;
-import sk.tuke.kpi.ssce.lexer.SieveJavaTokenId;
+import sk.tuke.kpi.ssce.nbinterface.lexer.SieveJavaTokenId;
 
 /**
  * Fold maintainer that creates and updates custom folds.
@@ -269,17 +269,17 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
     private List<FoldMarkInfo> getMarkList(TokenSequence seq) {
         List<FoldMarkInfo> markList = null;
 
-        Model model = null;
+        ViewModel model = null;
         SSCEditorCore core = (SSCEditorCore) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
         if (core != null) {
             model = core.getModel();
         }
-        if (model == null || !model.isConsistent()) {
+        if (model == null || !model.isInitialized()) {
             return markList;
         }
 
         for (int i = 0; i < model.size(); i++) {
-            JavaFile file = model.get(i);
+            JavaFile file = model.getFileAt(i);
 
             FoldMarkInfo fold = null;
 
@@ -301,7 +301,7 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
             }
 
 
-            for (Code code : file.getCodes()) {
+            for (CodeSnippet code : file.getCodeSnippets()) {
 
 
 

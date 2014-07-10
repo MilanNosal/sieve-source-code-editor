@@ -31,12 +31,12 @@ import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import sk.tuke.kpi.ssce.core.Constants;
-import sk.tuke.kpi.ssce.core.configuration.CurrentProjection;
-import sk.tuke.kpi.ssce.core.model.view.Code;
-import sk.tuke.kpi.ssce.core.model.view.Imports;
+import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
+import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
+import sk.tuke.kpi.ssce.core.model.view.importshandling.Imports;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
-import sk.tuke.kpi.ssce.core.model.projections.JavaFileIntents;
-import sk.tuke.kpi.ssce.core.model.projections.JavaFileIntentsVisitor;
+import sk.tuke.kpi.ssce.core.model.possibleprojections.JavaFileConcerns;
+import sk.tuke.kpi.ssce.core.model.possibleprojections.JavaFileConcernsVisitor;
 
 /**
  * Trieda reprezentuje nastroj pre pracu s java subormi.
@@ -51,7 +51,7 @@ public class JavaFileUtilities {
      * @return mapovanie zamerov na fragmenty kodu pre jeden java subor.
      */
     //SsceIntent:Model pre mapovanie zamerov;
-    public JavaFileIntents createJavaFileIntents(File javaFile) {
+    public JavaFileConcerns createJavaFileIntents(File javaFile) {
 //        System.out.println("\n-----------INTENTS-------------------- " + javaFile.getName());
 
         FileObject fobj = FileUtil.toFileObject(javaFile);
@@ -70,7 +70,7 @@ public class JavaFileUtilities {
 
     //iba pre ziskanie vsetkych zamerov pre dokument
     //SsceIntent:Model pre mapovanie zamerov;
-    private JavaFileIntents processCodeIntentsInDocument(EditorCookie ec) {
+    private JavaFileConcerns processCodeIntentsInDocument(EditorCookie ec) {
         BaseDocument doc;
         try {
             doc = (BaseDocument) ec.openDocument();
@@ -79,7 +79,7 @@ public class JavaFileUtilities {
             return null;
         }
 
-        JavaFileIntents javaFile;
+        JavaFileConcerns javaFile;
 
         doc.readLock();
         try {
@@ -90,8 +90,8 @@ public class JavaFileUtilities {
 
             CompilationUnitTree cu = info.getCompilationUnit();
             SourcePositions sp = info.getTrees().getSourcePositions();
-            JavaFileIntentsVisitor scanner = new JavaFileIntentsVisitor(info, cu, sp, doc);
-            javaFile = scanner.scan(cu, new JavaFileIntents(FileUtil.toFile(info.getFileObject()).getPath(), info.getFileObject().getName()));
+            JavaFileConcernsVisitor scanner = new JavaFileConcernsVisitor(info, cu, sp, doc);
+            javaFile = scanner.scan(cu, new JavaFileConcerns(FileUtil.toFile(info.getFileObject()).getPath(), info.getFileObject().getName()));
             javaFile.sortCodes();
 
         } finally {
@@ -202,7 +202,7 @@ public class JavaFileUtilities {
 
     //SsceIntent:Realizovanie projekcie zdrojoveho kodu;
     private boolean keepOnlyRootCodes(JavaFile file) {
-        List<Code> codes = file.getCodes();
+        List<CodeSnippet> codes = file.getCodeSnippets();
         Collections.sort(codes);
         for (int i = 1; i < codes.size();) {
             if (codes.get(i - 1).getCodeBinding().getStartPositionJavaDocument() <= codes.get(i).getCodeBinding().getStartPositionJavaDocument()
@@ -218,7 +218,7 @@ public class JavaFileUtilities {
     //SsceIntent:Realizovanie projekcie zdrojoveho kodu;
     private boolean keepOnlyUnguardedCodes(JavaFile file, BaseDocument doc) {
         if (doc instanceof GuardedDocument) {
-            List<Code> codes = file.getCodes();
+            List<CodeSnippet> codes = file.getCodeSnippets();
 //            GuardedDocument guardedDocument = (GuardedDocument) doc;
             MarkBlock chain = ((GuardedDocument) doc).getGuardedBlockChain().getChain();
 
@@ -239,7 +239,7 @@ public class JavaFileUtilities {
     }
 
     private boolean isInCodeArea(JavaFile jf, int offset) {
-        for (Code code : jf.getCodes()) {
+        for (CodeSnippet code : jf.getCodeSnippets()) {
             if (code.getCodeBinding().getStartPositionJavaDocument() <= offset && offset < code.getCodeBinding().getEndPositionJavaDocument()) {
                 return true;
             }
@@ -265,12 +265,12 @@ public class JavaFileUtilities {
         for (List<String> packageFiles : getJavaFilesPaths(rootSourcePaths).values()) {
             for (String pathFile : packageFiles) {
                 jf = createJavaFile(new File(pathFile), configuration);
-                if (jf.getCodes() != null && !jf.getCodes().isEmpty()) {
+                if (jf.getCodeSnippets() != null && !jf.getCodeSnippets().isEmpty()) {
                     javaFiles.add(jf);
                 }
             }
         }
-        Collections.sort(javaFiles, JavaFile.SORT_BY_PACKAGES);
+        Collections.sort(javaFiles, JavaFile.SORT_FILES_BY_PACKAGES);
         return javaFiles;
     }
 
@@ -437,10 +437,10 @@ public class JavaFileUtilities {
     * @return mapovanie zamerov na fragmenty kodu pre cely zdrojovy kod.
     */
     //SsceIntent:Model pre mapovanie zamerov;
-    public List<JavaFileIntents> createJavaFilesIntents(Set<String> javaFilePaths) {
+    public List<JavaFileConcerns> createJavaFilesIntents(Set<String> javaFilePaths) {
 
-        List<JavaFileIntents> javaFiles = new ArrayList<JavaFileIntents>();
-        JavaFileIntents jf;
+        List<JavaFileConcerns> javaFiles = new ArrayList<JavaFileConcerns>();
+        JavaFileConcerns jf;
         for (String pathFile : javaFilePaths) {
             jf = createJavaFileIntents(new File(pathFile));
             if (jf.getCodes() != null) {
@@ -465,11 +465,11 @@ public class JavaFileUtilities {
         JavaFile jf;
         for (String pathFile : javaFilePaths) {
             jf = createJavaFile(new File(pathFile), configuration);
-            if (jf.getCodes() != null && !jf.getCodes().isEmpty()) {
+            if (jf.getCodeSnippets() != null && !jf.getCodeSnippets().isEmpty()) {
                 javaFiles.add(jf);
             }
         }
-        Collections.sort(javaFiles, JavaFile.SORT_BY_PACKAGES);
+        Collections.sort(javaFiles, JavaFile.SORT_FILES_BY_PACKAGES);
 
         return javaFiles;
     }

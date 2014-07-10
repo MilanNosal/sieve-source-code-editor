@@ -1,0 +1,4 @@
+Vacsinou sa lahsie robia bezparametricke anotacie pre opis domenovych vlasntosti - zrejme preto ze to kopiruje nazvy tried (anotacie ako keby vytvarali novu strukturu kde anotacia predstavuje alternativnu triedu).
+Pomahaju lepsie si uvedomit co vlastne robim, viac sa musim zamyslat ze aku anotaciu tam dat, lepsie clovek potom chape co robi, nie len algoritmicky ako to robi.
+Meno anotacie s postfixom na simulaciu enum parametra pre viacery vyskyt rovnakej anotacie s rozlicnymi parametrami.
+Ma vyznam anotovat aj napr pouzitie nejakej triedy/rozhrania, sice FindUsages funguje, ale nemam tam priame editovanie.

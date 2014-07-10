@@ -14,18 +14,18 @@ import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectNotFoundException;
 import sk.tuke.kpi.ssce.core.Constants;
 import sk.tuke.kpi.ssce.core.SSCEditorCore;
-import sk.tuke.kpi.ssce.core.model.view.Code;
-import sk.tuke.kpi.ssce.core.model.projections.CodeIntents;
+import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
+import sk.tuke.kpi.ssce.core.model.possibleprojections.CodeSnippetConcerns;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
-import sk.tuke.kpi.ssce.core.model.projections.IntentsMapping;
-import sk.tuke.kpi.ssce.concerns.interfaces.Searchable;
+import sk.tuke.kpi.ssce.core.model.possibleprojections.ProjectConcerns;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  * Trieda reprezentuje GUI koponent pre preiradovanie zamerov fragmentom kodu.
  * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Komponent grafickeho rozhrania;
-public class SsceIntentManagerPanel extends javax.swing.JPanel implements IntentsMapping.IntentsChangeListener, ListSelectionListener, ChangeListener {
+public class SsceIntentManagerPanel extends javax.swing.JPanel implements ProjectConcerns.ConcernsChangeListener, ListSelectionListener, ChangeListener {
 
     /**
      * Mod v ako pracuje tento komponent.
@@ -46,7 +46,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Intent
     private EditorCookie editorCookie = null;
     private JEditorPane editorPane = null;
     private final Mode mode;
-    private CodeIntents selectionCodeIntents = null;
+    private CodeSnippetConcerns selectionCodeIntents = null;
 
     /**
      * Vytvori novy formular s modom mode.
@@ -107,7 +107,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Intent
         switch (mode) {
             case JAVA_DOCUMENT:
                 System.out.println("TEST filePath ====    >>>   " + this.filePath);
-                System.out.println("TEST core.getModel().get  ====    >>>   " + this.core.getModel().get(this.filePath));
+                System.out.println("TEST core.getModel().get  ====    >>>   " + this.core.getModel().getFileAt(this.filePath));
 
                 this.filePath = (String) doc.getProperty(Constants.FILE_NAME_PROP);
 //                this.editorCookie = getEditorCookie(filePath);//this.core.getModel().get(this.filePath).getEditorCookie();
@@ -202,21 +202,21 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Intent
 
 
         DefaultListModel model = new DefaultListModel();
-        List<Searchable> intents = new ArrayList<Searchable>(this.core.getIntentsMapping().getAllIntents());
+        List<Concern> intents = new ArrayList<Concern>(this.core.getIntentsMapping().getAllConcerns());
         Collections.sort(intents);
 //        model.addElement(IntentsConfiguration.IntentsConfiguration.UNTAGGED_CODE);
-        for (Searchable intent : intents) {
+        for (Concern intent : intents) {
             model.addElement(intent);
         }
 
         this.listIntents.setModel(model);
 
-        Set<Searchable> selectedIntents = selectionCodeIntents.getIntents();//core.getConfiguration().getSelectedIntents();
+        Set<Concern> selectedIntents = selectionCodeIntents.getConcerns();//core.getConfiguration().getSelectedIntents();
         List<Integer> indices = new ArrayList<Integer>();
 
         for (int i = 0; i < model.size(); i++) {
             Object searchable = model.get(i);
-            for(Searchable intent : selectedIntents) {
+            for(Concern intent : selectedIntents) {
                 if(intent.equals(searchable)) {
                     indices.add(i);
                     break;
@@ -242,7 +242,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Intent
 //        }
     }
 
-    private CodeIntents getSelectedCodeIntents() {
+    private CodeSnippetConcerns getSelectedCodeIntents() {
         if (editorPane == null) {
             return null;
         }
@@ -255,10 +255,10 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Intent
                 javaFileCaret = editorPane.getCaretPosition();
                 break;
             case SIEVE_DOCUMENT:
-                JavaFile javaFile = core.getModel().getByOffset(editorPane.getCaretPosition());
+                JavaFile javaFile = core.getModel().getFileBySJOffset(editorPane.getCaretPosition());
                 if (javaFile != null) {
                     javaFilePath = javaFile.getFilePath();
-                    Code code = javaFile.getBySieveOffset(editorPane.getCaretPosition());
+                    CodeSnippet code = javaFile.getCodeSnippetBySJOffset(editorPane.getCaretPosition());
                     if (code == null) {
                         javaFileCaret = -1;
                     } else {
@@ -269,7 +269,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Intent
         }
 
 
-        CodeIntents codeIntents = null;
+        CodeSnippetConcerns codeIntents = null;
         if (javaFilePath != null && javaFileCaret != -1) {
             codeIntents = this.core.getIntentsMapping().get(javaFilePath).findForOffset(javaFileCaret);
         }
@@ -358,7 +358,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Intent
     //This is for IntentsMapping
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @Override
-    public void intentsChanged(IntentsMapping.IntentsChangedEvent event) {
+    public void intentsChanged(ProjectConcerns.ConcernsChangedEvent event) {
         System.out.println("Ssce manager   intentsChanged = " + new Date().getTime());
         refreshModel();
 //        ignoreCaretChange = false;

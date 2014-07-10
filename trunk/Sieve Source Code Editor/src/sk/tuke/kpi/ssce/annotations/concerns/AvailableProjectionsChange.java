@@ -2,8 +2,8 @@ package sk.tuke.kpi.ssce.annotations.concerns;
 
 /**
  *
- * @author Milan Nosal
+ * @author Milan
  */
-public @interface ProjectionChange {
+public @interface AvailableProjectionsChange {
     public boolean propagation() default false;
 }

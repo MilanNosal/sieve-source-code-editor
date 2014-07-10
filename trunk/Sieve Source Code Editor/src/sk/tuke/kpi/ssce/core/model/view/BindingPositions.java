@@ -3,17 +3,21 @@ package sk.tuke.kpi.ssce.core.model.view;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
 import org.netbeans.editor.BaseDocument;
+import sk.tuke.kpi.ssce.annotations.concerns.Model;
+import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 
 /**
  * Trieda sluzi na prepojenie dvoch usekoch, jedneho v pomocnom subore .sj a druheho v java subore.
  * @author Matej Nosal
  */
 //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
+@Synchronization()
+@Model(model = RepresentationOf.VIEW)
 public class BindingPositions {
 
     private Position startPositionJavaDocument;
     private int lengthJavaDocument;
-//    private long endPositionJavaDocument;
     private Position startPositionSieveDocument;
     private Position endPositionSieveDocument;
 
@@ -32,13 +36,7 @@ public class BindingPositions {
         this.startPositionJavaDocument = startPositionJavaDocument;
         this.lengthJavaDocument = lengthJavaDocument;
     }
-
-//    public BindingPositions(Position startPositionJavaDocument, Position endPositionJavaDocument, Position startPositionSieveDocument, Position endPositionSieveDocument) {
-//        this.startPositionJavaDocument = startPositionJavaDocument;
-//        this.endPositionJavaDocument = endPositionJavaDocument;
-//        this.startPositionSieveDocument = startPositionSieveDocument;
-//        this.endPositionSieveDocument = endPositionSieveDocument;
-//    }
+    
     /**
      * Vrati dlzku useku v java subore.
      * @return dlzku useku v java subore.
@@ -132,7 +130,7 @@ public class BindingPositions {
      * @return true, ak je prepojenie konzistentne, v opacnom pripade false.
      */
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
-    public boolean isConsistent() {
+    public boolean isInitialized() {
         return startPositionJavaDocument!=null && lengthJavaDocument > -1
                 && startPositionSieveDocument != null && endPositionSieveDocument != null
                 && startPositionSieveDocument.getOffset() <= endPositionSieveDocument.getOffset();
@@ -140,7 +138,6 @@ public class BindingPositions {
 
     @Override
     public String toString() {
-
         StringBuilder builder = new StringBuilder();
         builder.append("startSieve=").append(startPositionSieveDocument.getOffset()).append(" endSieve=").append(endPositionSieveDocument.getOffset()).append(" StartJava=").append(startPositionJavaDocument.getOffset()).append(" lengthJava=").append(lengthJavaDocument).append(")");
         return builder.toString();
