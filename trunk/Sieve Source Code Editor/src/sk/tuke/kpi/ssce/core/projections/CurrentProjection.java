@@ -1,14 +1,17 @@
-package sk.tuke.kpi.ssce.core.configuration;
+package sk.tuke.kpi.ssce.core.projections;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.EventListener;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import sk.tuke.kpi.ssce.annotations.concerns.ProjectionChange;
+import sk.tuke.kpi.ssce.annotations.concerns.ProjectionConfigurationChange;
 import sk.tuke.kpi.ssce.annotations.concerns.ProjectionComposition;
 import sk.tuke.kpi.ssce.annotations.concerns.ProjectionConfiguration;
-import sk.tuke.kpi.ssce.concerns.interfaces.Searchable;
+import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  * Konfiguracia zamerov, ktora v podstate predstavuje dopyt na zdrojovy kod s urcitym zamerom.
@@ -19,7 +22,7 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Searchable;
 public class CurrentProjection implements Serializable {
 
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
-    @ProjectionChange(propagation=true)
+    @ProjectionConfigurationChange(propagation=true)
     private final Set<CurrentProjectionChangeListener> listeners = new HashSet<CurrentProjectionChangeListener>();
 
     /**
@@ -28,7 +31,7 @@ public class CurrentProjection implements Serializable {
      * @return true, ak listener je pridany, v opacnom pripade false.
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
-    @ProjectionChange(propagation=true)
+    @ProjectionConfigurationChange(propagation=true)
     public boolean addConfigurationChangeListener(CurrentProjectionChangeListener listener) {
         return listeners.add(listener);
     }
@@ -39,44 +42,30 @@ public class CurrentProjection implements Serializable {
      * @return true, ak listener je odobrany, v opacnom pripade false.
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
-    @ProjectionChange(propagation=true)
+    @ProjectionConfigurationChange(propagation=true)
     public boolean removeConfigurationChangeListener(CurrentProjectionChangeListener listener) {
         return listeners.remove(listener);
     }
 
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
-    @ProjectionChange(propagation=true)
-    private void fireConfigurationChanged(IntentsConfigurationChangedEvent event) {
+    @ProjectionConfigurationChange(propagation=true)
+    private void fireConfigurationChanged(CurrentProjectionChangedEvent event) {
         if (event == null) {
             return;
         }
         for (CurrentProjectionChangeListener listener : listeners) {
-            listener.configurationChanged(event);
+            listener.projectionChanged(event);
         }
     }
-
-    /**
-     * Konstanta pre mod AND, pri vytvarani dopytu (konfiguracie zamerov).
-     */
-    //SsceIntent:Konstanta;
-    @ProjectionConfiguration
-    @ProjectionComposition
-    public static final String MODE_AND = "And";
-     /**
-     * Konstanta pre mod OR, pri vytvarani dopytu (konfiguracie zamerov).
-     */
-    //SsceIntent:Konstanta;
-    @ProjectionConfiguration
-    @ProjectionComposition
-    public static final String MODE_OR = "Or";
         
     @ProjectionConfiguration
     @ProjectionComposition
-    private String mode = MODE_AND;
+    private Map<String, Object> params = new HashMap<String, Object>();
     
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
     @ProjectionConfiguration
-    private final Set<Searchable> currentlySelectedConcerns = new HashSet<Searchable>();
+    @SourceCodeSieving
+    private final Set<Concern> currentlySelectedConcerns = new HashSet<Concern>();
 
     /**
      * Vrati zvolene zamery ako nemodifikovatelnu mnozinu.
@@ -84,7 +73,8 @@ public class CurrentProjection implements Serializable {
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
     @ProjectionConfiguration
-    public Set<Searchable> getCurrentlySelectedConcerns() {
+    @SourceCodeSieving
+    public Set<Concern> getCurrentlySelectedConcerns() {
         return Collections.unmodifiableSet(currentlySelectedConcerns);
     }
 
@@ -94,11 +84,11 @@ public class CurrentProjection implements Serializable {
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @ProjectionConfiguration
-    @ProjectionChange
-    public void setSelectedIntents(Set<Searchable> selectedIntents) {
+    @ProjectionConfigurationChange
+    public void setSelectedIntents(Set<Concern> selectedIntents) {
         this.currentlySelectedConcerns.clear();
         this.currentlySelectedConcerns.addAll(selectedIntents);
-        fireConfigurationChanged(new IntentsConfigurationChangedEvent(this));
+        fireConfigurationChanged(new CurrentProjectionChangedEvent(this));
     }
 
     /**
@@ -106,39 +96,40 @@ public class CurrentProjection implements Serializable {
      * @return mod konfiguracie zamerov (dopytu).
      */
     @ProjectionConfiguration
-    public String getMode() {
-        return mode;
+    @SourceCodeSieving
+    public Map<String, Object> getParams() {
+        return params;
     }
 
     /**
      * Nastavi mod konfiguracie zamerov (dopytu).
-     * @param mode mod konfiguracie zamerov (dopytu).
+     * @param params mod konfiguracie zamerov (dopytu).
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @ProjectionConfiguration
-    @ProjectionChange
-    public void setMode(String mode) {
-        this.mode = mode;
-        fireConfigurationChanged(new IntentsConfigurationChangedEvent(this));
+    @ProjectionConfigurationChange
+    public void setParams(Map<String, Object> params) {
+        this.params = params;
+        fireConfigurationChanged(new CurrentProjectionChangedEvent(this));
     }
 
     /**
      * Event pre zmenu v konfiguracii zamerov.
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
-    @ProjectionChange(propagation = true)
-    public static class IntentsConfigurationChangedEvent {
+    @ProjectionConfigurationChange(propagation = true)
+    public static class CurrentProjectionChangedEvent {
 
         @ProjectionConfiguration
         private final CurrentProjection newCurrentProjection;
 
         /**
          * Vytvori event pre zmenu v konfiguracii zamerov.
-         * @param configuration nova konfiguracia zamerov.
+         * @param newProjection nova konfiguracia zamerov.
          */
-        @ProjectionChange(propagation = true)
-        public IntentsConfigurationChangedEvent(CurrentProjection configuration) {
-            this.newCurrentProjection = configuration;
+        @ProjectionConfigurationChange(propagation = true)
+        public CurrentProjectionChangedEvent(CurrentProjection newProjection) {
+            this.newCurrentProjection = newProjection;
         }
 
         /**
@@ -154,7 +145,7 @@ public class CurrentProjection implements Serializable {
      * Listener reagujuci na zmeny v konfiguracii zamerov.
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
-    @ProjectionChange(propagation = true)
+    @ProjectionConfigurationChange(propagation = true)
     @ProjectionConfiguration
     public static interface CurrentProjectionChangeListener extends EventListener {
 
@@ -162,6 +153,6 @@ public class CurrentProjection implements Serializable {
          * Volana ked dojde k zmene v konfiguracii zamerov.
          * @param event event
          */
-        public void configurationChanged(CurrentProjection.IntentsConfigurationChangedEvent event);
+        public void projectionChanged(CurrentProjection.CurrentProjectionChangedEvent event);
     }
 }

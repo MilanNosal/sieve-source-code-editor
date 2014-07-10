@@ -1,6 +1,5 @@
-package sk.tuke.kpi.ssce.core.model.projections;
+package sk.tuke.kpi.ssce.core.model.possibleprojections;
 
-import sk.tuke.kpi.ssce.concerns.annotations.CompilerTreeUtils;
 import com.sun.source.tree.*;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePathScanner;
@@ -8,17 +7,16 @@ import java.util.List;
 import javax.lang.model.element.Modifier;
 import javax.swing.text.BadLocationException;
 import org.netbeans.api.java.lexer.JavaTokenId;
-import org.netbeans.api.java.source.CompilationController;
 import org.netbeans.api.java.source.CompilationInfo;
 import org.netbeans.api.lexer.TokenHierarchy;
 import org.netbeans.api.lexer.TokenSequence;
 import org.netbeans.editor.BaseDocument;
 import org.openide.util.Exceptions;
-import sk.tuke.kpi.ssce.core.model.projections.CodeIntents;
-import sk.tuke.kpi.ssce.core.model.projections.JavaFileIntents;
-import sk.tuke.kpi.ssce.concerns.annotations.AnnotationSearchableFactory;
-import sk.tuke.kpi.ssce.concerns.interfaces.SearchableFactory;
-import sk.tuke.kpi.ssce.core.utilities.IntentsUtilities;
+import sk.tuke.kpi.ssce.annotations.concerns.CodeAnalysis;
+import sk.tuke.kpi.ssce.annotations.concerns.View;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
+import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 
 /**
  * Trieda reprezentuje skener prechadzajuci celou strukturou kompilacneho stromu
@@ -28,17 +26,17 @@ import sk.tuke.kpi.ssce.core.utilities.IntentsUtilities;
  * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Model pre mapovanie zamerov;Praca s java suborom;
-public class JavaFileIntentsVisitor extends TreePathScanner<JavaFileIntents, JavaFileIntents> {
+@View(aspect = ViewAspect.CONCERN_EXTRACTION)
+@CodeAnalysis(output = RepresentationOf.PROJECTION)
+public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, JavaFileConcerns> {
 
-    private final IntentsUtilities intentsUtilities = new IntentsUtilities();
     private final CompilationInfo info;
     private final CompilationUnitTree cu;
     private final SourcePositions sp;
-    private final BaseDocument doc;
+    private final BaseDocument doc;    
     
-    private final SearchableFactory factory;
-    //SsceIntent:Komentar uchovavajuci zamer;
-    //private static Pattern pattern = Pattern.compile(Constants.SSCE_COMMENT_REGEX);
+    @View(aspect = ViewAspect.CONCERN_EXTRACTION)
+    private final ConcernExtractor extractor;
 
     /**
      * Vytvori novy skener pre kompilacne info a strom.
@@ -49,12 +47,14 @@ public class JavaFileIntentsVisitor extends TreePathScanner<JavaFileIntents, Jav
      * @param doc dokument, z ktoreho sa vytvori mapovania zamerov na fragmenty
      * kodu pre jeden java subor (dokument).
      */
-    public JavaFileIntentsVisitor(CompilationInfo info, CompilationUnitTree cu, SourcePositions sp, BaseDocument doc) {
+    public JavaFileConcernsVisitor(ConcernExtractor extractor,
+            CompilationInfo info, CompilationUnitTree cu,
+            SourcePositions sp, BaseDocument doc) {
         this.info = info;
         this.cu = cu;
         this.sp = sp;
         this.doc = doc;
-        this.factory = new AnnotationSearchableFactory(new CompilerTreeUtils((CompilationController) info));
+        this.extractor = extractor;
     }
 
     /**
@@ -66,8 +66,10 @@ public class JavaFileIntentsVisitor extends TreePathScanner<JavaFileIntents, Jav
      * @return aktualne mapovanie zamerov na fragmenty kodu pre jeden java
      * subor.
      */
+    @CodeAnalysis(output = RepresentationOf.PROJECTION)
+    @View(aspect = ViewAspect.CONCERN_EXTRACTION)
     @Override
-    public JavaFileIntents visitClass(ClassTree node, JavaFileIntents p) {
+    public JavaFileConcerns visitClass(ClassTree node, JavaFileConcerns p) {
         super.visitClass(node, p);
 
         int start = (int) sp.getStartPosition(cu, node);
@@ -80,7 +82,6 @@ public class JavaFileIntentsVisitor extends TreePathScanner<JavaFileIntents, Jav
             TokenSequence seq = th.tokenSequence();
             seq.move(start);
             while (seq.moveNext() && !JavaTokenId.LBRACE.equals(seq.token().id())) {
-
                 if (JavaTokenId.CLASS.equals(seq.token().id()) || JavaTokenId.ENUM.equals(seq.token().id())) {
                     typeClass = seq.token().text().toString();
                     break;
@@ -105,10 +106,9 @@ public class JavaFileIntentsVisitor extends TreePathScanner<JavaFileIntents, Jav
         builder.append(typeClass).append(" ").append(node.getSimpleName());
 
         try {
-            CodeIntents code = new CodeIntents(p, builder.toString(),
+            CodeSnippetConcerns code = new CodeSnippetConcerns(p, builder.toString(),
                     doc.createPosition(start), end - start,
-                    null, -1,
-                    factory.getSearchablesFor(node));
+                    extractor.getConcernsFor(node));
 
             p.getCodes().add(code);
         } catch (BadLocationException ex) {
@@ -126,14 +126,14 @@ public class JavaFileIntentsVisitor extends TreePathScanner<JavaFileIntents, Jav
      * @return aktualne mapovanie zamerov na fragmenty kodu pre jeden java
      * subor.
      */
+    @CodeAnalysis(output = RepresentationOf.PROJECTION)
+    @View(aspect = ViewAspect.CONCERN_EXTRACTION)
     @Override
-    public JavaFileIntents visitMethod(MethodTree node, JavaFileIntents p) {
+    public JavaFileConcerns visitMethod(MethodTree node, JavaFileConcerns p) {
         super.visitMethod(node, p);
 
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
-
-//        String typeClass = null;// class, enum, interface, anotation
 
         StringBuilder builder = new StringBuilder();
         for (Modifier modifier : node.getModifiers().getFlags()) {
@@ -150,17 +150,15 @@ public class JavaFileIntentsVisitor extends TreePathScanner<JavaFileIntents, Jav
         builder.append(")");
 
         try {
-            CodeIntents code = new CodeIntents(p,
+            CodeSnippetConcerns code = new CodeSnippetConcerns(p,
                     builder.toString(),
                     doc.createPosition(start), end - start,
-                    null, -1,
-                    factory.getSearchablesFor(node));
+                    extractor.getConcernsFor(node));
 
             p.getCodes().add(code);
         } catch (BadLocationException ex) {
             Exceptions.printStackTrace(ex);
         }
-
 
         return p;
     }
@@ -175,15 +173,14 @@ public class JavaFileIntentsVisitor extends TreePathScanner<JavaFileIntents, Jav
      * @return aktualne mapovanie zamerov na fragmenty kodu pre jeden java
      * subor.
      */
+    @CodeAnalysis(output = RepresentationOf.PROJECTION)
+    @View(aspect = ViewAspect.CONCERN_EXTRACTION)
     @Override
-    public JavaFileIntents visitVariable(VariableTree node, JavaFileIntents p) {
+    public JavaFileConcerns visitVariable(VariableTree node, JavaFileConcerns p) {
         super.visitVariable(node, p);
-
 
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
-
-//        String typeClass = null;// class, enum, interface, anotation
 
         StringBuilder builder = new StringBuilder();
         for (Modifier modifier : node.getModifiers().getFlags()) {
@@ -192,19 +189,15 @@ public class JavaFileIntentsVisitor extends TreePathScanner<JavaFileIntents, Jav
         builder.append(node.getType()).append(" ").append(node.getName());
 
         try {
-            CodeIntents code = new CodeIntents(p,
+            CodeSnippetConcerns code = new CodeSnippetConcerns(p,
                     builder.toString(),
                     doc.createPosition(start), end - start,
-                    null, -1,
-                    factory.getSearchablesFor(node));
+                    extractor.getConcernsFor(node));
 
             p.getCodes().add(code);
         } catch (BadLocationException ex) {
             Exceptions.printStackTrace(ex);
         }
-
-
-
         return p;
     }
 
@@ -216,8 +209,9 @@ public class JavaFileIntentsVisitor extends TreePathScanner<JavaFileIntents, Jav
      * @return aktualne mapovanie zamerov na fragmenty kodu pre jeden java
      * subor.
      */
+    @CodeAnalysis(output = RepresentationOf.PROJECTION)
     @Override
-    public JavaFileIntents visitCompilationUnit(CompilationUnitTree node, JavaFileIntents p) {
+    public JavaFileConcerns visitCompilationUnit(CompilationUnitTree node, JavaFileConcerns p) {
         super.visitCompilationUnit(node, p);
         if (node.getPackageName() != null) {
             p.setPackageName(node.getPackageName().toString());
