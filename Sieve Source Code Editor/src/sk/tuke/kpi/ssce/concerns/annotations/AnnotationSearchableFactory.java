@@ -6,13 +6,13 @@ import com.sun.source.tree.VariableTree;
 import java.util.HashSet;
 import java.util.Set;
 import javax.lang.model.type.DeclaredType;
-import sk.tuke.kpi.ssce.concerns.interfaces.SearchableFactory;
+import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 
 /**
  *
  * @author Milan
  */
-public class AnnotationSearchableFactory implements SearchableFactory<AnnotationSearchable> {
+public class AnnotationSearchableFactory implements ConcernExtractor<AnnotationSearchable> {
     
     private CompilerTreeUtils treeUtils;
 
@@ -21,12 +21,12 @@ public class AnnotationSearchableFactory implements SearchableFactory<Annotation
     }
     
     @Override
-    public AnnotationSearchable getNilSearchable() {
+    public AnnotationSearchable getNilConcern() {
         return new AnnotationSearchable(null);
     }
 
     @Override
-    public Set<AnnotationSearchable> getSearchablesFor(ClassTree node) {
+    public Set<AnnotationSearchable> getConcernsFor(ClassTree node) {
         Set<AnnotationSearchable> retSet = new HashSet<AnnotationSearchable>();
         Set<DeclaredType> declTypes = treeUtils.getAnnTypesFor(node);
         for(DeclaredType type : declTypes) {
@@ -36,7 +36,7 @@ public class AnnotationSearchableFactory implements SearchableFactory<Annotation
     }
     
     @Override
-    public Set<AnnotationSearchable> getSearchablesFor(MethodTree node) {
+    public Set<AnnotationSearchable> getConcernsFor(MethodTree node) {
         Set<AnnotationSearchable> retSet = new HashSet<AnnotationSearchable>();
         Set<DeclaredType> declTypes = treeUtils.getAnnTypesFor(node);
         for(DeclaredType type : declTypes) {
@@ -46,7 +46,7 @@ public class AnnotationSearchableFactory implements SearchableFactory<Annotation
     }
     
     @Override
-    public Set<AnnotationSearchable> getSearchablesFor(VariableTree node) {
+    public Set<AnnotationSearchable> getConcernsFor(VariableTree node) {
         Set<AnnotationSearchable> retSet = new HashSet<AnnotationSearchable>();
         Set<DeclaredType> declTypes = treeUtils.getAnnTypesFor(node);
         for(DeclaredType type : declTypes) {
@@ -57,16 +57,16 @@ public class AnnotationSearchableFactory implements SearchableFactory<Annotation
 
     @Override
     public boolean isPresentOn(AnnotationSearchable searchable, VariableTree node) {
-        return getSearchablesFor(node).contains(searchable);
+        return getConcernsFor(node).contains(searchable);
     }
     
     @Override
     public boolean isPresentOn(AnnotationSearchable searchable, ClassTree node) {
-        return getSearchablesFor(node).contains(searchable);
+        return getConcernsFor(node).contains(searchable);
     }
     
     @Override
     public boolean isPresentOn(AnnotationSearchable searchable, MethodTree node) {
-        return getSearchablesFor(node).contains(searchable);
+        return getConcernsFor(node).contains(searchable);
     }
 }

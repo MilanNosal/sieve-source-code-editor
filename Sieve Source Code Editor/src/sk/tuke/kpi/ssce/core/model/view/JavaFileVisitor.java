@@ -1,54 +1,57 @@
 package sk.tuke.kpi.ssce.core.model.view;
 
-import sk.tuke.kpi.ssce.concerns.annotations.CompilerTreeUtils;
 import com.sun.source.tree.*;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePathScanner;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.StyledDocument;
 import org.netbeans.api.java.lexer.JavaTokenId;
-import org.netbeans.api.java.source.CompilationController;
 import org.netbeans.api.java.source.CompilationInfo;
 import org.netbeans.api.lexer.TokenHierarchy;
 import org.netbeans.api.lexer.TokenSequence;
 import org.netbeans.editor.BaseDocument;
 import org.openide.text.NbDocument;
 import org.openide.util.Exceptions;
-import sk.tuke.kpi.ssce.core.configuration.CurrentProjection;
-import sk.tuke.kpi.ssce.core.model.view.BindingPositions;
-import sk.tuke.kpi.ssce.core.model.view.Code;
-import sk.tuke.kpi.ssce.core.model.view.JavaFile;
-import sk.tuke.kpi.ssce.concerns.annotations.AnnotationSearchableFactory;
-import sk.tuke.kpi.ssce.concerns.interfaces.Searchable;
-import sk.tuke.kpi.ssce.concerns.interfaces.SearchableFactory;
-import sk.tuke.kpi.ssce.core.utilities.IntentsUtilities;
+import sk.tuke.kpi.ssce.annotations.concerns.CodeAnalysis;
+import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
+import sk.tuke.kpi.ssce.annotations.concerns.View;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
+import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
+import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
+import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
 
 /**
  * Trieda reprezentuje skener prechadzajuci celou strukturou kompilacneho stromu
  * zdrojoveho kodu java. Sluzi ako nastroj pre zaujmoco-orientovanu projekciu
  * zdrojoveho kodu v jedenom java subore.
+ * XXX: toto v podstate formuje view, tuto to treba upravit
  *
  * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Praca s java suborom;Model pre synchronizaciu kodu;
+@View(aspect = ViewAspect.PRESENTATION)
+@SourceCodeSieving
+@CodeAnalysis(output = RepresentationOf.VIEW)
 public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
 
-    private final IntentsUtilities intentsUtilities = new IntentsUtilities();
     private final CompilationInfo info;
     private final CompilationUnitTree cu;
-    private final SearchableFactory factory;
+    @View(aspect = ViewAspect.CONCERN_EXTRACTION)
+    private final ConcernExtractor extractor;
     private final SourcePositions sp;
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
-    private final CurrentProjection config;
+    private final CurrentProjection currentProjection;
     private final BaseDocument doc;
-    private final Stack<String> stack;
-    private final Stack<Set<Searchable>> stackOfIntents;
-    //SsceIntent:Komentar uchovavajuci zamer;
-    //private static Pattern pattern = Pattern.compile(Constants.SSCE_COMMENT_REGEX);
+    private final Stack<String> contextCounter;
+    private final Stack<Set<Concern>> contextOfConcerns;
+    
+    @SourceCodeSieving
+    private final CodeSiever codeSiever;
 
     /**
      * Vytvori novy skener pre kompilacne info a strom, dokument, konfiguraciu
@@ -57,19 +60,22 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
      * @param info kompilacne info.
      * @param cu kompilacna jednotka obsahujuca kompilacny strom...
      * @param sp sourcePositions.
-     * @param config konfiguracia zamerov (dopyt) na zdrojovy kod.
+     * @param currentProjection konfiguracia zamerov (dopyt) na zdrojovy kod.
      * @param doc dokument, nad ktorym sa bude realizovat projekcie zdrojoveho
      * kodu na zaklade konfiguracie (dopytu) zamerov.
      */
-    public JavaFileVisitor(CompilationInfo info, CompilationUnitTree cu, SourcePositions sp, CurrentProjection config, BaseDocument doc) {
+    public JavaFileVisitor(CompilationInfo info, CompilationUnitTree cu, SourcePositions sp,
+            ConcernExtractor extractor, CodeSiever siever,
+            CurrentProjection currentProjection, BaseDocument doc) {
         this.info = info;
         this.cu = cu;
-        this.factory = new AnnotationSearchableFactory(new CompilerTreeUtils((CompilationController) info));
+        this.extractor = extractor;
         this.sp = sp;
-        this.config = config;
+        this.currentProjection = currentProjection;
+        this.codeSiever = siever;
         this.doc = doc;
-        this.stack = new Stack<String>();
-        this.stackOfIntents = new Stack<Set<Searchable>>();
+        this.contextCounter = new Stack<String>();
+        this.contextOfConcerns = new Stack<Set<Concern>>();
     }
 
     /**
@@ -81,29 +87,31 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
      * @return aktualny vysledok projekcie zdrojoveho kodu pre jeden java subor.
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;Komentar uchovavajuci zamer;
-    @Override ()
+    @View(aspect = ViewAspect.PRESENTATION)
+    @CodeAnalysis(output = RepresentationOf.VIEW)
+    @Override
     public JavaFile visitClass(ClassTree node, JavaFile p) {
         String nameElement = node.getSimpleName().toString();
 
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
         
-        stackOfIntents.push(factory.getSearchablesFor(node));
-        stack.push(nameElement);
+        contextOfConcerns.push(extractor.getConcernsFor(node));
+        contextCounter.push(nameElement);
         super.visitClass(node, p);
-        stack.pop();
+        contextCounter.pop();
 
-        if (filterCodeByIntents(getIntentsForCode(), config)) {
+        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor)) {
             try {
-                Code code = new Code(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "TYPE");
-                code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
-                p.getCodes().add(code);
+                CodeSnippet codeSnippet = new CodeSnippet(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "TYPE");
+                codeSnippet.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
+                p.getCodeSnippets().add(codeSnippet);
             } catch (BadLocationException ex) {
                 Exceptions.printStackTrace(ex);
             }
         }
 
-        stackOfIntents.pop();
+        contextOfConcerns.pop();
         return p;
     }
 
@@ -116,6 +124,8 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
      * @return aktualny vysledok projekcie zdrojoveho kodu pre jeden java subor.
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;Komentar uchovavajuci zamer;
+    @View(aspect = ViewAspect.PRESENTATION)
+    @CodeAnalysis(output = RepresentationOf.VIEW)
     @Override
     public JavaFile visitMethod(MethodTree node, JavaFile p) {
 
@@ -135,22 +145,22 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
 
-        stackOfIntents.push(factory.getSearchablesFor(node));
-        stack.push(nameElement);
+        contextOfConcerns.push(extractor.getConcernsFor(node));
+        contextCounter.push(nameElement);
         super.visitMethod(node, p);
-        stack.pop();
+        contextCounter.pop();
 
 
-        if (filterCodeByIntents(getIntentsForCode(), config)) {
+        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor)) {
             try {
-                Code code = new Code(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "METHOD");
+                CodeSnippet code = new CodeSnippet(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "METHOD");
                 code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
-                p.getCodes().add(code);
+                p.getCodeSnippets().add(code);
             } catch (BadLocationException ex) {
                 Exceptions.printStackTrace(ex);
             }
         }
-        stackOfIntents.pop();
+        contextOfConcerns.pop();
         return p;
     }
 
@@ -164,6 +174,8 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
      * @return aktualny vysledok projekcie zdrojoveho kodu pre jeden java subor.
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;Komentar uchovavajuci zamer;
+    @View(aspect = ViewAspect.PRESENTATION)
+    @CodeAnalysis(output = RepresentationOf.VIEW)
     @Override
     public JavaFile visitVariable(VariableTree node, JavaFile p) {
         String nameElement = node.getName().toString();
@@ -171,22 +183,22 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
 
-        stackOfIntents.push(factory.getSearchablesFor(node));
-        stack.push(nameElement);
+        contextOfConcerns.push(extractor.getConcernsFor(node));
+        contextCounter.push(nameElement);
         super.visitVariable(node, p);
-        stack.pop();
+        contextCounter.pop();
 
-        if (filterCodeByIntents(getIntentsForCode(), config)) {
+        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor)) {
             try {
-                Code code = new Code(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "FIELD");
+                CodeSnippet code = new CodeSnippet(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "FIELD");
                 code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
-                p.getCodes().add(code);
+                p.getCodeSnippets().add(code);
             } catch (BadLocationException ex) {
                 Exceptions.printStackTrace(ex);
             }
         }
 
-        stackOfIntents.pop();
+        contextOfConcerns.pop();
         return p;
     }
 
@@ -198,6 +210,8 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
      * @param p vysledok projekcie zdrojoveho kodu pre jeden java subor.
      * @return aktualny vysledok projekcie zdrojoveho kodu pre jeden java subor.
      */
+    @View(aspect = ViewAspect.PRESENTATION)
+    @CodeAnalysis(output = RepresentationOf.VIEW)
     @Override
     public JavaFile visitCompilationUnit(CompilationUnitTree node, JavaFile p) {
         super.visitCompilationUnit(node, p);
@@ -258,69 +272,15 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         return p;
     }
 
-    /**
-     * TODO: zeby sa intents dedili?
-     * @return 
-     */
-    private Set<Searchable> getIntentsForCode() {
-        Set<Searchable> intents = new HashSet<Searchable>();
-        for (int i = 0; i < stackOfIntents.size(); i++) {
-            intents.addAll(stackOfIntents.get(i));
-        }
-        return intents;
-    }
-
+    @CodeAnalysis(output = RepresentationOf.VIEW)
     private String getContextForCode() {
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < stack.size(); i++) {
-            builder.append(stack.get(i));
-            if (i < stack.size() - 1) {
+        for (int i = 0; i < contextCounter.size(); i++) {
+            builder.append(contextCounter.get(i));
+            if (i < contextCounter.size() - 1) {
                 builder.append(".");
             }
         }
         return builder.toString();
-    }
-
-    //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;Realizovanie projekcie zdrojoveho kodu;
-    private boolean filterCodeByIntents(Set<Searchable> codeIntents, CurrentProjection intentsConfig) {
-
-        boolean match = false;
-
-        Set<Searchable> selectedIntents = new HashSet<Searchable>(intentsConfig.getCurrentlySelectedConcerns());
-        if (selectedIntents.isEmpty()) {
-            match = false;
-        } else {
-            if (CurrentProjection.MODE_AND.equals(intentsConfig.getMode())) {
-                match = true;
-                if (selectedIntents.contains(factory.getNilSearchable())) {
-                    if (!codeIntents.isEmpty()) {
-                        match = false;
-                    }
-                    selectedIntents.remove(factory.getNilSearchable());
-                }
-                for (Searchable selectedIntent : selectedIntents) {
-                    if (!codeIntents.contains(selectedIntent)) {
-                        match = false;
-                        break;
-                    }
-                }
-            } else if (CurrentProjection.MODE_OR.equals(intentsConfig.getMode())) {
-                match = false;
-                if (selectedIntents.contains(factory.getNilSearchable())) {
-                    if (codeIntents.isEmpty()) {
-                        match = true;
-                    }
-                }
-                for (Searchable selectedIntent : selectedIntents) {
-                    if (codeIntents.contains(selectedIntent)) {
-                        match = true;
-                        break;
-                    }
-                }
-            }
-        }
-        return match;
-    }
-    
-    
+    }    
 }

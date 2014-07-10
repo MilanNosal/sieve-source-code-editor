@@ -13,12 +13,14 @@ import sk.tuke.kpi.ssce.annotations.concerns.Guarding;
 import sk.tuke.kpi.ssce.annotations.concerns.JavaSieving;
 import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
+import sk.tuke.kpi.ssce.annotations.concerns.View;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
 import sk.tuke.kpi.ssce.core.utilities.JavaFileUtilities;
-import sk.tuke.kpi.ssce.core.model.view.Code;
-import sk.tuke.kpi.ssce.core.model.view.Imports;
+import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
+import sk.tuke.kpi.ssce.core.model.view.importshandling.Imports;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
-import sk.tuke.kpi.ssce.core.model.view.Model;
+import sk.tuke.kpi.ssce.core.model.view.ViewModel;
 
 /**
  * Trieda predstavuje nastroj pre realizovanie prepojenia medzi java subormi a
@@ -83,7 +85,8 @@ public class Binding {
     @Synchronization(direction = Direction.JAVATOSJ)
     @JavaSieving
     @SievedDocument
-    public boolean loadSieveDocument(final Model model) {
+    @View(aspect = ViewAspect.PRESENTATION)
+    public boolean loadSieveDocument(final ViewModel model) {
         // toto predstavuje vysledny sj dokument
         final StringBuilder buffer = new StringBuilder();
 
@@ -96,7 +99,7 @@ public class Binding {
         SnippetToBeUpdated element;
         try {
             for (int i = 0; i < model.size(); i++) {
-                javaFile = model.get(i);
+                javaFile = model.getFileAt(i);
                 BaseDocument doc = (BaseDocument) javaFile.getEditorCookie().openDocument();
                 doc.readLock();
                 try {
@@ -104,7 +107,7 @@ public class Binding {
                     file.setJavaFile(javaFile);
                     file.setStart(buffer.length());
 
-                    buffer.append(javaFile.getStartText());
+                    buffer.append(javaFile.getStartTextForSJDoc());
 
                     element = new SnippetToBeUpdated();
                     element.setImports(javaFile);
@@ -117,20 +120,20 @@ public class Binding {
                     updates.add(element);
 
 //                    buffer.append("\n");
-                    for (Code c : javaFile.getCodes()) {
+                    for (CodeSnippet c : javaFile.getCodeSnippets()) {
                         element = new SnippetToBeUpdated();
                         element.setCode(c);
-                        buffer.append(c.getStartText());
+                        buffer.append(c.getStartTextForSJDoc());
                         element.setStart(buffer.length());
                         buffer.append(doc.getText(c.getCodeBinding().getStartPositionJavaDocument(), c.getCodeBinding().getLengthBindingAreaJavaDocument()));
 
                         element.setEnd(buffer.length() - 1);
                         updates.add(element);
 
-                        buffer.append(Code.END_TEXT);
+                        buffer.append(c.getEndTextForSJDoc());
                     }
 
-                    buffer.append(javaFile.getEndText());
+                    buffer.append(javaFile.getEndTextForSJDoc());
 
                     file.setEnd(buffer.length() - 1);
                     updates.add(file);
@@ -176,7 +179,7 @@ public class Binding {
                 updatePositions(updates, sieveDocument); // make update positions in SieveDocument=> model is corect, fully defined
 
 //                System.out.println(model.toString());
-                if (!model.isConsistent()) {
+                if (!model.isInitialized()) {
                     throw new RuntimeException("Model is not consistent!");
                 }
                 //TODO: dokoncit
@@ -216,7 +219,7 @@ public class Binding {
      */
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
-    public boolean updateSieveDocument(UpdateModelAction action, Model model, JavaFile javaFile) {
+    public boolean updateSieveDocument(UpdateModelAction action, ViewModel model, JavaFile javaFile) {
         switch (action) {
             case UPDATE:
                 return updateSieveDocument_UpdateAction(model, javaFile);
@@ -231,7 +234,7 @@ public class Binding {
 
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
-    private boolean updateSieveDocument_DeleteAction(Model model, JavaFile javaFile) {
+    private boolean updateSieveDocument_DeleteAction(ViewModel model, JavaFile javaFile) {
 
         if (javaFile == null) {
             return false;
@@ -246,8 +249,8 @@ public class Binding {
 //        for (int i = 0; i < panes.length; i++) {
 //            carets[i] = panes[i].getCaretPosition();
 //        }
-        int startFile = jF.getStartFile();
-        int endFile = jF.getEndFile();
+        int startFile = jF.getBeginInSJ();
+        int endFile = jF.getEndInSJ();
 
         try {
             BaseDocument sieveDocument = ((BaseDocument) model.getEditorCookieSieveDocument().openDocument());
@@ -280,12 +283,12 @@ public class Binding {
 
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
-    private boolean updateSieveDocument_UpdateAction(Model model, JavaFile javaFile) {
+    private boolean updateSieveDocument_UpdateAction(ViewModel model, JavaFile javaFile) {
         if (javaFile == null) {
             return false;
         }
         JavaFile jF;
-        if (javaFile.getCodes() == null || javaFile.getCodes().isEmpty()) {
+        if (javaFile.getCodeSnippets() == null || javaFile.getCodeSnippets().isEmpty()) {
             return updateSieveDocument_DeleteAction(model, javaFile);
         } else if ((jF = model.updateFile(javaFile)) == null) {
             return updateSieveDocument_InsertAction(model, javaFile);
@@ -294,7 +297,7 @@ public class Binding {
         StringBuilder buffer = new StringBuilder();
 
 //        return loadSieveDocument(model);
-        int startFileOffset = jF.getStartFile();
+        int startFileOffset = jF.getBeginInSJ();
 
         List<SnippetToBeUpdated> updates = new ArrayList<SnippetToBeUpdated>();
 
@@ -309,7 +312,7 @@ public class Binding {
                 file.setJavaFile(jF);
                 file.setStart(buffer.length() + startFileOffset);
 
-                buffer.append(jF.getStartText());
+                buffer.append(jF.getStartTextForSJDoc());
 
                 element = new SnippetToBeUpdated();
                 element.setImports(jF);
@@ -322,20 +325,20 @@ public class Binding {
                 updates.add(element);
 
 //                buffer.append("\n");
-                for (Code c : jF.getCodes()) {
+                for (CodeSnippet c : jF.getCodeSnippets()) {
                     element = new SnippetToBeUpdated();
                     element.setCode(c);
-                    buffer.append(c.getStartText());
+                    buffer.append(c.getStartTextForSJDoc());
                     element.setStart(buffer.length() + startFileOffset);
                     buffer.append(doc.getText((int) c.getCodeBinding().getStartPositionJavaDocument(), (int) c.getCodeBinding().getLengthBindingAreaJavaDocument()));
 
                     element.setEnd(buffer.length() - 1 + startFileOffset);
                     updates.add(element);
 
-                    buffer.append(Code.END_TEXT);
+                    buffer.append(c.getEndTextForSJDoc());
                 }
 
-                buffer.append(jF.getEndText());
+                buffer.append(jF.getEndTextForSJDoc());
 
                 file.setEnd(buffer.length() - 1 + startFileOffset);
                 updates.add(file);
@@ -348,8 +351,8 @@ public class Binding {
             JEditorPane[] panes = model.getEditorCookieSieveDocument().getOpenedPanes();
             Integer[] carets = null;
 
-            int startOldFile = jF.getStartFile();
-            int endOldFile = jF.getEndFile();
+            int startOldFile = jF.getBeginInSJ();
+            int endOldFile = jF.getEndInSJ();
             int lengthOldFile = endOldFile - startOldFile + 1;
 
             if (panes != null) {
@@ -379,7 +382,7 @@ public class Binding {
 //                model.getEditorCookieSieveDocument().saveDocument();
                 updatePositions(updates, sieveDocument); // make update positions in SieveDocument=> model is corect, fully defined
 
-                if (!model.isConsistent()) {
+                if (!model.isInitialized()) {
                     throw new RuntimeException("Model is not consistent!");
                 }
                 //TODO: dokoncit
@@ -410,21 +413,21 @@ public class Binding {
 
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
-    private boolean updateSieveDocument_InsertAction(Model model, JavaFile javaFile) {
+    private boolean updateSieveDocument_InsertAction(ViewModel model, JavaFile javaFile) {
         StringBuilder buffer = new StringBuilder();
 
         JavaFile jF;
-        if ((jF = model.insertFile(javaFile)) == null) {
+        if ((jF = model.insertFileToModel(javaFile)) == null) {
             return false;
         }
 
 //        return loadSieveDocument(model);
         int startFileOffset;
         JavaFile fileTmp;
-        if ((fileTmp = model.getNext(jF.getFilePath())) != null) {
-            startFileOffset = fileTmp.getStartFile();
-        } else if ((fileTmp = model.getPrevious(jF.getFilePath())) != null) {
-            startFileOffset = fileTmp.getEndFile() + 1;
+        if ((fileTmp = model.getFileNextTo(jF.getFilePath())) != null) {
+            startFileOffset = fileTmp.getBeginInSJ();
+        } else if ((fileTmp = model.getFilePreviousTo(jF.getFilePath())) != null) {
+            startFileOffset = fileTmp.getEndInSJ() + 1;
         } else {
             startFileOffset = 0;
         }
@@ -442,7 +445,7 @@ public class Binding {
                 file.setJavaFile(jF);
                 file.setStart(buffer.length() + startFileOffset);
 
-                buffer.append(jF.getStartText());
+                buffer.append(jF.getStartTextForSJDoc());
 
                 element = new SnippetToBeUpdated();
                 element.setImports(jF);
@@ -455,20 +458,20 @@ public class Binding {
                 updates.add(element);
 
 //                buffer.append("\n");
-                for (Code c : jF.getCodes()) {
+                for (CodeSnippet c : jF.getCodeSnippets()) {
                     element = new SnippetToBeUpdated();
                     element.setCode(c);
-                    buffer.append(c.getStartText());
+                    buffer.append(c.getStartTextForSJDoc());
                     element.setStart(buffer.length() + startFileOffset);
                     buffer.append(doc.getText((int) c.getCodeBinding().getStartPositionJavaDocument(), (int) c.getCodeBinding().getLengthBindingAreaJavaDocument()));
 
                     element.setEnd(buffer.length() - 1 + startFileOffset);
                     updates.add(element);
 
-                    buffer.append(Code.END_TEXT);
+                    buffer.append(c.getEndTextForSJDoc());
                 }
 
-                buffer.append(jF.getEndText());
+                buffer.append(jF.getEndTextForSJDoc());
 
                 file.setEnd(buffer.length() - 1 + startFileOffset);
                 updates.add(file);
@@ -484,7 +487,7 @@ public class Binding {
 //                model.getEditorCookieSieveDocument().saveDocument();
                 updatePositions(updates, sieveDocument); // make update positions in SieveDocument=> model is corect, fully defined
 
-                if (!model.isConsistent()) {
+                if (!model.isInitialized()) {
                     throw new RuntimeException("Model is not consistent!");
                 }
                 //TODO: dokoncit
@@ -519,26 +522,26 @@ public class Binding {
     @Synchronization(direction = Direction.JAVATOSJ)
     @SievedDocument
     @Guarding
-    private boolean markGuardedSieveDoument(StyledDocument doc, Model model) {
+    private boolean markGuardedSieveDoument(StyledDocument doc, ViewModel model) {
 //        NbDocument.unmarkGuarded((StyledDocument) doc, 0, doc.getLength());
         JavaFile javaFile;
         for (int i = 0; i < model.size(); i++) {
-            javaFile = model.get(i);
-            NbDocument.markGuarded(doc, javaFile.getStartFile(), javaFile.getImportsBinding().getStartPositionSieveDocument() - javaFile.getStartFile());
-            if (javaFile.getCodes().isEmpty()) {
-                NbDocument.markGuarded(doc, javaFile.getImportsBinding().getEndPositionSieveDocument() + 1, javaFile.getEndFile() - javaFile.getImportsBinding().getEndPositionSieveDocument());
+            javaFile = model.getFileAt(i);
+            NbDocument.markGuarded(doc, javaFile.getBeginInSJ(), javaFile.getImportsBinding().getStartPositionSieveDocument() - javaFile.getBeginInSJ());
+            if (javaFile.getCodeSnippets().isEmpty()) {
+                NbDocument.markGuarded(doc, javaFile.getImportsBinding().getEndPositionSieveDocument() + 1, javaFile.getEndInSJ() - javaFile.getImportsBinding().getEndPositionSieveDocument());
             } else {
                 NbDocument.markGuarded(
                         doc, 
                         javaFile.getImportsBinding().getEndPositionSieveDocument() + 1, 
-                        javaFile.getCodes().get(0).getCodeBinding().getStartPositionSieveDocument() - javaFile.getImportsBinding().getEndPositionSieveDocument() - 1);
-                for (int j = 1; j < javaFile.getCodes().size(); j++) {
-                    NbDocument.markGuarded(doc, javaFile.getCodes().get(j - 1).getCodeBinding().getEndPositionSieveDocument() + 2, javaFile.getCodes().get(j).getCodeBinding().getStartPositionSieveDocument() - javaFile.getCodes().get(j - 1).getCodeBinding().getEndPositionSieveDocument() - 2);
+                        javaFile.getCodeSnippets().get(0).getCodeBinding().getStartPositionSieveDocument() - javaFile.getImportsBinding().getEndPositionSieveDocument() - 1);
+                for (int j = 1; j < javaFile.getCodeSnippets().size(); j++) {
+                    NbDocument.markGuarded(doc, javaFile.getCodeSnippets().get(j - 1).getCodeBinding().getEndPositionSieveDocument() + 2, javaFile.getCodeSnippets().get(j).getCodeBinding().getStartPositionSieveDocument() - javaFile.getCodeSnippets().get(j - 1).getCodeBinding().getEndPositionSieveDocument() - 2);
                 }
                 NbDocument.markGuarded(
                         doc, 
-                        javaFile.getCodes().get(javaFile.getCodes().size() - 1).getCodeBinding().getEndPositionSieveDocument() + 2,
-                        javaFile.getEndFile() - javaFile.getCodes().get(javaFile.getCodes().size() - 1).getCodeBinding().getEndPositionSieveDocument());
+                        javaFile.getCodeSnippets().get(javaFile.getCodeSnippets().size() - 1).getCodeBinding().getEndPositionSieveDocument() + 2,
+                        javaFile.getEndInSJ() - javaFile.getCodeSnippets().get(javaFile.getCodeSnippets().size() - 1).getCodeBinding().getEndPositionSieveDocument());
             }
 //            
 //            NbDocument.markGuarded(doc, jF.getImporstBinding().getEndPositionSieveDocument().getOffset(), jF.getImporstBinding().getStartPositionSieveDocument().getOffset());
@@ -561,7 +564,7 @@ public class Binding {
      */
     //SsceIntent:Praca s java suborom;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.SJTOJAVA)
-    public boolean updateJavaDocument(Model model, JavaFile javaFile, int offsetJF) {
+    public boolean updateJavaDocument(ViewModel model, JavaFile javaFile, int offsetJF) {
         BaseDocument sieveDoc;
         BaseDocument javaDoc;
         try {
@@ -647,7 +650,7 @@ public class Binding {
             return true;
         }
 
-        for (Code code : javaFile.getCodes()) {
+        for (CodeSnippet code : javaFile.getCodeSnippets()) {
             if (code.getCodeBinding().getStartPositionSieveDocument() <= offsetJF && offsetJF <= code.getCodeBinding().getEndPositionSieveDocument() + 1) {
                 String text;
                 sieveDoc.readLock();

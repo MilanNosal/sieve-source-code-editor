@@ -4,13 +4,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.openide.cookies.EditorCookie;
+import sk.tuke.kpi.ssce.annotations.concerns.Model;
+import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 
 /**
  * Trieda predstavuje celkovy model prepojenia vsetkych java suborov s pomocnym suborom .sj.
  * @author Matej Nosal
  */
 //SsceIntent:Model pre synchronizaciu kodu;
-public class Model {
+@Model(model = RepresentationOf.VIEW)
+public class ViewModel {
 
     //SsceIntent:Praca s pomocnym suborom;
     private EditorCookie editorCookieSieveDocument;
@@ -20,7 +24,7 @@ public class Model {
     /**
      * Vytvori celkovy model prepojenia vsetkych java suborov s pomocnym suborom .sj.
      */
-    public Model() {
+    public ViewModel() {
     }
 
     /**
@@ -52,7 +56,7 @@ public class Model {
      * @param index index modelovanyho java suboru.
      * @return modelovany java subor s indexom index.
      */
-    public JavaFile get(int index) {
+    public JavaFile getFileAt(int index) {
         return files.get(index);
     }
 
@@ -78,9 +82,10 @@ public class Model {
      * @param file novy aktualizovany model java suboru.
      * @return aktualizovany model java suboru.
      */
+    @Synchronization
     public JavaFile updateFile(JavaFile file) {
         JavaFile javaFile;
-        if ((javaFile = get(file.getFilePath())) != null) {
+        if ((javaFile = getFileAt(file.getFilePath())) != null) {
             javaFile.copy(file);
         }
         return javaFile;
@@ -91,9 +96,10 @@ public class Model {
      * @param file model java suboru, ktory ma byt odstraneny z tohto modelu.
      * @return odstraneny model java suboru.
      */
+    @Synchronization
     public JavaFile deleteFile(JavaFile file) {
         JavaFile javaFile;
-        if ((javaFile = get(file.getFilePath())) != null) {
+        if ((javaFile = getFileAt(file.getFilePath())) != null) {
             files.remove(javaFile);
 //            removeJavaDocumentListenerFrom(javaFile);
             return javaFile;
@@ -120,7 +126,7 @@ public class Model {
      * @param javaFilePath suborova cesta java suboru
      * @return modelovany java subor so suborovou cestou javaFilePath.
      */
-    public JavaFile get(String javaFilePath) {
+    public JavaFile getFileAt(String javaFilePath) {
         for (JavaFile jF : files) {
             if (jF.getFilePath().equals(javaFilePath)) {
                 return jF;
@@ -134,7 +140,7 @@ public class Model {
      * @param javaFilePath suborova cesta java suboru
      * @return modelovany java subor, ktory naleduje za java suborom s cestou javaFilePath, alebo null ak neexistuje.
      */
-    public JavaFile getNext(String javaFilePath) {
+    public JavaFile getFileNextTo(String javaFilePath) {
         for (int i = 1; i < files.size(); i++) {
             if (files.get(i - 1).getFilePath().equals(javaFilePath)) {
                 return files.get(i);
@@ -148,7 +154,7 @@ public class Model {
      * @param javaFilePath suborova cesta java suboru
      * @return modelovany java subor, ktory predchadza java subor s cestou javaFilePath, alebo null ak neexistuje.
      */
-    public JavaFile getPrevious(String javaFilePath) {
+    public JavaFile getFilePreviousTo(String javaFilePath) {
         for (int i = 1; i < files.size(); i++) {
             if (files.get(i).getFilePath().equals(javaFilePath)) {
                 return files.get(i - 1);
@@ -162,12 +168,13 @@ public class Model {
      * @param file model java subor.
      * @return model java subor, alebo null ak sa nepodari vlozit novy java subor.
      */
-    public JavaFile insertFile(JavaFile file) {
-        if (get(file.getFilePath()) != null) {
+    @Synchronization
+    public JavaFile insertFileToModel(JavaFile file) {
+        if (getFileAt(file.getFilePath()) != null) {
             return null;
         }
         if (files.add(file)) {
-            Collections.sort(files, JavaFile.SORT_BY_PACKAGES);
+            Collections.sort(files, JavaFile.SORT_FILES_BY_PACKAGES);
             return file;
         }
         return null;
@@ -178,22 +185,17 @@ public class Model {
      * @return true, ak vsetky prepojenia v tomto modeli su konzistentne, v opacnom pripade false.
      */
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
-    public boolean isConsistent() {
+    public boolean isInitialized() {
         for (JavaFile file : files) {
-            if (!file.isConsistent()) {
+            if (!file.isInitialized()) {
                 return false;
             }
-//            System.out.println("Java File (ok): " + file.getFilePath());
         }
         return true;
     }
-//    public JavaFile getCode(Position ){
-//        
-//    }
 
     @Override
     public String toString() {
-
         StringBuilder builder = new StringBuilder();
         builder.append("Model\n");
         for (JavaFile file : files) {
@@ -207,9 +209,9 @@ public class Model {
      * @param offset offset v pomocnom subore .sj.
      * @return modelovany java subor podla offsetu v pomocnom subore .sj.
      */
-    public JavaFile getByOffset(int offset) { // in sieve document
+    public JavaFile getFileBySJOffset(int offset) { // in sieve document
         for (JavaFile jF : files) {
-            if (jF.getStartFile() <= offset && offset <= jF.getEndFile()) {
+            if (jF.getBeginInSJ() <= offset && offset <= jF.getEndInSJ()) {
                 return jF;
             }
         }

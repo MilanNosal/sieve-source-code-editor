@@ -8,18 +8,18 @@ import javax.swing.DefaultListModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import sk.tuke.kpi.ssce.core.SSCEditorCore;
-import sk.tuke.kpi.ssce.core.configuration.CurrentProjection;
-import sk.tuke.kpi.ssce.core.model.projections.IntentsMapping;
-import sk.tuke.kpi.ssce.core.model.projections.IntentsMapping.IntentsChangedEvent;
+import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
+import sk.tuke.kpi.ssce.core.model.possibleprojections.ProjectConcerns;
+import sk.tuke.kpi.ssce.core.model.possibleprojections.ProjectConcerns.ConcernsChangedEvent;
 import sk.tuke.kpi.ssce.concerns.annotations.AnnotationSearchable;
-import sk.tuke.kpi.ssce.concerns.interfaces.Searchable;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  *
  * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Komponent grafickeho rozhrania;
-public class SsceIntentFilterPanel extends javax.swing.JPanel implements IntentsMapping.IntentsChangeListener, ActionListener, ListSelectionListener {
+public class SsceIntentFilterPanel extends javax.swing.JPanel implements ProjectConcerns.ConcernsChangeListener, ActionListener, ListSelectionListener {
 
     private SSCEditorCore core = null;
 
@@ -121,20 +121,20 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Intents
         this.jListIntents.removeListSelectionListener(this);
 
         DefaultListModel model = new DefaultListModel();
-        List<Searchable> intents = new ArrayList<Searchable>(this.core.getIntentsMapping().getAllIntents());
+        List<Concern> intents = new ArrayList<Concern>(this.core.getIntentsMapping().getAllConcerns());
         Collections.sort(intents);
         model.addElement(new AnnotationSearchable(null));
-        for (Searchable intent : intents) {
+        for (Concern intent : intents) {
             model.addElement(intent);
         }
 
         this.jListIntents.setModel(model);
 
-        Set<Searchable> selectedIntents = core.getConfiguration().getCurrentlySelectedConcerns();
+        Set<Concern> selectedIntents = core.getConfiguration().getCurrentlySelectedConcerns();
         List<Integer> indices = new ArrayList<Integer>();
 
         for (int i = 0; i < model.size(); i++) {
-            for(Searchable intent : selectedIntents) {
+            for(Concern intent : selectedIntents) {
                 if(intent.equals(model.get(i))) { // TODO: java.lang.ClassCastException: sk.tuke.kpi.nosal.matej.ssce.core.configuration.IntentsConfiguration$1 cannot be cast to java.lang.String
                     indices.add(i);
                 }
@@ -165,7 +165,7 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Intents
 
         this.jComboBoxMode.removeActionListener(this);
 
-        this.jComboBoxMode.setSelectedItem(core.getConfiguration().getMode());
+        this.jComboBoxMode.setSelectedItem(core.getConfiguration().getParams());
 
 
         this.jComboBoxMode.addActionListener(this);
@@ -184,11 +184,11 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Intents
             return;
         }
         Object[] objects = jListIntents.getSelectedValues();
-        Searchable[] intents = Arrays.copyOf(objects, objects.length, Searchable[].class); // TODO: zrejme problem s java.lang.ArrayStoreException, s declared type dummy
+        Concern[] intents = Arrays.copyOf(objects, objects.length, Concern[].class); // TODO: zrejme problem s java.lang.ArrayStoreException, s declared type dummy
         //List<String> intentsList = Arrays.asList(intents);
         // TODO: spravit to aby JList pracoval priamo s declared (resp. s wrapper)
         //List<Searchable> allIntents = new ArrayList<Searchable>(this.core.getIntentsMapping().getAllIntents());
-        Set<Searchable> selectedIntents = new HashSet<Searchable>();
+        Set<Concern> selectedIntents = new HashSet<Concern>();
         selectedIntents.addAll(Arrays.asList(intents));
 
         this.core.getConfiguration().setSelectedIntents(selectedIntents);
@@ -204,7 +204,7 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Intents
     //This is for IntentsMapping
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @Override
-    public void intentsChanged(IntentsChangedEvent event) {
+    public void intentsChanged(ConcernsChangedEvent event) {
 //            System.out.println("INTENTS CHANGED       ScceIntentFilterPanel   event.isIntentsSetChanged()="+event.isIntentsSetChanged());
 //        if (event.isIntentsSetChanged()) {
         refreshdModel();
@@ -223,9 +223,9 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Intents
             return;
         }
         if (CurrentProjection.MODE_AND.equals(jComboBoxMode.getSelectedItem())) {
-            this.core.getConfiguration().setMode(CurrentProjection.MODE_AND);
+            this.core.getConfiguration().setParams(CurrentProjection.MODE_AND);
         } else if (CurrentProjection.MODE_OR.equals(jComboBoxMode.getSelectedItem())) {
-            this.core.getConfiguration().setMode(CurrentProjection.MODE_OR);
+            this.core.getConfiguration().setParams(CurrentProjection.MODE_OR);
         }
 
     }

@@ -1,5 +1,6 @@
 package sk.tuke.kpi.ssce.core.model.view;
 
+import sk.tuke.kpi.ssce.core.model.view.importshandling.Imports;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -7,16 +8,25 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
 import org.netbeans.editor.BaseDocument;
 import org.openide.cookies.EditorCookie;
+import sk.tuke.kpi.ssce.annotations.concerns.Model;
+import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
+import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
+import sk.tuke.kpi.ssce.annotations.concerns.View;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
 
 /**
- * Trieda modeluje preopjenie jedeneho java suboru s pomocnym suborom .sj.
+ * Trieda modeluje prepojenie jedneho java suboru s pomocnym suborom .sj.
  * @author Matej Nosal
  */
 //SsceIntent:Model pre synchronizaciu kodu;
+@Model(model = RepresentationOf.VIEW)
 public class JavaFile {
 
-    private Position startFile; // in sieve document
-    private Position endFile;
+    @Synchronization
+    private Position beginInSJ; // in sieve document
+    @Synchronization
+    private Position endInSJ;
     //SsceIntent:Konstanta;
     private final EditorCookie editorCookie;
     //SsceIntent:Konstanta;
@@ -28,11 +38,11 @@ public class JavaFile {
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
     private BindingPositions importsBinding; //binding between allImports in file and necesaryImports in sieve file
     private Imports allImports;
-    private Imports necesaryImports;
-    private List<Code> codes;
+    private Imports necessaryImports;
+    private List<CodeSnippet> codeSnippets;
 
     /**
-     * Vytvori model prepojenia jedeneho java suboru s pomocnym suborom .sj.
+     * Vytvori model prepojenia jedneho java suboru s pomocnym suborom .sj.
      * @param filePath cesta modelovaneho java suboru.
      * @param fileName meno modelovaneho java suboru.
      * @param editorCookie editorCookie modelovaneho java suboru.
@@ -46,8 +56,8 @@ public class JavaFile {
 
     private void initialize() {
         this.allImports = new Imports();
-        this.necesaryImports = new Imports();
-        this.codes = new ArrayList<Code>();
+        this.necessaryImports = new Imports();
+        this.codeSnippets = new ArrayList<CodeSnippet>();
     }
 
     /**
@@ -55,10 +65,10 @@ public class JavaFile {
      * @param offset offset v pomocnom subore .sj
      * @return model prepojenia fragmentu kodu, ak na offsete nie je ziaden fragment tak null.
      */
-    public Code getBySieveOffset(int offset) {
-        for (Code code : codes) {
-            if (code.getCodeBinding().isConsistent() && code.getCodeBinding().getStartPositionSieveDocument() <= offset && offset <= code.getCodeBinding().getEndPositionSieveDocument() + 1) {
-                return code;
+    public CodeSnippet getCodeSnippetBySJOffset(int offset) {
+        for (CodeSnippet codeSnippet : codeSnippets) {
+            if (codeSnippet.getCodeBinding().isInitialized() && codeSnippet.getCodeBinding().getStartPositionSieveDocument() <= offset && offset <= codeSnippet.getCodeBinding().getEndPositionSieveDocument() + 1) {
+                return codeSnippet;
             }
         }
         return null;
@@ -68,33 +78,36 @@ public class JavaFile {
      * Vrati zaciatocnu poziciu (offset) tohto java suboru v pomocnom subore .sj.
      * @return zaciatocnu poziciu (offset) tohto java suboru v pomocnom subore .sj.
      */
-    public int getEndFile() {
-        if (endFile == null) {
+    @Synchronization
+    public int getEndInSJ() {
+        if (endInSJ == null) {
             return -1;
         }
-        return endFile.getOffset() + 1;
+        return endInSJ.getOffset() + 1;
     }
 
     /**
      * Nastavi koncovu poziciu tohto java suboru v pomocnom subore .sj.
      * @param doc dokument pre pomocny subor .sj.
-     * @param endFile koncova pozicia tohto java suboru v pomocnom subore .sj.
+     * @param enInSJ koncova pozicia tohto java suboru v pomocnom subore .sj.
      * @throws BadLocationException
      */
     //SsceIntent:Praca s pomocnym suborom;
-    public void setEndFile(BaseDocument doc, int endFile) throws BadLocationException {
-        this.endFile = doc.createPosition(endFile - 1);
+    @Synchronization
+    public void setEndInSJ(BaseDocument doc, int enInSJ) throws BadLocationException {
+        this.endInSJ = doc.createPosition(enInSJ - 1);
     }
 
     /**
      * Vrati koncovu poziciu (offset) tohto java suboru v pomocnom subore .sj.
      * @return koncovu poziciu (offset) tohto java suboru v pomocnom subore .sj.
      */
-    public int getStartFile() {
-        if (startFile == null) {
+    @Synchronization
+    public int getBeginInSJ() {
+        if (beginInSJ == null) {
             return -1;
         }
-        return startFile.getOffset() - 1;
+        return beginInSJ.getOffset() - 1;
     }
 
     /**
@@ -103,9 +116,10 @@ public class JavaFile {
      * @param startFile zaciatocnu pozicia tohto java suboru v pomocnom subore .sj.
      * @throws BadLocationException
      */
+    @Synchronization
     //SsceIntent:Praca s pomocnym suborom;
-    public void setStartFile(BaseDocument doc, int startFile) throws BadLocationException {
-        this.startFile = doc.createPosition(startFile + 1);
+    public void setBeginInSJ(BaseDocument doc, int beginInSJ) throws BadLocationException {
+        this.beginInSJ = doc.createPosition(beginInSJ + 1);
     }
 
     /**
@@ -128,16 +142,16 @@ public class JavaFile {
      * Vrati zoznam vsetkych modelovanych fragmentov kodu.
      * @return zoznam vsetkych modelovanych fragmentov kodu.
      */
-    public List<Code> getCodes() {
-        return codes;
+    public List<CodeSnippet> getCodeSnippets() {
+        return codeSnippets;
     }
 
     /**
      * Nastavi zoznam vsetkych modelovanych fragmentov kodu.
      * @param codes zoznam vsetkych modelovanych fragmentov kodu.
      */
-    public void setCodes(List<Code> codes) {
-        this.codes = codes;
+    public void setCodeSnippets(List<CodeSnippet> codes) {
+        this.codeSnippets = codes;
     }
 
     /**
@@ -187,16 +201,15 @@ public class JavaFile {
      * @return importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
      */
     public Imports getNecessaryImports() {
-//        return allImports;
-        return necesaryImports;
+        return necessaryImports;
     }
 
     /**
      * Nastavi importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
-     * @param necesaryImports importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
+     * @param necessaryImports importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
      */
-    public void setNecesaryImports(Imports necesaryImports) {
-        this.necesaryImports = necesaryImports;
+    public void setNecessaryImports(Imports necessaryImports) {
+        this.necessaryImports = necessaryImports;
     }
 
     /**
@@ -220,7 +233,8 @@ public class JavaFile {
      * @return text, ktory uvadza jeden java subor v pomocnom subore .sj.
      */
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;
-    public String getStartText() {
+    @SievedDocument
+    public String getStartTextForSJDoc() {
         if (this.getPackageName() == null) {
             return "#file ( " + this.fileName + " ){\n";
         } else {
@@ -233,7 +247,8 @@ public class JavaFile {
      * @return text, ktory uzatvara jeden java subor v pomocnom subore .sj.
      */
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;
-    public String getEndText() {
+    @SievedDocument
+    public String getEndTextForSJDoc() {
         return "}\n";
     }
 
@@ -243,9 +258,9 @@ public class JavaFile {
      */
     public void copy(JavaFile file) {
         this.allImports = file.allImports;
-        this.necesaryImports = file.necesaryImports;
+        this.necessaryImports = file.necessaryImports;
         this.importsBinding = file.importsBinding;
-        this.codes = file.codes;
+        this.codeSnippets = file.codeSnippets;
         this.packageName = file.packageName;
     }
 
@@ -254,8 +269,8 @@ public class JavaFile {
      * @return true, ak prepojenia su konzistentne, v opacnom pripade false.
      */
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
-    public boolean isConsistent() {
-        if (startFile == null || endFile == null || startFile.getOffset() > endFile.getOffset() || !importsBinding.isConsistent() || codes == null) {
+    public boolean isInitialized() {
+        if (beginInSJ == null || endInSJ == null || beginInSJ.getOffset() > endInSJ.getOffset() || !importsBinding.isInitialized() || codeSnippets == null) {
             System.out.println("chyba v1: " + getFilePath());
             System.out.println("chyba getStartPositionJavaDocument: " + importsBinding.getStartPositionJavaDocument());
             System.out.println("chyba getEndPositionJavaDocument: " + importsBinding.getEndPositionJavaDocument());
@@ -264,19 +279,21 @@ public class JavaFile {
 
             return false;
         }
-        for (Code code : codes) {
-            if (!code.getCodeBinding().isConsistent()) {
+        for (CodeSnippet code : codeSnippets) {
+            if (!code.getCodeBinding().isInitialized()) {
                 System.out.println("chyba v2: " + getFilePath());
                 return false;
             }
         }
         return true;
     }
+    
     /**
      * Comparator pre usporiadanie java suborov podla balikov.
      */
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;
-    public static final Comparator<JavaFile> SORT_BY_PACKAGES = new Comparator<JavaFile>() {
+    @View(aspect = ViewAspect.PRESENTATION)
+    public static final Comparator<JavaFile> SORT_FILES_BY_PACKAGES = new Comparator<JavaFile>() {
 
         @Override
         public int compare(JavaFile o1, JavaFile o2) {
@@ -298,7 +315,8 @@ public class JavaFile {
      * Comparator pre usporiadanie java suborov podla nazvom suborov.
      */
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;
-    public static final Comparator<JavaFile> SORT_BY_FILES = new Comparator<JavaFile>() {
+    @View(aspect = ViewAspect.PRESENTATION)
+    public static final Comparator<JavaFile> SORT_FILES_BY_NAMES = new Comparator<JavaFile>() {
 
         @Override
         public int compare(JavaFile o1, JavaFile o2) {
@@ -321,10 +339,10 @@ public class JavaFile {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("file(").append(filePath).append("){\n");
-        builder.append("startFile=").append(startFile.getOffset()).append("  endFile=").append(endFile.getOffset()).append("\n");
+        builder.append("startFile=").append(beginInSJ.getOffset()).append("  endFile=").append(endInSJ.getOffset()).append("\n");
 
         builder.append("imports(").append(importsBinding.toString()).append(")\n");
-        for (Code code : codes) {
+        for (CodeSnippet code : codeSnippets) {
             builder.append("code( binding= ").append(code.getCodeBinding().toString()).append(")\n");
         }
 

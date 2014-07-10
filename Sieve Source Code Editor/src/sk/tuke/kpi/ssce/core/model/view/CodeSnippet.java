@@ -1,23 +1,29 @@
 package sk.tuke.kpi.ssce.core.model.view;
 
+import sk.tuke.kpi.ssce.annotations.concerns.Model;
+import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
+import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+
 /**
  * Trieda modeluje fragment kodu.
  * @author Matej Nosal
  */
 //SsceIntent:Model pre synchronizaciu kodu;
-public class Code implements Comparable<Code> {
+@Model(model = RepresentationOf.VIEW)
+public class CodeSnippet implements Comparable<CodeSnippet> {
 
 //    private static final String START_TEXT = "#code :\n";
     //SsceIntent:Konstanta;
-    private static final String START_TEXT_1 = "#code";
+    @SievedDocument()
+    private static final String START_TEXT_1_IN_SJDOC = "#code";
     //SsceIntent:Konstanta;
-    private static final String START_TEXT_2 = ":\n";
-    /**
-     * Konstanta pre zalomenie (ukoncenie) fragmentu kodu zobrazeneho v pomocnom subore .sj.
-     */
-    //SsceIntent:Konstanta;
-    public static final String END_TEXT = "\n";
+    @SievedDocument
+    private static final String START_TEXT_2_IN_SJDOC = ":\n";
+    @SievedDocument
+    private static final String END_TEXT_IN_SJDOC = "\n";
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
+    @Synchronization
     private BindingPositions codeBinding;
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
     private final String tab;
@@ -33,12 +39,18 @@ public class Code implements Comparable<Code> {
      * @return text, ktory bude v pomocnom subore .sj uvadzat tento fragment kodu.
      */
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
-    public String getStartText() {
+    @SievedDocument
+    public String getStartTextForSJDoc() {
         if (codeContext == null || codeContext.trim().length() == 0) {
-            return START_TEXT_1 + " " + START_TEXT_2 + this.tab;
+            return START_TEXT_1_IN_SJDOC + " " + START_TEXT_2_IN_SJDOC + this.tab;
         } else {
-            return START_TEXT_1 + " ( " + codeContext + " )" + START_TEXT_2 + this.tab;
+            return START_TEXT_1_IN_SJDOC + " ( " + codeContext + " )" + START_TEXT_2_IN_SJDOC + this.tab;
         }
+    }
+    
+    @SievedDocument
+    public String getEndTextForSJDoc() {
+        return END_TEXT_IN_SJDOC;
     }
 
     /**
@@ -49,7 +61,7 @@ public class Code implements Comparable<Code> {
      * @param elementType typ fragmentu kodu (elementu).
      */
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
-    public Code(int initialTabSize, String codeContext, String codeElementName, String elementType) {
+    public CodeSnippet(int initialTabSize, String codeContext, String codeElementName, String elementType) {
         this.codeContext = codeContext;
         this.codeElementName = codeElementName;
         this.elementType = elementType;
@@ -75,6 +87,7 @@ public class Code implements Comparable<Code> {
      * @param codeBinding prepojenie usekov reprezentujucich tento fragment kodu.
      */
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
+    @Synchronization
     public void setCodeBinding(BindingPositions codeBinding) {
         this.codeBinding = codeBinding;
     }
@@ -83,12 +96,13 @@ public class Code implements Comparable<Code> {
      * Vrati kontext fragmentu kodu v textovej podobe.
      * @return kontext fragmentu kodu v textovej podobe.
      */
+    @Synchronization
     public String getCodeContext() {
         return codeContext;
     }
 
     @Override
-    public int compareTo(Code o) {
+    public int compareTo(CodeSnippet o) {
         if (this.codeBinding.getStartPositionJavaDocument() > o.codeBinding.getStartPositionJavaDocument()) {
             return 1;
         } else if (this.codeBinding.getStartPositionJavaDocument() == o.codeBinding.getStartPositionJavaDocument()) {

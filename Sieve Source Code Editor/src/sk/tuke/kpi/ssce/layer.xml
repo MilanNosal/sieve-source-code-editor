@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
 <filesystem>
-        
+        <!-- XXX: pozriet toto dole sk-tuke-kpi-ssce-gui-IntentsTopComponent.instance_hidden -->
     <folder name="Actions">
         <folder name="Window">
             <file name="sk-tuke-kpi-ssce-gui-IntentsTopComponent.instance">
@@ -21,13 +21,13 @@
                     </file>
                 </folder>
                 <folder name="BracesMatchers">
-                    <file name="sk-tuke-kpi-ssce-lexer-SieveJavaBracesMatcherFactory.instance">
+                    <file name="sk-tuke-kpi-ssce-nbinterface-lexer-SieveJavaBracesMatcherFactory.instance">
                         <attr name="position" intvalue="0"/>
                     </file>
                 </folder>
                 
                 <file name="language.instance">
-                    <attr name="instanceCreate" methodvalue="sk.tuke.kpi.ssce.lexer.JavaTokenId.language"/>
+                    <attr name="instanceCreate" methodvalue="sk.tuke.kpi.ssce.nbinterface.lexer.JavaTokenId.language"/>
                     <attr name="instanceOf" stringvalue="org.netbeans.api.lexer.Language"/>
                 </file>
                 
@@ -35,7 +35,7 @@
                 <folder name="FontsColors">
                     <folder name="NetBeans">
                         <folder name="Defaults">
-                            <file name="FontAndColors.xml" url="lexer/FontAndColors.xml">
+                            <file name="FontAndColors.xml" url="nbinterface/lexer/FontAndColors.xml">
                                 <attr name="SystemFileSystem.localizingBundle" stringvalue="sk.tuke.kpi.ssce.Bundle"/>
                             </file>
                         </folder>
@@ -63,7 +63,7 @@
     <folder name="OptionsDialog">
         <folder name="PreviewExamples">
             <folder name="text">
-                <file name="x-sieve-java" url="lexer/Template.sj"/>
+                <file name="x-sieve-java" url="nbinterface/lexer/Template.sj"/>
             </folder>
         </folder>
     </folder>
@@ -131,8 +131,8 @@
                 </folder>
                 <folder name="Factories">
                     <file name="SieveJavaDataLoader.instance">
-                        <attr name="dataObjectClass" stringvalue="sk.tuke.kpi.ssce.file.SieveJavaDataObject"/>
-                        <attr name="iconBase" stringvalue="sk/tuke/kpi/ssce/file/ssce.png"/>
+                        <attr name="dataObjectClass" stringvalue="sk.tuke.kpi.ssce.nbinterface.file.SieveJavaDataObject"/>
+                        <attr name="iconBase" stringvalue="sk/tuke/kpi/ssce/nbinterface/file/ssce.png"/>
                         <attr name="instanceCreate" methodvalue="org.openide.loaders.DataLoaderPool.factory"/>
                         <attr name="mimeType" stringvalue="text/x-sieve-java"/>
                     </file>

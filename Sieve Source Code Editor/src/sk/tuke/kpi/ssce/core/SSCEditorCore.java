@@ -15,13 +15,13 @@ import org.openide.cookies.EditorCookie;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
 import sk.tuke.kpi.ssce.core.JavaFilesMonitor.JavaFileEvent;
-import sk.tuke.kpi.ssce.core.configuration.CurrentProjection;
-import sk.tuke.kpi.ssce.core.configuration.CurrentProjection.IntentsConfigurationChangedEvent;
-import sk.tuke.kpi.ssce.core.model.projections.IntentsMapping;
+import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
+import sk.tuke.kpi.ssce.core.projections.CurrentProjection.CurrentProjectionChangedEvent;
+import sk.tuke.kpi.ssce.core.model.possibleprojections.ProjectConcerns;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
-import sk.tuke.kpi.ssce.core.model.view.Model;
+import sk.tuke.kpi.ssce.core.model.view.ViewModel;
 import sk.tuke.kpi.ssce.core.binding.Binding;
-import sk.tuke.kpi.ssce.core.model.projections.JavaFileIntents;
+import sk.tuke.kpi.ssce.core.model.possibleprojections.JavaFileConcerns;
 
 /**
  * Jadro celeho modulu, teda SSCE editora. Je vložene do documentu pre pomocny
@@ -79,12 +79,12 @@ public class SSCEditorCore {
      * Model pre synchronizaciu java suborov a pomocneho suboru .sj.
      */
     //SsceIntent:Model pre synchronizaciu kodu;
-    private final Model model;
+    private final ViewModel model;
     /**
      * Mapovanie zamerov na fragmenty kodu.
      */
     //SsceIntent:Model pre mapovanie zamerov;Notifikacia na zmeny v priradenych zamerov;
-    private final IntentsMapping intentsMapping;
+    private final ProjectConcerns intentsMapping;
 
     /**
      * Vytvori jadro editora modulu SSCE. Realizuje zaujmovo-oreientovanu
@@ -98,14 +98,14 @@ public class SSCEditorCore {
      */
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v java zdrojovom kode;Notifikacia na zmeny v pomocnom subore .sj;Monitorovanie java suborov;Model pre mapovanie zamerov;Prepojenie java suborov s pomocnym suborom .sj;Notifikacia na zmeny v priradenych zamerov;Model pre synchronizaciu kodu;
     public SSCEditorCore(final DataObject dataObject, Project projectContext) throws IOException {
-        model = new Model();
-        intentsMapping = new IntentsMapping();
+        model = new ViewModel();
+        intentsMapping = new ProjectConcerns();
         configuration = new CurrentProjection();
         this.dataObject = dataObject;
 
         configuration.addConfigurationChangeListener(new CurrentProjection.CurrentProjectionChangeListener() {
             @Override
-            public void configurationChanged(IntentsConfigurationChangedEvent event) {
+            public void projectionChanged(CurrentProjectionChangedEvent event) {
                 reloadModel();
                 reloadSieveDocument();
             }
@@ -260,7 +260,7 @@ public class SSCEditorCore {
      * @return model pre prepojenie java suborov s pomocnym suborom.
      */
     //SsceIntent:Model pre synchronizaciu kodu;
-    public Model getModel() {
+    public ViewModel getModel() {
         return model;
     }
 
@@ -279,7 +279,7 @@ public class SSCEditorCore {
      * @return mapovanie zazmerov na fragmenty kodu.
      */
     //SsceIntent:Model pre mapovanie zamerov;
-    public IntentsMapping getIntentsMapping() {
+    public ProjectConcerns getIntentsMapping() {
         return intentsMapping;
     }
 
@@ -323,7 +323,7 @@ public class SSCEditorCore {
                     if (!active) {
                         return;
                     }
-                    JavaFile javaFile = model.getByOffset(e.getOffset());
+                    JavaFile javaFile = model.getFileBySJOffset(e.getOffset());
                     if (javaFile == null) {
                         return;
                     }
@@ -386,7 +386,7 @@ public class SSCEditorCore {
                 }
             }
             sieveDocumentListener.deactivate();
-            bindingUtilities.updateSieveDocument(Binding.UpdateModelAction.DELETE, model, model.get(event.getFile().getPath()));
+            bindingUtilities.updateSieveDocument(Binding.UpdateModelAction.DELETE, model, model.getFileAt(event.getFile().getPath()));
             sieveDocumentListener.activate();
         }
 
@@ -432,7 +432,7 @@ public class SSCEditorCore {
 
         @Override
         public void javaFileDocumentChanged(JavaFileEvent event) {
-            JavaFileIntents javaFileIntents = bindingUtilities.getJavaFileUtilities().createJavaFileIntents(event.getFile());
+            JavaFileConcerns javaFileIntents = bindingUtilities.getJavaFileUtilities().createJavaFileIntents(event.getFile());
             intentsMapping.updateOrInsertFile(javaFileIntents);
 
 //            if (intentsMapping.updateFile(javaFileIntents) == null) {
