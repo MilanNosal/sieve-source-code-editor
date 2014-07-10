@@ -26,10 +26,10 @@ import sk.tuke.kpi.ssce.core.model.possibleprojections.JavaFileConcernsVisitor;
  * @author Milan Nosal, Matej Nosal
  */
 @CodeAnalysis(output = RepresentationOf.PROJECTION)
-public class ProjectionsModelCreation {
+public class ProjectionsModelCreator {
     private final ConcernExtractor extractor;
 
-    public ProjectionsModelCreation(ConcernExtractor extractor) {
+    public ProjectionsModelCreator(ConcernExtractor extractor) {
         this.extractor = extractor;
     }
     
