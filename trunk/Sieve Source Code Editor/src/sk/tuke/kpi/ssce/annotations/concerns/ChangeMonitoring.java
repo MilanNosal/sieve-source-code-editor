@@ -1,6 +1,7 @@
 package sk.tuke.kpi.ssce.annotations.concerns;
 
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Source;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.Type;
 
 /**
  * Annotated code monitors changes in the source code of either the Java, or the
@@ -9,4 +10,6 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.Source;
  */
 public @interface ChangeMonitoring {
     public Source monitoredSource();
+    
+    public Type typeOfEvents() default Type.GENERAL_CHANGE;
 }

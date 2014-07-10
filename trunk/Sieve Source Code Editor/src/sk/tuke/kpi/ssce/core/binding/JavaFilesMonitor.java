@@ -17,7 +17,6 @@ import org.netbeans.api.java.source.JavaSource;
 import org.netbeans.editor.BaseDocument;
 import org.netbeans.modules.parsing.api.ResultIterator;
 import org.netbeans.modules.parsing.api.Snapshot;
-import org.netbeans.modules.parsing.api.Source;
 import org.netbeans.modules.parsing.api.UserTask;
 import org.netbeans.modules.parsing.impl.Utilities;
 import org.netbeans.modules.parsing.spi.ParseException;
@@ -29,6 +28,9 @@ import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import sk.tuke.kpi.ssce.annotations.concerns.ChangeMonitoring;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.Source;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.Type;
 
 /**
  * Trieda realizuje monitorovanie akychkolvek zmien vo vsetkych java suboroch vo
@@ -37,6 +39,7 @@ import org.openide.util.Lookup;
  * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Monitorovanie java suborov;
+@ChangeMonitoring(monitoredSource = Source.JAVA)
 public class JavaFilesMonitor {
 
 //    private final String[] rootSourcePaths;
@@ -48,11 +51,13 @@ public class JavaFilesMonitor {
      * Dokumenty, ktore su monitorovane.
      */
     //SsceIntent:Monitorovanie zmien v java dokumentoch;
-    private final HashMap<String, Document> monitoringDocs = new HashMap<String, Document>();
+    @ChangeMonitoring(monitoredSource = Source.JAVA)
+    private final HashMap<String, Document> monitoredDocuments = new HashMap<String, Document>();
     /**
      * Listener pre zmeny v suboroch.
      */
     //SsceIntent:Monitorovanie zmien v java suboroch;
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.FILES_CHANGE)
     private final FileChangeListener changeListener = new FileChangeListener() {
 
         @Override
@@ -83,7 +88,7 @@ public class JavaFilesMonitor {
                                 putProperties(doc);
                                 String path = FileUtil.toFile(fe.getFile()).getPath();
                                 doc.putProperty(Constants.FILE_NAME_PROP, path);
-                                monitoringDocs.put(path, doc);
+                                monitoredDocuments.put(path, doc);
 
                             }
                         } catch (DataObjectNotFoundException ex) {
@@ -104,55 +109,20 @@ public class JavaFilesMonitor {
         @Override
         public void fileChanged(FileEvent fe) {
             if ("java".equalsIgnoreCase(fe.getFile().getExt())) {
-//                System.out.println("   >>>>>   fileChanged()" + fe.getFile().getName());
-
                 JavaFilesMonitor.JavaFileEvent event = new JavaFilesMonitor.JavaFileEvent(FileUtil.toFile(fe.getFile()), JavaFilesMonitor.JavaFileEvent.Type.DOCUMENT_CHANGE_EVENT, fe.getTime());
-//                notifyChangeDocumentJavaFile(event);
                 notifierTask.notifyEvent(event);
-
-//                DataObject dobj;
-//                try {
-//                    dobj = DataObject.find(fe.getFile());
-//                    if (dobj != null) {
-//                        StyledDocument doc = dobj.getCookie(EditorCookie.class).openDocument();
-//                        Document doc2 = monitoringDocs.put(FileUtil.toFile(fe.getFile()).getPath(), doc);
-//                        if (!doc.equals(doc2)) {
-//                            System.out.println("             >>>>>   fileChanged()   document was switch  " + fe.getFile().getName());
-//                            doc2.removeDocumentListener(changeDocumentListener);
-//                            doc.addDocumentListener(changeDocumentListener);
-//                        }
-//                    }
-//                } catch (DataObjectNotFoundException ex) {
-//                    Exceptions.printStackTrace(ex);
-//                } catch (IOException ex) {
-//                    Exceptions.printStackTrace(ex);
-//                }
             }
         }
 
         //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
         @Override
         public void fileDeleted(FileEvent fe) {
-//            if ("java".equalsIgnoreCase(fe.getFile().getExt())) {
-//                DataObject dobj = null;
-//                try {
-//                    dobj = DataObject.find(fe.getFile());
-//                    if (dobj != null) {
-//                        dobj.getCookie(EditorCookie.class).openDocument().removeDocumentListener(changeDocumentListener);
-//                    }
-//                } catch (DataObjectNotFoundException ex) {
-//                    ex.printStackTrace();
-//                } catch (IOException ex) {
-//                    Exceptions.printStackTrace(ex);
-//                }
-//            }
             if ("java".equalsIgnoreCase(fe.getFile().getExt())) {
-                Document doc = monitoringDocs.remove(FileUtil.toFile(fe.getFile()).getPath());
+                Document doc = monitoredDocuments.remove(FileUtil.toFile(fe.getFile()).getPath());
                 if (doc != null) {
                     doc.removeDocumentListener(changeDocumentListener);
                 }
                 JavaFilesMonitor.JavaFileEvent event = new JavaFilesMonitor.JavaFileEvent(FileUtil.toFile(fe.getFile()), JavaFilesMonitor.JavaFileEvent.Type.DELETE_EVENT, fe.getTime());
-//                notifyDeleteJavaFile(event);
                 notifierTask.notifyEvent(event);
             }
         }
@@ -160,16 +130,13 @@ public class JavaFilesMonitor {
         //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
         @Override
         public void fileRenamed(FileRenameEvent fe) {
-//            System.out.println("   >>>>>   fileRenamed()" + fe.getName());
-
             String oldPath = new File(FileUtil.toFile(fe.getFile()).getParentFile(), fe.getName() + "." + fe.getExt()).getPath();
             if ("java".equalsIgnoreCase(fe.getExt())) {
-                Document doc = monitoringDocs.remove(oldPath);
+                Document doc = monitoredDocuments.remove(oldPath);
                 if (doc != null) {
                     doc.removeDocumentListener(changeDocumentListener);
                 }
                 JavaFilesMonitor.JavaFileEvent eventDelete = new JavaFilesMonitor.JavaFileEvent(new File(oldPath), JavaFilesMonitor.JavaFileEvent.Type.DELETE_EVENT, fe.getTime());
-//                notifyDeleteJavaFile(eventDelete);
                 notifierTask.notifyEvent(eventDelete);
             }
 
@@ -183,7 +150,7 @@ public class JavaFilesMonitor {
                         putProperties(doc);
                         String path = FileUtil.toFile(fe.getFile()).getPath();
                         doc.putProperty(Constants.FILE_NAME_PROP, path);
-                        monitoringDocs.put(path, doc);
+                        monitoredDocuments.put(path, doc);
                     }
                 } catch (DataObjectNotFoundException ex) {
                     Exceptions.printStackTrace(ex);
@@ -191,7 +158,6 @@ public class JavaFilesMonitor {
                     Exceptions.printStackTrace(ex);
                 }
                 JavaFilesMonitor.JavaFileEvent eventCreate = new JavaFilesMonitor.JavaFileEvent(FileUtil.toFile(fe.getFile()), JavaFilesMonitor.JavaFileEvent.Type.CREATE_EVENT, fe.getTime());
-//                notifyCreationJavaFile(eventCreate);
                 notifierTask.notifyEvent(eventCreate);
             }
         }
@@ -200,10 +166,12 @@ public class JavaFilesMonitor {
         public void fileAttributeChanged(FileAttributeEvent fe) {
         }
     };
+    
     /**
      * Listener pre zmeny v dokumentoch.
      */
     //SsceIntent:Monitorovanie zmien v java dokumentoch;
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
     private final DocumentListener changeDocumentListener = new DocumentListener() {
 
         @Override
@@ -228,20 +196,18 @@ public class JavaFilesMonitor {
         private void processEvent(DocumentEvent e) {
             String path = resolveJavaFilePath(e.getDocument());
             if (path != null) {
-//                System.out.println("path = " + path);
                 JavaFilesMonitor.JavaFileEvent event = new JavaFilesMonitor.JavaFileEvent(new File(path), JavaFilesMonitor.JavaFileEvent.Type.DOCUMENT_CHANGE_EVENT, new Date().getTime());
-//                notifyChangeDocumentJavaFile(event);
                 notifierTask.notifyEvent(event);
-            } else {
-//                System.out.println("path = null");
             }
         }
     };
+    
+    
     /**
      * Listenery, ktore bude JavaFilesMonitor informovat o zmenach.
      */
-
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
     private final Set<JavaFilesMonitor.JavaFileChangeListener> javaFileListeners = new HashSet<JavaFilesMonitor.JavaFileChangeListener>();
     /**
      * Priecinok, ktory je monitorovany.
@@ -266,6 +232,7 @@ public class JavaFilesMonitor {
      * @param properties hodnoty, ktore budu pridane do dokumentov.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;Monitorovanie java suborov;Monitorovanie zmien v java suboroch;Monitorovanie zmien v java dokumentoch;
+    @ChangeMonitoring(monitoredSource = Source.JAVA)
     public JavaFilesMonitor(String path, Map<Object, Object> properties) {
         propertiesForDocs = properties;
         Thread notifierThread = new Thread(notifierTask);
@@ -274,7 +241,6 @@ public class JavaFilesMonitor {
         stop = false;
         folder = new File(path);
         FileUtil.addRecursiveListener(changeListener, folder, new Callable<Boolean>() {
-
             @Override
             public Boolean call() throws Exception {
                 return stop;
@@ -293,19 +259,15 @@ public class JavaFilesMonitor {
                         doc.addDocumentListener(changeDocumentListener);
                         putProperties(doc);
                         doc.putProperty(Constants.FILE_NAME_PROP, pathFile);
-                        monitoringDocs.put(pathFile, doc);
-                        doc.putProperty(Constants.COMPILATION_INFO_PROP, getCompilationInfo((BaseDocument) doc));
+                        monitoredDocuments.put(pathFile, doc);
                     }
                 } catch (DataObjectNotFoundException ex) {
                     Exceptions.printStackTrace(ex);
                 } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
                 }
-
             }
-
         }
-
     }
 
     /**
@@ -355,35 +317,35 @@ public class JavaFilesMonitor {
      * @return aktualne monitorovane java subory.
      */
     //SsceIntent:Monitorovanie zmien v java dokumentoch;
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
     public Set<String> getMonitoringJavaFilePaths() {
-        return monitoringDocs.keySet();
+        return monitoredDocuments.keySet();
     }
 
     /**
      * Obnovi sledovanie monitorovanych dokumentov.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;Monitorovanie zmien v java dokumentoch;
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
     public void refreshDocumentListening() {
-        for (String filepath : monitoringDocs.keySet()) {
+        for (String filepath : monitoredDocuments.keySet()) {
             DataObject dobj;
 
             try {
                 dobj = DataObject.find(FileUtil.toFileObject(new File(filepath)));
                 if (dobj != null) {
-                    Document oldDoc = monitoringDocs.get(filepath);
+                    Document oldDoc = monitoredDocuments.get(filepath);
                     Document doc = dobj.getLookup().lookup(EditorCookie.class).openDocument();
                     if (oldDoc.equals(doc)) {
                         continue;
                     }
-//                    System.out.println("+++ discard   " + filepath);
                     oldDoc.removeDocumentListener(changeDocumentListener);
                     doc.addDocumentListener(changeDocumentListener);
                     putProperties(doc);
                     doc.putProperty(Constants.FILE_NAME_PROP, filepath);
-                    monitoringDocs.put(filepath, doc);
+                    monitoredDocuments.put(filepath, doc);
                     JavaFilesMonitor.JavaFileEvent event = new JavaFilesMonitor.JavaFileEvent(new File(filepath), JavaFilesMonitor.JavaFileEvent.Type.DOCUMENT_CHANGE_EVENT, new Date().getTime());
 
-//                    notifyChangeDocumentJavaFile(event);
                     this.notifierTask.notifyEvent(event);
                 }
             } catch (DataObjectNotFoundException ex) {
@@ -405,14 +367,16 @@ public class JavaFilesMonitor {
 
     /**
      * Ukonci monitorovanie.
+     * 
+     * XXX: mozno sa zavesit na zavretie suboru a toto volat
      */
     //SsceIntent:Monitorovanie zmien v java dokumentoch;
     public void stop() {
         stop = true;
-        for (Document doc : monitoringDocs.values()) {
+        for (Document doc : monitoredDocuments.values()) {
             doc.removeDocumentListener(changeDocumentListener);
         }
-        monitoringDocs.clear();
+        monitoredDocuments.clear();
     }
 
     /**
@@ -420,7 +384,8 @@ public class JavaFilesMonitor {
      *
      * @param listener listener sledujuci zmeny v java suborch.
      */
-    //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
+    //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;    
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
     public void addJavaFileListener(JavaFilesMonitor.JavaFileChangeListener listener) {
         this.javaFileListeners.add(listener);
     }
@@ -431,6 +396,7 @@ public class JavaFilesMonitor {
      * @param listener listener sledujuci zmeny v java suborch.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
     public void removeJavaFileListener(JavaFilesMonitor.JavaFileChangeListener listener) {
         this.javaFileListeners.remove(listener);
     }
@@ -442,7 +408,7 @@ public class JavaFilesMonitor {
      * @return cestu java suboru.
      */
     public String resolveJavaFilePath(Document doc) {
-        for (Map.Entry<String, Document> entry : monitoringDocs.entrySet()) {
+        for (Map.Entry<String, Document> entry : monitoredDocuments.entrySet()) {
             if (entry.getValue().equals(doc)) {
                 return entry.getKey();
             }
@@ -463,61 +429,16 @@ public class JavaFilesMonitor {
     }
 
     /**
-     * Ziska kompilacne info pre zvoleny dokument.
-     *
-     * XXX: Toto moze byt uzitocne pri tom parsovani, pred zakomponovanim
-     * vlastneho parsovania skusit toto. Vid. notifyListeners metodu nizsie
-     *
-     * @param doc dokument, ku ktoremu sa potrebne ziskat kompilacne info.
-     * @return kompilacne info.
-     */
-    //SsceIntent:Syntakticka analyza java dokumentu;
-    private CompilationInfo getCompilationInfo(BaseDocument doc) {
-
-        final Lookup lookup = MimeLookup.getLookup("text/x-java");
-        final ParserFactory parserFactory = lookup.lookup(ParserFactory.class);
-        if (parserFactory == null) {
-            throw new IllegalArgumentException("No parser for mime type: text/x-java");
-        }
-        Snapshot snapshot = Source.create(doc).createSnapshot();
-
-        Parser p = parserFactory.createParser(Collections.singletonList(snapshot));
-        final UserTask task = new UserTask() {
-
-            @Override
-            public void run(ResultIterator ri) throws Exception {
-            }
-        };
-
-        Utilities.acquireParserLock();
-        try {
-            p.parse(snapshot, task, null);
-
-            CompilationInfo info = CompilationInfo.get(p.getResult(task));
-            ((CompilationController) info).toPhase(JavaSource.Phase.PARSED);
-            return info;
-
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (ParseException ex) {
-            Exceptions.printStackTrace(ex);
-        } finally {
-            Utilities.releaseParserLock();
-        }
-
-        return null;
-    }
-
-    /**
      * Task, ktory sluzi pre opozdnene generovanie udalosti. Posle iba jednu
      * namiesto mnohych.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;Monitorovanie java suborov;
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
     private class NotifierTask implements Runnable {
 
-        private ArrayBlockingQueue<JavaFileEvent> queue;
+        private final ArrayBlockingQueue<JavaFileEvent> queue;
         private boolean working = false;
-        private Map<String, JavaFileEvent> mapEvents;
+        private final Map<String, JavaFileEvent> mapEvents;
 
         /**
          * Metoda spracovava zmeny v java suboroch a posle iba jednu namiesto
@@ -569,22 +490,23 @@ public class JavaFilesMonitor {
          * @param event udalost
          */
         private void notifyListeners(JavaFileEvent event) {
-            if (event.getTypeEvent() == JavaFilesMonitor.JavaFileEvent.Type.CREATE_EVENT
-                    || event.getTypeEvent() == JavaFilesMonitor.JavaFileEvent.Type.DOCUMENT_CHANGE_EVENT) {
-                FileObject fobj = FileUtil.toFileObject(event.getFile());
-                DataObject dobj;
-                try {
-                    dobj = DataObject.find(fobj);
-                    if (dobj != null) {
-                        BaseDocument bD = (BaseDocument) dobj.getLookup().lookup(EditorCookie.class).openDocument();
-                        bD.putProperty(Constants.COMPILATION_INFO_PROP, getCompilationInfo(bD));
-                    }
-                } catch (DataObjectNotFoundException ex) {
-                    Exceptions.printStackTrace(ex);
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-            }
+            // XXX: zmazat ak naozaj toto netreba
+//            if (event.getTypeEvent() == JavaFilesMonitor.JavaFileEvent.Type.CREATE_EVENT
+//                    || event.getTypeEvent() == JavaFilesMonitor.JavaFileEvent.Type.DOCUMENT_CHANGE_EVENT) {
+//                FileObject fobj = FileUtil.toFileObject(event.getFile());
+//                DataObject dobj;
+//                try {
+//                    dobj = DataObject.find(fobj);
+//                    if (dobj != null) {
+//                        BaseDocument bD = (BaseDocument) dobj.getLookup().lookup(EditorCookie.class).openDocument();
+//                        bD.putProperty(Constants.COMPILATION_INFO_PROP, getCompilationInfo(bD));
+//                    }
+//                } catch (DataObjectNotFoundException ex) {
+//                    Exceptions.printStackTrace(ex);
+//                } catch (IOException ex) {
+//                    Exceptions.printStackTrace(ex);
+//                }
+//            }
 
             switch (event.getTypeEvent()) {
                 case CREATE_EVENT:
@@ -638,6 +560,7 @@ public class JavaFilesMonitor {
      * Trieda predstavuje udalost na akukolvek zmenu java kodu (java suboru).
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;Monitorovanie java suborov;
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
     public static class JavaFileEvent {
 
         /**
@@ -702,6 +625,7 @@ public class JavaFilesMonitor {
      * Listener pre zmeny v java kode (java suboroch).
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;Monitorovanie java suborov;
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
     public static interface JavaFileChangeListener extends EventListener {
 
         /**
