@@ -1,5 +1,6 @@
 package sk.tuke.kpi.ssce.core;
 
+import sk.tuke.kpi.ssce.core.binding.JavaFilesMonitor;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
@@ -14,7 +15,7 @@ import org.netbeans.editor.BaseDocument;
 import org.openide.cookies.EditorCookie;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
-import sk.tuke.kpi.ssce.core.JavaFilesMonitor.JavaFileEvent;
+import sk.tuke.kpi.ssce.core.binding.JavaFilesMonitor.JavaFileEvent;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection.CurrentProjectionChangedEvent;
 import sk.tuke.kpi.ssce.core.model.possibleprojections.ProjectConcerns;
@@ -422,7 +423,7 @@ public class SSCEditorCore {
 
         @Override
         public void javaFileCreated(JavaFileEvent event) {
-            intentsMapping.insertFile(bindingUtilities.getJavaFileUtilities().createJavaFileIntents(event.getFile()));
+            intentsMapping.insertFile(bindingUtilities.getJavaFileUtilities().createJavaFileConcerns(event.getFile()));
         }
 
         @Override
@@ -432,7 +433,7 @@ public class SSCEditorCore {
 
         @Override
         public void javaFileDocumentChanged(JavaFileEvent event) {
-            JavaFileConcerns javaFileIntents = bindingUtilities.getJavaFileUtilities().createJavaFileIntents(event.getFile());
+            JavaFileConcerns javaFileIntents = bindingUtilities.getJavaFileUtilities().createJavaFileConcerns(event.getFile());
             intentsMapping.updateOrInsertFile(javaFileIntents);
 
 //            if (intentsMapping.updateFile(javaFileIntents) == null) {

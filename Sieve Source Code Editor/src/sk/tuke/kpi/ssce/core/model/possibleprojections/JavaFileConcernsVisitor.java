@@ -48,11 +48,10 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
      * kodu pre jeden java subor (dokument).
      */
     public JavaFileConcernsVisitor(ConcernExtractor extractor,
-            CompilationInfo info, CompilationUnitTree cu,
-            SourcePositions sp, BaseDocument doc) {
+            CompilationInfo info, BaseDocument doc) {
         this.info = info;
-        this.cu = cu;
-        this.sp = sp;
+        this.cu = info.getCompilationUnit();
+        this.sp = info.getTrees().getSourcePositions();
         this.doc = doc;
         this.extractor = extractor;
     }
@@ -108,7 +107,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
         try {
             CodeSnippetConcerns code = new CodeSnippetConcerns(p, builder.toString(),
                     doc.createPosition(start), end - start,
-                    extractor.getConcernsFor(node));
+                    extractor.getConcernsFor(node, doc));
 
             p.getCodes().add(code);
         } catch (BadLocationException ex) {
@@ -153,7 +152,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
             CodeSnippetConcerns code = new CodeSnippetConcerns(p,
                     builder.toString(),
                     doc.createPosition(start), end - start,
-                    extractor.getConcernsFor(node));
+                    extractor.getConcernsFor(node, doc));
 
             p.getCodes().add(code);
         } catch (BadLocationException ex) {
@@ -192,7 +191,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
             CodeSnippetConcerns code = new CodeSnippetConcerns(p,
                     builder.toString(),
                     doc.createPosition(start), end - start,
-                    extractor.getConcernsFor(node));
+                    extractor.getConcernsFor(node, doc));
 
             p.getCodes().add(code);
         } catch (BadLocationException ex) {

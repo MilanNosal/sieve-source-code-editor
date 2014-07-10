@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
+import sk.tuke.kpi.ssce.annotations.concerns.ImportsManagement;
 import sk.tuke.kpi.ssce.annotations.concerns.Model;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
@@ -15,6 +16,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 //SsceIntent:Model pre synchronizaciu kodu;
 @Model(model = RepresentationOf.VIEW)
 @Synchronization
+@ImportsManagement
 public class Imports {
 
     //SsceIntent:Zobrazenie importov v pomocnom subore;

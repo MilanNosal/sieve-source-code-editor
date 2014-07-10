@@ -8,7 +8,7 @@ package sk.tuke.kpi.ssce.core;
 public interface Constants {
 
     /**
-     * Kluc pre ulozenie a ziskanie property, ktora reprezentuje cestu suboru.
+     * Kluc pre ulozenie a ziskanie property, ktora reprezentuje cestu k suboru.
      */
     //SsceIntent:Konstanta;
     public static final String FILE_NAME_PROP = "file_path_name_property";
@@ -18,17 +18,5 @@ public interface Constants {
      */
     //SsceIntent:Konstanta;
     public static final String SSCE_CORE_OBJECT_PROP = "ssce_core_object_property";
-    /**
-     * Kluc pre ulozenie a ziskanie property, ktora reprezentuje kompilcne
-     * informacie.
-     */
-    //SsceIntent:Konstanta;
-    @Deprecated
-    public static final String COMPILATION_INFO_PROP = "compilation_unit_property";
-    /**
-     * Regularny vyraz pre komentar zachovavajuci zamer.
-     */
-    //SsceIntent:Komentar uchovavajuci zamer;Konstanta;
-    @Deprecated
-    public static final String SSCE_COMMENT_REGEX = "^\\s*//SsceIntent:([\\w\\d \\t_,\\.\\?\\!]+;)+\\s*$";
+
 }
