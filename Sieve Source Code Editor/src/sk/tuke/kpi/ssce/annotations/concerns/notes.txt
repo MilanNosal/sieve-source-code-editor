@@ -2,3 +2,5 @@ Vacsinou sa lahsie robia bezparametricke anotacie pre opis domenovych vlasntosti
 Pomahaju lepsie si uvedomit co vlastne robim, viac sa musim zamyslat ze aku anotaciu tam dat, lepsie clovek potom chape co robi, nie len algoritmicky ako to robi.
 Meno anotacie s postfixom na simulaciu enum parametra pre viacery vyskyt rovnakej anotacie s rozlicnymi parametrami.
 Ma vyznam anotovat aj napr pouzitie nejakej triedy/rozhrania, sice FindUsages funguje, ale nemam tam priame editovanie.
+Privelky reuse anotacii mi vytvori velke pohlady, potom aby sa v nich clovek nestratil.
+Z hladiska navrhu by bolo zaujimave zhodnotit ci spravit v subore triedu s viacerymi concernami, a potom si to anotaciami rozdelit, alebo naopak, viacero tried napokon spojenych projekciou.
