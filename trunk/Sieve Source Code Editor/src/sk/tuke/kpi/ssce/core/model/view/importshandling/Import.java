@@ -1,5 +1,6 @@
 package sk.tuke.kpi.ssce.core.model.view.importshandling;
 
+import sk.tuke.kpi.ssce.annotations.concerns.ImportsManagement;
 import sk.tuke.kpi.ssce.annotations.concerns.Model;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 
@@ -9,6 +10,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
  */
 //SsceIntent:Zobrazenie importov v pomocnom subore;Model pre synchronizaciu kodu;
 @Model(model = RepresentationOf.VIEW)
+@ImportsManagement
 public class Import implements Comparable<Import> {
 
     private final boolean isStatic;

@@ -64,13 +64,13 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
      * @param doc dokument, nad ktorym sa bude realizovat projekcie zdrojoveho
      * kodu na zaklade konfiguracie (dopytu) zamerov.
      */
-    public JavaFileVisitor(CompilationInfo info, CompilationUnitTree cu, SourcePositions sp,
+    public JavaFileVisitor(CompilationInfo info,
             ConcernExtractor extractor, CodeSiever siever,
             CurrentProjection currentProjection, BaseDocument doc) {
         this.info = info;
-        this.cu = cu;
+        this.cu = info.getCompilationUnit();
+        this.sp = info.getTrees().getSourcePositions();
         this.extractor = extractor;
-        this.sp = sp;
         this.currentProjection = currentProjection;
         this.codeSiever = siever;
         this.doc = doc;
@@ -96,7 +96,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
         
-        contextOfConcerns.push(extractor.getConcernsFor(node));
+        contextOfConcerns.push(extractor.getConcernsFor(node, doc));
         contextCounter.push(nameElement);
         super.visitClass(node, p);
         contextCounter.pop();
@@ -145,7 +145,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
 
-        contextOfConcerns.push(extractor.getConcernsFor(node));
+        contextOfConcerns.push(extractor.getConcernsFor(node, doc));
         contextCounter.push(nameElement);
         super.visitMethod(node, p);
         contextCounter.pop();
@@ -183,7 +183,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
 
-        contextOfConcerns.push(extractor.getConcernsFor(node));
+        contextOfConcerns.push(extractor.getConcernsFor(node, doc));
         contextCounter.push(nameElement);
         super.visitVariable(node, p);
         contextCounter.pop();

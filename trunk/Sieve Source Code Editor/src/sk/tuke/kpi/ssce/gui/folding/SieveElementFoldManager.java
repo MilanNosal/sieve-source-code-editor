@@ -71,7 +71,7 @@ import sk.tuke.kpi.ssce.core.SSCEditorCore;
 import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
 import sk.tuke.kpi.ssce.core.model.view.ViewModel;
-import sk.tuke.kpi.ssce.core.utilities.JavaFileUtilities;
+import sk.tuke.kpi.ssce.core.binding.utilities.ViewModelCreator;
 import sk.tuke.kpi.ssce.core.utilities.IntentsUtilities;
 import sk.tuke.kpi.ssce.nbinterface.lexer.SieveJavaTokenId;
 
@@ -286,7 +286,7 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
 
 
             try {
-                if (new JavaFileUtilities().getImports((BaseDocument) doc, file.getImportsBinding().getStartPositionSieveDocument(), file.getImportsBinding().getLengthBindingAreaSieveDocument()).getCount() > 0) {
+                if (new ViewModelCreator().getImports((BaseDocument) doc, file.getImportsBinding().getStartPositionSieveDocument(), file.getImportsBinding().getLengthBindingAreaSieveDocument()).getCount() > 0) {
                     fold = new FoldMarkInfo(file.getImportsBinding().getStartPositionSieveDocument(), file.getImportsBinding().getEndPositionSieveDocument(), 0, 0, true, "imports");
                 }
             } catch (BadLocationException ex) {

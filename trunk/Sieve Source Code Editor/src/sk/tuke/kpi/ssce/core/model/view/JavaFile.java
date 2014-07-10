@@ -8,6 +8,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
 import org.netbeans.editor.BaseDocument;
 import org.openide.cookies.EditorCookie;
+import sk.tuke.kpi.ssce.annotations.concerns.ImportsManagement;
 import sk.tuke.kpi.ssce.annotations.concerns.Model;
 import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
@@ -37,8 +38,12 @@ public class JavaFile {
     private String packageName;
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
     private BindingPositions importsBinding; //binding between allImports in file and necesaryImports in sieve file
+    
+    @ImportsManagement
     private Imports allImports;
+    @ImportsManagement
     private Imports necessaryImports;
+    
     private List<CodeSnippet> codeSnippets;
 
     /**
@@ -126,6 +131,7 @@ public class JavaFile {
      * Vrati model importov pre tento java subor.
      * @return model importov pre tento java subor.
      */
+    @ImportsManagement
     public Imports getAllImports() {
         return allImports;
     }
@@ -134,6 +140,7 @@ public class JavaFile {
      * Nastavi model importov pre tento java subor.
      * @param allImports model importov pre tento java subor.
      */
+    @ImportsManagement
     public void setAllImports(Imports allImports) {
         this.allImports = allImports;
     }
@@ -168,6 +175,7 @@ public class JavaFile {
      * @param importsBinding model prepojenia usekov pre importy.
      */
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
+    @ImportsManagement
     public void setImportsBinding(BindingPositions importsBinding) {
         this.importsBinding = importsBinding;
     }
@@ -200,6 +208,7 @@ public class JavaFile {
      * Vrati importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
      * @return importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
      */
+    @ImportsManagement
     public Imports getNecessaryImports() {
         return necessaryImports;
     }
@@ -208,6 +217,7 @@ public class JavaFile {
      * Nastavi importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
      * @param necessaryImports importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
      */
+    @ImportsManagement
     public void setNecessaryImports(Imports necessaryImports) {
         this.necessaryImports = necessaryImports;
     }

@@ -10,13 +10,13 @@ import org.netbeans.editor.BaseDocument;
 import org.openide.text.NbDocument;
 import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.Guarding;
-import sk.tuke.kpi.ssce.annotations.concerns.JavaSieving;
 import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
+import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.View;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
-import sk.tuke.kpi.ssce.core.utilities.JavaFileUtilities;
+import sk.tuke.kpi.ssce.core.binding.utilities.ViewModelCreator;
 import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
 import sk.tuke.kpi.ssce.core.model.view.importshandling.Imports;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
@@ -53,14 +53,14 @@ public class Binding {
     }
     //SsceIntent:Praca s java suborom;
     @Synchronization(direction = Direction.SJTOJAVA)
-    private final JavaFileUtilities javaFileUtilities;
+    private final ViewModelCreator javaFileUtilities;
 
     /**
      * Vytvori nastroj pre realizovanie prepojenia medzi java subormi a pomocnym
      * suborom .sj.
      */
-    public Binding() {
-        javaFileUtilities = new JavaFileUtilities();
+    public Binding(ViewModelCreator javaFileUtilities) {
+        this.javaFileUtilities = javaFileUtilities;
     }
 
     /**
@@ -70,7 +70,7 @@ public class Binding {
      */
     //SsceIntent:Praca s java suborom;
     @Synchronization(direction = Direction.SJTOJAVA)
-    public JavaFileUtilities getJavaFileUtilities() {
+    public ViewModelCreator getJavaFileUtilities() {
         return javaFileUtilities;
     }
 
@@ -83,9 +83,10 @@ public class Binding {
      */
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
-    @JavaSieving
+    @SourceCodeSieving
     @SievedDocument
     @View(aspect = ViewAspect.PRESENTATION)
+    @Guarding
     public boolean loadSieveDocument(final ViewModel model) {
         // toto predstavuje vysledny sj dokument
         final StringBuilder buffer = new StringBuilder();
@@ -234,6 +235,7 @@ public class Binding {
 
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
+    @Guarding
     private boolean updateSieveDocument_DeleteAction(ViewModel model, JavaFile javaFile) {
 
         if (javaFile == null) {
@@ -283,6 +285,7 @@ public class Binding {
 
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
+    @Guarding
     private boolean updateSieveDocument_UpdateAction(ViewModel model, JavaFile javaFile) {
         if (javaFile == null) {
             return false;
@@ -413,6 +416,7 @@ public class Binding {
 
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
+    @Guarding
     private boolean updateSieveDocument_InsertAction(ViewModel model, JavaFile javaFile) {
         StringBuilder buffer = new StringBuilder();
 
@@ -421,7 +425,6 @@ public class Binding {
             return false;
         }
 
-//        return loadSieveDocument(model);
         int startFileOffset;
         JavaFile fileTmp;
         if ((fileTmp = model.getFileNextTo(jF.getFilePath())) != null) {
@@ -624,7 +627,7 @@ public class Binding {
             try {
                 String text = javaFile.getAllImports().toString();
                 int startPosition = javaFile.getImportsBinding().getStartPositionJavaDocument();
-                int endPosition = javaFile.getImportsBinding().getEndPositionJavaDocument();
+                int endPosition; //= javaFile.getImportsBinding().getEndPositionJavaDocument();
 //                System.out.println("Replace java file imports: start= " + startPosition + "  end= " + endPosition);
 
                 javaDoc.replace(startPosition, (int) javaFile.getImportsBinding().getLengthBindingAreaJavaDocument(), text, null);

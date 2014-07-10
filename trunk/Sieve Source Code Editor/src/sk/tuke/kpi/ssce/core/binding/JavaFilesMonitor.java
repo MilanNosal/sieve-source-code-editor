@@ -1,5 +1,6 @@
-package sk.tuke.kpi.ssce.core;
+package sk.tuke.kpi.ssce.core.binding;
 
+import sk.tuke.kpi.ssce.core.Constants;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
