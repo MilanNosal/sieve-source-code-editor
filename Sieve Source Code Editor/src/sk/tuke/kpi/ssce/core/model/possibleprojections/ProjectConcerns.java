@@ -1,25 +1,29 @@
-package sk.tuke.kpi.ssce.core.model.projections;
+package sk.tuke.kpi.ssce.core.model.possibleprojections;
 
 import java.util.*;
-import sk.tuke.kpi.ssce.concerns.interfaces.Searchable;
+import sk.tuke.kpi.ssce.annotations.concerns.AvailableProjectionsChange;
+import sk.tuke.kpi.ssce.annotations.concerns.Model;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  * Trieda sluzi ako nastroj pre mapovanie zamerov na fragmenty kodu (resp. na java subory) celeho zvoleneho projektu.
  * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Model pre mapovanie zamerov;
-public class IntentsMapping {
+@Model(model = RepresentationOf.PROJECTION)
+public class ProjectConcerns {
 
     //SsceIntent:Model pre mapovanie zamerov;
-    private final List<JavaFileIntents> files = new ArrayList<JavaFileIntents>();
+    private final List<JavaFileConcerns> files = new ArrayList<JavaFileConcerns>();
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    private final Set<IntentsChangeListener> listeners = new HashSet<IntentsChangeListener>();
+    private final Set<ConcernsChangeListener> listeners = new HashSet<ConcernsChangeListener>();
     private boolean outOfDate;
 
     /**
      * Vytvori mapovanie zamerov na fragmenty kodu.
      */
-    public IntentsMapping() {
+    public ProjectConcerns() {
         outOfDate = true;
     }
 
@@ -44,7 +48,7 @@ public class IntentsMapping {
      * @return true, ak listener bol pridany, inak false.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    public boolean addChangeListener(IntentsChangeListener listener) {
+    public boolean addChangeListener(ConcernsChangeListener listener) {
         return listeners.add(listener);
     }
 
@@ -54,7 +58,7 @@ public class IntentsMapping {
      * @return true, ak listener bol odobrany, inak false.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    public boolean removeChangeListener(IntentsChangeListener listener) {
+    public boolean removeChangeListener(ConcernsChangeListener listener) {
         return listeners.remove(listener);
     }
 
@@ -62,14 +66,14 @@ public class IntentsMapping {
      * Vrati mnozinu vsetkych mapovanych zamerov.
      * @return mnozinu vsetkych mapovanych zamerov.
      */
-    public Set<Searchable> getAllIntents() {
-        Set<Searchable> intents = new HashSet<Searchable>();
-        for (JavaFileIntents fileIntents : files) {
-            for (CodeIntents codeIntents : fileIntents.getCodes()) {
-                intents.addAll(codeIntents.getIntents());
+    public Set<Concern> getAllConcerns() {
+        Set<Concern> concerns = new HashSet<Concern>();
+        for (JavaFileConcerns fileConcerns : files) {
+            for (CodeSnippetConcerns codeConcerns : fileConcerns.getCodes()) {
+                concerns.addAll(codeConcerns.getConcerns());
             }
         }
-        return intents;
+        return concerns;
     }
 
     /**
@@ -85,7 +89,7 @@ public class IntentsMapping {
      * @param index index java suboru.
      * @return mapovanie zamerov pre jeden java subor.
      */
-    public JavaFileIntents get(int index) {
+    public JavaFileConcerns get(int index) {
         return files.get(index);
     }
 
@@ -94,13 +98,9 @@ public class IntentsMapping {
      * @param files mapovania zamerov pre java subory.
      * @return true, ak sa nastavia nove mapovania zamerov, inak false.
      */
-    public boolean setFiles(List<JavaFileIntents> files) {
+    public boolean setFiles(List<JavaFileConcerns> files) {
         try {
             this.files.clear();
-//        boolean success;
-//        if (success = this.files.addAll(files)) {
-//            addAllJavaDocumentListeners();
-//        }
             this.outOfDate = false;
             return this.files.addAll(files);
         } finally {
@@ -112,6 +112,7 @@ public class IntentsMapping {
      * Odstrani cele mapovanie zamerov.
      */
     public void clearFiles() {
+        // XXX: check for usages
 //        removeAllJavaDocumentListeners();
         try {
             this.files.clear();
@@ -126,13 +127,14 @@ public class IntentsMapping {
      * @return ak sa najde stare mapovanie zamerov pre zvoleny java subor, tak vrati nove mapovanie, inak null.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    public JavaFileIntents updateFile(JavaFileIntents file) {
+    @AvailableProjectionsChange(propagation = false)
+    public JavaFileConcerns updateFile(JavaFileConcerns file) {
         try {
-            JavaFileIntents javaFile;
+            JavaFileConcerns javaFile;
             if ((javaFile = get(file.getFilePath())) != null) {
-                Set<Searchable> oldAllIntents = getAllIntents();
+                Set<Concern> oldAllConcerns = getAllConcerns();
                 javaFile.copy(file);
-                fireIntentsChangedEvent(prepareEvent(oldAllIntents, getAllIntents()));
+                fireConcernsConfigurationChangedEvent(prepareEvent(oldAllConcerns, getAllConcerns()));
             }
             return javaFile;
         } finally {
@@ -146,10 +148,11 @@ public class IntentsMapping {
      * @return nove mapovanie zamerov pre zvoleny java subor, alebo null, ak sa nepodari vykovat akciu.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    public JavaFileIntents updateOrInsertFile(JavaFileIntents file) {
-        Set<Searchable> oldAllIntents = getAllIntents();
+    @AvailableProjectionsChange(propagation = false)
+    public JavaFileConcerns updateOrInsertFile(JavaFileConcerns file) {
+        Set<Concern> oldAllIntents = getAllConcerns();
         try {
-            JavaFileIntents javaFile;
+            JavaFileConcerns javaFile;
             if ((javaFile = get(file.getFilePath())) != null) {
                 javaFile.copy(file);
                 return javaFile;
@@ -162,35 +165,24 @@ public class IntentsMapping {
 
         } finally {
             this.outOfDate = false;
-            fireIntentsChangedEvent(prepareEvent(oldAllIntents, getAllIntents()));
+            fireConcernsConfigurationChangedEvent(prepareEvent(oldAllIntents, getAllConcerns()));
         }
     }
 
-//    private void removeJavaDocumentListenerFrom(JavaFile javaFile) {
-//        try {
-//            javaFile.getEditorCookie().openDocument().removeDocumentListener(javaDocumentListener);
-//        } catch (IOException ex) {
-//            Exceptions.printStackTrace(ex);
-//        }
-//    }
     /**
      * Odstrani mapovanie zamerov pre zvoleny java subor.
      * @param file mapovanie zamerov pre zvoleny java subor.
      * @return odstranene mapovanie zamerov pre zvoleny java subor.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    public JavaFileIntents deleteFile(JavaFileIntents file) {
-
+    @AvailableProjectionsChange(propagation = false)
+    public JavaFileConcerns deleteFile(JavaFileConcerns file) {
         try {
-            JavaFileIntents javaFile;
+            JavaFileConcerns javaFile;
             if ((javaFile = get(file.getFilePath())) != null) {
-
-                Set<Searchable> oldAllIntents = getAllIntents();
-
+                Set<Concern> oldAllConcerns = getAllConcerns();
                 files.remove(javaFile);
-
-                fireIntentsChangedEvent(prepareEvent(oldAllIntents, getAllIntents()));
-
+                fireConcernsConfigurationChangedEvent(prepareEvent(oldAllConcerns, getAllConcerns()));
                 return javaFile;
             }
             return null;
@@ -205,8 +197,8 @@ public class IntentsMapping {
      * @return true, ak obsahuje, inak false.
      */
     public boolean contains(String javaFilePath) {
-        for (JavaFileIntents jF : files) {
-            if (jF.getFilePath().equals(javaFilePath)) {
+        for (JavaFileConcerns jFC : files) {
+            if (jFC.getFilePath().equals(javaFilePath)) {
                 return true;
             }
         }
@@ -218,10 +210,10 @@ public class IntentsMapping {
      * @param javaFilePath cesta java suboru.
      * @return mapovanie zamerov pre java subor, ak toto mapovanie ho obsahuje, inak null.
      */
-    public JavaFileIntents get(String javaFilePath) {
-        for (JavaFileIntents jF : files) {
-            if (jF.getFilePath().equals(javaFilePath)) {
-                return jF;
+    public JavaFileConcerns get(String javaFilePath) {
+        for (JavaFileConcerns jFC : files) {
+            if (jFC.getFilePath().equals(javaFilePath)) {
+                return jFC;
             }
         }
         return null;
@@ -232,7 +224,7 @@ public class IntentsMapping {
      * @param javaFilePath cesta java suboru.
      * @return mapovanie zamerov pre nasledujuci java subor, ak toto mapovanie ho obsahuje, inak null.
      */
-    public JavaFileIntents getNext(String javaFilePath) {
+    public JavaFileConcerns getNext(String javaFilePath) {
         for (int i = 1; i < files.size(); i++) {
             if (files.get(i - 1).getFilePath().equals(javaFilePath)) {
                 return files.get(i);
@@ -246,7 +238,7 @@ public class IntentsMapping {
      * @param javaFilePath cesta java suboru.
      * @return mapovanie zamerov pre predchadzajuci java subor, ak toto mapovanie ho obsahuje, inak null.
      */
-    public JavaFileIntents getPrevious(String javaFilePath) {
+    public JavaFileConcerns getPrevious(String javaFilePath) {
         for (int i = 1; i < files.size(); i++) {
             if (files.get(i).getFilePath().equals(javaFilePath)) {
                 return files.get(i - 1);
@@ -261,19 +253,17 @@ public class IntentsMapping {
      * @return mapovanie zamerov pre java subor, ak akcia prebehla uspesne, inak null.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    public JavaFileIntents insertFile(JavaFileIntents file) {
+    @AvailableProjectionsChange(propagation = false)
+    public JavaFileConcerns insertFile(JavaFileConcerns file) {
         try {
             if (get(file.getFilePath()) != null) {
                 return null;
             }
-
-            Set<Searchable> oldAllIntents = getAllIntents();
+            Set<Concern> oldAllConcerns = getAllConcerns();
 
             if (files.add(file)) {
 //            Collections.sort(files, JavaFileIntents.SORT_BY_PACKAGES);
-
-
-                fireIntentsChangedEvent(prepareEvent(oldAllIntents, getAllIntents()));
+                fireConcernsConfigurationChangedEvent(prepareEvent(oldAllConcerns, getAllConcerns()));
                 return file;
             }
             return null;
@@ -283,39 +273,42 @@ public class IntentsMapping {
     }
 
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    private void fireIntentsChangedEvent(IntentsChangedEvent event) {
+    @AvailableProjectionsChange(propagation = true)
+    private void fireConcernsConfigurationChangedEvent(ConcernsChangedEvent event) {
         this.outOfDate = false;
         if (event == null) {
             return;
         }
-        for (IntentsChangeListener listener : listeners) {
+        for (ConcernsChangeListener listener : listeners) {
             listener.intentsChanged(event);
         }
     }
 
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    private IntentsChangedEvent prepareEvent(Set<Searchable> oldAllIntents, Set<Searchable> newAllIntents) {
-        Set<Searchable> removedIntents = new HashSet<Searchable>(oldAllIntents);
-        removedIntents.removeAll(newAllIntents);
+    @AvailableProjectionsChange(propagation = true)
+    private ConcernsChangedEvent prepareEvent(Set<Concern> oldAllConcerns, Set<Concern> newAllConcerns) {
+        Set<Concern> removedConcerns = new HashSet<Concern>(oldAllConcerns);
+        removedConcerns.removeAll(newAllConcerns);
 
-        Set<Searchable> newIntents = new HashSet<Searchable>(newAllIntents);
-        newIntents.removeAll(oldAllIntents);
+        Set<Concern> newConcerns = new HashSet<Concern>(newAllConcerns);
+        newConcerns.removeAll(oldAllConcerns);
 //        if (newIntents.isEmpty() && removedIntents.isEmpty()) {
 //            return null;
 //        }
-        return new IntentsChangedEvent(newAllIntents, newIntents, removedIntents);
+        return new ConcernsChangedEvent(newAllConcerns, newConcerns, removedConcerns);
     }
 
     /**
      * Event pre zmenu v mapovani zamerov na fragmenty kodu.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    public static class IntentsChangedEvent {
+    @AvailableProjectionsChange(propagation = true)
+    public static class ConcernsChangedEvent {
 
 //        private final File file;
-        private final Set<Searchable> newIntents;
-        private final Set<Searchable> removedIntents;
-        private final Set<Searchable> allIntents;
+        private final Set<Concern> newIntents;
+        private final Set<Concern> removedIntents;
+        private final Set<Concern> allIntents;
 
         /**
          * Vytvori event pre zmenu v mapovani zamerov na fragmenty kodu.
@@ -323,7 +316,7 @@ public class IntentsMapping {
          * @param newIntents  mnozina novo pridanych zamerov.
          * @param removedIntents mnozina odobratych zamerov.
          */
-        public IntentsChangedEvent(Set<Searchable> allIntents, Set<Searchable> newIntents, Set<Searchable> removedIntents) {
+        public ConcernsChangedEvent(Set<Concern> allIntents, Set<Concern> newIntents, Set<Concern> removedIntents) {
             this.newIntents = newIntents;
             this.removedIntents = removedIntents;
             this.allIntents = allIntents;
@@ -341,7 +334,7 @@ public class IntentsMapping {
          * Vrati mnozinu novo pridanych zamerov.
          * @return mnozinu novo pridanych zamerov.
          */
-        public Set<Searchable> getNewIntents() {
+        public Set<Concern> getNewIntents() {
             return newIntents;
         }
 
@@ -349,7 +342,7 @@ public class IntentsMapping {
          * Vrati mnozinu odobratych zamerov.
          * @return mnozinu odobratych zamerov.
          */
-        public Set<Searchable> getRemovedIntents() {
+        public Set<Concern> getRemovedIntents() {
             return removedIntents;
         }
 
@@ -357,7 +350,7 @@ public class IntentsMapping {
          * Vrati novu mnozinu vsetkych zamerov.
          * @return novu mnozinu vsetkych zamerov.
          */
-        public Set<Searchable> getAllIntents() {
+        public Set<Concern> getAllIntents() {
             return allIntents;
         }
     }
@@ -366,12 +359,13 @@ public class IntentsMapping {
      * Listener reagujuci na zmeny v mapovani zamerov na fragmenty kodu.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    public static interface IntentsChangeListener extends EventListener {
+    @AvailableProjectionsChange(propagation = true)
+    public static interface ConcernsChangeListener extends EventListener {
 
         /**
          * Metoda je volana ak doslo k zmene v mapovani zamerov na fragmenty kodu.
          * @param event event
          */
-        public void intentsChanged(IntentsMapping.IntentsChangedEvent event);
+        public void intentsChanged(ProjectConcerns.ConcernsChangedEvent event);
     }
 }

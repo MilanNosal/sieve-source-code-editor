@@ -1,28 +1,26 @@
-package sk.tuke.kpi.ssce.core.model.projections;
+package sk.tuke.kpi.ssce.core.model.possibleprojections;
 
 import java.util.Set;
 import javax.swing.text.Position;
-import sk.tuke.kpi.ssce.concerns.interfaces.Searchable;
+import sk.tuke.kpi.ssce.annotations.concerns.Model;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  * Trieda modeluje mapovanie zamerov na fragment kodu.
  * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Model pre mapovanie zamerov;
-public class CodeIntents implements Comparable<CodeIntents> {
+@Model(model = RepresentationOf.PROJECTION)
+public class CodeSnippetConcerns implements Comparable<CodeSnippetConcerns> {
 
-    private final JavaFileIntents parent;
+    private final JavaFileConcerns parent;
     private final String codeHead;
     private final Position startPositionJavaCode;
     
     private final int lengthJavaCode;
-    //SsceIntent:Komentar uchovavajuci zamer;
-    @Deprecated
-    private final Position startPositionIntentsComment;
-    //SsceIntent:Komentar uchovavajuci zamer;
-    @Deprecated
-    private final int lengthIntentsComment;
-    private final Set<Searchable> intents;
+    
+    private final Set<Concern> concerns;
 
     /**
      * Vytvori mapovanie zamerov na fragment kodu.
@@ -30,28 +28,23 @@ public class CodeIntents implements Comparable<CodeIntents> {
      * @param codeHead hlavicka fragmentu kodu, ktora sa zobrazuje pri definovani konfiguracie zamerov. Je to v podstate kontext + nazov elementu.
      * @param startPositionJavaCode zaciatocna pozicia fragmentu kodu v java subore.
      * @param lengthJavaCode dlzka fragmentu v java subore.
-     * @param startPositionIntentsComment zaciatocna pozicia komentara uchovavajuceho zamer.
-     * @param lengthIntentsComment dlzka komentara uchovavajuceho zamer.
-     * @param intents mnozina zamerov priradenych tomuto fragmentu kodu.
+     * @param concerns mnozina zamerov priradenych tomuto fragmentu kodu.
      */
-    public CodeIntents(JavaFileIntents parent, String codeHead,
+    public CodeSnippetConcerns(JavaFileConcerns parent, String codeHead,
             Position startPositionJavaCode, int lengthJavaCode,
-            @Deprecated Position startPositionIntentsComment, @Deprecated int lengthIntentsComment,
-            Set<Searchable> intents) {
+            Set<Concern> concerns) {
         this.parent = parent;
         this.codeHead = codeHead;
         this.startPositionJavaCode = startPositionJavaCode;
         this.lengthJavaCode = lengthJavaCode;
-        this.startPositionIntentsComment = startPositionIntentsComment;
-        this.lengthIntentsComment = lengthIntentsComment;
-        this.intents = intents;
+        this.concerns = concerns;
     }
 
     /**
      * Vrati rodicovsky java subor tohto fragmentu kodu.
      * @return rodicovsky java subor tohto fragmentu kodu.
      */
-    public JavaFileIntents getParent() {
+    public JavaFileConcerns getParent() {
         return parent;
     }
 
@@ -64,16 +57,6 @@ public class CodeIntents implements Comparable<CodeIntents> {
     }
 
     /**
-     * Vrati dlzku komentara uchovavajuceho zamer tohto fragmentu kodu.
-     * @return dlzku komentara uchovavajuceho zamer tohto fragmentu kodu.
-     */
-    //SsceIntent:Komentar uchovavajuci zamer;
-    @Deprecated
-    public int getLengthIntentsComment() {
-        return lengthIntentsComment;
-    }
-
-    /**
      * Vrati zaciatocnu poziciu tohto fragmentu kodu.
      * @return zaciatocnu poziciu tohto fragmentu kodu.
      */
@@ -83,21 +66,11 @@ public class CodeIntents implements Comparable<CodeIntents> {
     }
 
     /**
-     * Vrati zaciatocnu poziciu komentara uchovavajuceho zamer tohto fragmentu kodu.
-     * @return zaciatocnu poziciu komentara uchovavajuceho zamer tohto fragmentu kodu.
-     */
-    //SsceIntent:Komentar uchovavajuci zamer;
-    @Deprecated
-    public Position getStartPositionIntentsComment() {
-        return startPositionIntentsComment;
-    }
-
-    /**
      * Vrati mnozinu zamerov priradenych tomutu fragmentu kodu.
      * @return mnozinu zamerov priradenych tomutu fragmentu kodu.
      */
-    public Set<Searchable> getIntents() {
-        return intents;
+    public Set<Concern> getConcerns() {
+        return concerns;
     }
 
     /**
@@ -109,7 +82,7 @@ public class CodeIntents implements Comparable<CodeIntents> {
     }
 
     @Override
-    public int compareTo(CodeIntents o) {
+    public int compareTo(CodeSnippetConcerns o) {
         if (this.startPositionJavaCode.getOffset() > o.startPositionJavaCode.getOffset()) {
             return 1;
         } else if (this.startPositionJavaCode.getOffset() == o.startPositionJavaCode.getOffset()) {
