@@ -1,4 +1,4 @@
-package sk.tuke.kpi.ssce.core.model.possibleprojections;
+package sk.tuke.kpi.ssce.core.model.availableprojections;
 
 import java.util.*;
 import sk.tuke.kpi.ssce.annotations.concerns.Model;
