@@ -1,4 +1,4 @@
-package sk.tuke.kpi.ssce.core.model.possibleprojections;
+package sk.tuke.kpi.ssce.core.model.availableprojections;
 
 import java.util.*;
 import sk.tuke.kpi.ssce.annotations.concerns.AvailableProjectionsChange;
@@ -12,7 +12,7 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
  */
 //SsceIntent:Model pre mapovanie zamerov;
 @Model(model = RepresentationOf.PROJECTION)
-public class ProjectConcerns {
+public class ProjectionsModel {
 
     //SsceIntent:Model pre mapovanie zamerov;
     private final List<JavaFileConcerns> files = new ArrayList<JavaFileConcerns>();
@@ -23,7 +23,7 @@ public class ProjectConcerns {
     /**
      * Vytvori mapovanie zamerov na fragmenty kodu.
      */
-    public ProjectConcerns() {
+    public ProjectionsModel() {
         outOfDate = true;
     }
 
@@ -366,6 +366,6 @@ public class ProjectConcerns {
          * Metoda je volana ak doslo k zmene v mapovani zamerov na fragmenty kodu.
          * @param event event
          */
-        public void intentsChanged(ProjectConcerns.ConcernsChangedEvent event);
+        public void intentsChanged(ProjectionsModel.ConcernsChangedEvent event);
     }
 }

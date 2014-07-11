@@ -1,4 +1,4 @@
-package sk.tuke.kpi.ssce.core.model.possibleprojections;
+package sk.tuke.kpi.ssce.core.model.availableprojections;
 
 import com.sun.source.tree.*;
 import com.sun.source.util.SourcePositions;
