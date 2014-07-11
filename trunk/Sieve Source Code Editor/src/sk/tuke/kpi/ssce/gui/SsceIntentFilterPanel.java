@@ -7,11 +7,11 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import sk.tuke.kpi.ssce.core.SSCEditorCore;
+import sk.tuke.kpi.ssce.core.SSCEditorContainer;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
-import sk.tuke.kpi.ssce.core.model.possibleprojections.ProjectConcerns;
-import sk.tuke.kpi.ssce.core.model.possibleprojections.ProjectConcerns.ConcernsChangedEvent;
-import sk.tuke.kpi.ssce.concerns.annotations.AnnotationSearchable;
+import sk.tuke.kpi.ssce.core.model.availableprojections.ProjectionsModel;
+import sk.tuke.kpi.ssce.core.model.availableprojections.ProjectionsModel.ConcernsChangedEvent;
+import sk.tuke.kpi.ssce.concerns.annotations.AnnotationBasedConcern;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
@@ -19,9 +19,9 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
  * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Komponent grafickeho rozhrania;
-public class SsceIntentFilterPanel extends javax.swing.JPanel implements ProjectConcerns.ConcernsChangeListener, ActionListener, ListSelectionListener {
+public class SsceIntentFilterPanel extends javax.swing.JPanel implements ProjectionsModel.ConcernsChangeListener, ActionListener, ListSelectionListener {
 
-    private SSCEditorCore core = null;
+    private SSCEditorContainer core = null;
 
     /**
      * Creates new form SsceIntentFilterPanel
@@ -51,7 +51,7 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Project
      * @param core nove jadro editora modulu SSCE.
      */
     //SsceIntent:Aktualizacia grafickeho rozhrania;
-    public void setSSCEditorCore(SSCEditorCore core) {
+    public void setSSCEditorCore(SSCEditorContainer core) {
         if (this.core != null) {
             if (this.core.equals(core)) {
                 //TODO: co treba: actualize
@@ -91,7 +91,7 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Project
 
 
 
-        core.getIntentsMapping().addChangeListener(this);
+        core.getAvailableProjections().addChangeListener(this);
 
     }
 
@@ -107,7 +107,7 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Project
         this.jListIntents.removeListSelectionListener(this);
         this.jComboBoxMode.removeActionListener(this);
 
-        core.getIntentsMapping().removeChangeListener(this);
+        core.getAvailableProjections().removeChangeListener(this);
         core = null;
 
     }
@@ -121,9 +121,9 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Project
         this.jListIntents.removeListSelectionListener(this);
 
         DefaultListModel model = new DefaultListModel();
-        List<Concern> intents = new ArrayList<Concern>(this.core.getIntentsMapping().getAllConcerns());
+        List<Concern> intents = new ArrayList<Concern>(this.core.getAvailableProjections().getAllConcerns());
         Collections.sort(intents);
-        model.addElement(new AnnotationSearchable(null));
+        model.addElement(new AnnotationBasedConcern(null));
         for (Concern intent : intents) {
             model.addElement(intent);
         }
@@ -191,7 +191,7 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Project
         Set<Concern> selectedIntents = new HashSet<Concern>();
         selectedIntents.addAll(Arrays.asList(intents));
 
-        this.core.getConfiguration().setSelectedIntents(selectedIntents);
+        this.core.getConfiguration().setSelectedConcerns(selectedIntents);
 
 
         //System.out.println("actual selection :  " + Arrays.toString(objects));

@@ -15,14 +15,25 @@ import org.netbeans.editor.BaseDocument;
 import org.openide.cookies.EditorCookie;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
+import sk.tuke.kpi.ssce.annotations.concerns.ChangeMonitoring;
+import sk.tuke.kpi.ssce.annotations.concerns.ProjectionConfigurationChange;
+import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
+import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.Source;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.Type;
+import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import sk.tuke.kpi.ssce.core.binding.JavaFilesMonitor.JavaFileEvent;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection.CurrentProjectionChangedEvent;
-import sk.tuke.kpi.ssce.core.model.possibleprojections.ProjectConcerns;
+import sk.tuke.kpi.ssce.core.model.availableprojections.ProjectionsModel;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
 import sk.tuke.kpi.ssce.core.model.view.ViewModel;
 import sk.tuke.kpi.ssce.core.binding.Binding;
-import sk.tuke.kpi.ssce.core.model.possibleprojections.JavaFileConcerns;
+import sk.tuke.kpi.ssce.core.model.creators.ProjectionsModelCreator;
+import sk.tuke.kpi.ssce.core.model.creators.ViewModelCreator;
+import sk.tuke.kpi.ssce.core.model.availableprojections.JavaFileConcerns;
+import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
 
 /**
  * Jadro celeho modulu, teda SSCE editora. Je vložene do documentu pre pomocny
@@ -32,7 +43,7 @@ import sk.tuke.kpi.ssce.core.model.possibleprojections.JavaFileConcerns;
  *
  * @author Matej Nosal
  */
-public class SSCEditorCore {
+public class SSCEditorContainer {
 
     /**
      * Nastroj pre obojsmerne prepojovanie java suborov s pomocnym suborom.
@@ -58,11 +69,12 @@ public class SSCEditorCore {
      * Listener pre zmenu v mapovani zamerov na fragmenty kodu.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    private final ListenerForIntentsMapping listenerForIntentsMapping;
+    private final ProjectionsChangeListener concernsMappingListener;
     /**
      * Dokument pre predstavujuci pomocny subor.
      */
     //SsceIntent:Praca s pomocnym suborom;
+    @SievedDocument
     private final BaseDocument sieveDocument;
     
     /**
@@ -70,22 +82,26 @@ public class SSCEditorCore {
      * aby som sa vedel chytat na Ctrl + S
      */
     private final DataObject dataObject;
+    
     /**
      * Aktualna konfiguracia (dopyt) zamerov na zdrojovy kod.
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
-    private final CurrentProjection configuration;
-    private Project projectContext;
+    private final CurrentProjection currentProjection;
+    
+    private final Project projectContext;
+    
     /**
      * Model pre synchronizaciu java suborov a pomocneho suboru .sj.
      */
     //SsceIntent:Model pre synchronizaciu kodu;
-    private final ViewModel model;
+    private final ViewModel viewModel;
+    
     /**
      * Mapovanie zamerov na fragmenty kodu.
      */
     //SsceIntent:Model pre mapovanie zamerov;Notifikacia na zmeny v priradenych zamerov;
-    private final ProjectConcerns intentsMapping;
+    private final ProjectionsModel projectionsModel;
 
     /**
      * Vytvori jadro editora modulu SSCE. Realizuje zaujmovo-oreientovanu
@@ -98,13 +114,14 @@ public class SSCEditorCore {
      * @throws IOException ak dojde k nejakej I/O chybe.
      */
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v java zdrojovom kode;Notifikacia na zmeny v pomocnom subore .sj;Monitorovanie java suborov;Model pre mapovanie zamerov;Prepojenie java suborov s pomocnym suborom .sj;Notifikacia na zmeny v priradenych zamerov;Model pre synchronizaciu kodu;
-    public SSCEditorCore(final DataObject dataObject, Project projectContext) throws IOException {
-        model = new ViewModel();
-        intentsMapping = new ProjectConcerns();
-        configuration = new CurrentProjection();
+    public SSCEditorContainer(final DataObject dataObject, Project projectContext,
+            ConcernExtractor extractor, CodeSiever siever) throws IOException {
+        viewModel = new ViewModel();
+        projectionsModel = new ProjectionsModel();
+        currentProjection = new CurrentProjection();
         this.dataObject = dataObject;
 
-        configuration.addConfigurationChangeListener(new CurrentProjection.CurrentProjectionChangeListener() {
+        currentProjection.addCurrentProjectionChangeListener(new CurrentProjection.CurrentProjectionChangeListener() {
             @Override
             public void projectionChanged(CurrentProjectionChangedEvent event) {
                 reloadModel();
@@ -116,9 +133,11 @@ public class SSCEditorCore {
         javaFilesMonitor = new JavaFilesMonitor(FileUtil.toFile(projectContext.getProjectDirectory()).getPath(), props);
         sieveDocumentListener = new SieveDocumentListener();
         javaDocumentListener = new JavaDocumentListener();
-        listenerForIntentsMapping = new ListenerForIntentsMapping();
-        bindingUtilities = new Binding();
-        this.model.setEditorCookieSieveDocument(dataObject.getCookie(EditorCookie.class));
+        concernsMappingListener = new ProjectionsChangeListener();
+        bindingUtilities = 
+                new Binding(new ViewModelCreator(extractor, siever),
+                        new ProjectionsModelCreator(extractor));
+        this.viewModel.setEditorCookieSieveDocument(dataObject.getCookie(EditorCookie.class));
         
         
 //        DataObject.getRegistry().addChangeListener(new ChangeListener() {
@@ -134,36 +153,9 @@ public class SSCEditorCore {
 //        });
         
         
-        this.sieveDocument = (BaseDocument) this.model.getEditorCookieSieveDocument().openDocument();
+        this.sieveDocument = (BaseDocument) this.viewModel.getEditorCookieSieveDocument().openDocument();
         this.sieveDocument.addDocumentListener(this.sieveDocumentListener);
-        // vyzera to tak ze document listener je volany v locku a nemal by mutovat dokument
-//        this.sieveDocument.addDocumentListener(new DocumentListener() {
-//
-//            private void saveDocument() {
-//                try {
-//                    ((BaseDocument)model.getEditorCookieSieveDocument().getDocument()).extWriteLock();
-//                    model.getEditorCookieSieveDocument().saveDocument();
-//                    ((BaseDocument)model.getEditorCookieSieveDocument().getDocument()).extWriteUnlock();
-//                } catch (Throwable ex) {
-//                    Exceptions.printStackTrace(ex);
-//                }
-//            }
-//
-//            @Override
-//            public void insertUpdate(DocumentEvent e) {
-//                saveDocument();
-//            }
-//
-//            @Override
-//            public void removeUpdate(DocumentEvent e) {
-//                saveDocument();
-//            }
-//
-//            @Override
-//            public void changedUpdate(DocumentEvent e) {
-//                saveDocument();
-//            }
-//        });
+  
         this.projectContext = projectContext;
 
 //        projectContext.getLookup().lookup(Sources.class).getSourceGroups(Source);
@@ -174,7 +166,7 @@ public class SSCEditorCore {
 
         this.javaFilesMonitor.addJavaFileListener(javaDocumentListener);
 
-        this.javaFilesMonitor.addJavaFileListener(listenerForIntentsMapping);
+        this.javaFilesMonitor.addJavaFileListener(concernsMappingListener);
 
         EditorRegistry.addPropertyChangeListener(new PropertyChangeListener() {
             
@@ -184,7 +176,7 @@ public class SSCEditorCore {
             public void propertyChange(PropertyChangeEvent evt) {
                 if (EditorRegistry.FOCUS_GAINED_PROPERTY.equals(evt.getPropertyName())) {
                     JTextComponent component = evt.getNewValue() != null && evt.getNewValue() instanceof JTextComponent ? ((JTextComponent) evt.getNewValue()) : null;
-                    if (component != null && component.getDocument() != null && SSCEditorCore.this.equals(component.getDocument().getProperty(Constants.SSCE_CORE_OBJECT_PROP))) {
+                    if (component != null && component.getDocument() != null && SSCEditorContainer.this.equals(component.getDocument().getProperty(Constants.SSCE_CORE_OBJECT_PROP))) {
 //                        bindingUtilities.markGuardedSieveDoument((StyledDocument) component.getDocument(), model);
                         System.out.println("--- focus gained + refreshDocumentListening --- time: " + new Date().toString());
                         javaFilesMonitor.refreshDocumentListening();
@@ -198,17 +190,18 @@ public class SSCEditorCore {
     //SsceIntent:Monitorovanie java suborov;Dopyt na zdrojovy kod, konfiguracia zamerov;Prepojenie java suborov s pomocnym suborom .sj;Model pre synchronizaciu kodu;
     private boolean reloadModel() {
 //        model.setFiles(this.javaFileUtilities.createJavaFiles(new String[]{projectContext.getProjectDirectory().getPath() + File.separator + "src"}, null));
-        model.setFiles(this.bindingUtilities.getJavaFileUtilities().createJavaFiles(this.javaFilesMonitor.getMonitoringJavaFilePaths(), configuration));
+        viewModel.setFiles(this.bindingUtilities.getViewModelCreator().createJavaFiles(this.javaFilesMonitor.getMonitoringJavaFilePaths(), currentProjection));
         return true;
     }
 
     //SsceIntent:Monitorovanie java suborov;Model pre mapovanie zamerov;
     private boolean reloadIntentsMapping() {
-        intentsMapping.setFiles(this.bindingUtilities.getJavaFileUtilities().createJavaFilesIntents(this.javaFilesMonitor.getMonitoringJavaFilePaths()));
+        projectionsModel.setFiles(this.bindingUtilities.getProjectionsModelCreator().createJavaFilesConcerns(this.javaFilesMonitor.getMonitoringJavaFilePaths()));
         return true;
     }
 
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v pomocnom subore .sj;
+    @SievedDocument
     private boolean reloadSieveDocument() {
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -216,7 +209,7 @@ public class SSCEditorCore {
             @Override
             public void run() {
                 sieveDocumentListener.deactivate();
-                bindingUtilities.loadSieveDocument(model);
+                bindingUtilities.loadSieveDocument(viewModel);
                 sieveDocumentListener.activate();
             }
         });
@@ -252,7 +245,7 @@ public class SSCEditorCore {
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
     public CurrentProjection getConfiguration() {
-        return configuration;
+        return currentProjection;
     }
 
     /**
@@ -262,7 +255,7 @@ public class SSCEditorCore {
      */
     //SsceIntent:Model pre synchronizaciu kodu;
     public ViewModel getModel() {
-        return model;
+        return viewModel;
     }
 
     /**
@@ -280,11 +273,13 @@ public class SSCEditorCore {
      * @return mapovanie zazmerov na fragmenty kodu.
      */
     //SsceIntent:Model pre mapovanie zamerov;
-    public ProjectConcerns getIntentsMapping() {
-        return intentsMapping;
+    public ProjectionsModel getAvailableProjections() {
+        return projectionsModel;
     }
 
     //SsceIntent:Notifikacia na zmeny v pomocnom subore .sj;
+    @Synchronization(direction = Direction.SJTOJAVA)
+    @ChangeMonitoring(monitoredSource = Source.SJ, typeOfEvents = Type.GENERAL_CHANGE)
     private class SieveDocumentListener implements DocumentListener {
 
         private boolean active = true;
@@ -324,7 +319,7 @@ public class SSCEditorCore {
                     if (!active) {
                         return;
                     }
-                    JavaFile javaFile = model.getFileBySJOffset(e.getOffset());
+                    JavaFile javaFile = viewModel.getFileBySJOffset(e.getOffset());
                     if (javaFile == null) {
                         return;
                     }
@@ -332,7 +327,7 @@ public class SSCEditorCore {
                     //System.out.println("Time = " + new Date().getTime());
                     javaDocumentListener.addIgnoredFilePath(javaFile.getFilePath());
 
-                    bindingUtilities.updateJavaDocument(model, javaFile, e.getOffset());
+                    bindingUtilities.updateJavaDocument(viewModel, javaFile, e.getOffset());
                     javaDocumentListener.removeIgnoredFilePath(javaFile.getFilePath());
                 }
             });
@@ -341,6 +336,8 @@ public class SSCEditorCore {
     }
 
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
+    @Synchronization(direction = Direction.JAVATOSJ)
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
     private class JavaDocumentListener implements JavaFilesMonitor.JavaFileChangeListener {
 
         private final Map<String, Long> ignoreList = new HashMap<String, Long>();
@@ -368,7 +365,7 @@ public class SSCEditorCore {
                 }
             }
             sieveDocumentListener.deactivate();
-            bindingUtilities.updateSieveDocument(Binding.UpdateModelAction.INSERT, model, bindingUtilities.getJavaFileUtilities().createJavaFile(event.getFile(), configuration));
+            bindingUtilities.updateSieveDocument(Binding.UpdateModelAction.INSERT, viewModel, bindingUtilities.getViewModelCreator().createJavaFile(event.getFile(), currentProjection));
 //            bindingUtilities.updateSieveDocument(BindingUtilities.UpdateModelAction.INSERT, model, javaFileUtilities.createJavaFile(event.getFile(), null));
 //            model.insertFile(javaFileUtilities.createJavaFile(event.getFile(), null));
             sieveDocumentListener.activate();
@@ -380,14 +377,14 @@ public class SSCEditorCore {
             Long time = ignoreList.get(event.getFile().getPath());
             if (time != null) {
                 if (event.getTime() <= time) {
-                    System.out.println("Skipped event javaFileCreated!");
+                    //System.out.println("Skipped event javaFileCreated!");
                     return;
                 } else {
                     ignoreList.remove(event.getFile().getPath());
                 }
             }
             sieveDocumentListener.deactivate();
-            bindingUtilities.updateSieveDocument(Binding.UpdateModelAction.DELETE, model, model.getFileAt(event.getFile().getPath()));
+            bindingUtilities.updateSieveDocument(Binding.UpdateModelAction.DELETE, viewModel, viewModel.getFileAt(event.getFile().getPath()));
             sieveDocumentListener.activate();
         }
 
@@ -398,7 +395,7 @@ public class SSCEditorCore {
             Long time = ignoreList.get(event.getFile().getPath());
             if (time != null) {
                 if (event.getTime() <= time) {
-                    System.out.println("Skipped event javaFileCreated!");
+                    //System.out.println("Skipped event javaFileCreated!");
                     return;
                 } else {
                     ignoreList.remove(event.getFile().getPath());
@@ -410,7 +407,7 @@ public class SSCEditorCore {
                 @Override
                 public void run() {
                     sieveDocumentListener.deactivate();
-                    bindingUtilities.updateSieveDocument(Binding.UpdateModelAction.UPDATE, model, bindingUtilities.getJavaFileUtilities().createJavaFile(event.getFile(), configuration));
+                    bindingUtilities.updateSieveDocument(Binding.UpdateModelAction.UPDATE, viewModel, bindingUtilities.getViewModelCreator().createJavaFile(event.getFile(), currentProjection));
                     sieveDocumentListener.activate();
 
                 }
@@ -419,26 +416,24 @@ public class SSCEditorCore {
     }
 
     //SsceIntent:Model pre mapovanie zamerov;Notifikacia na zmeny v priradenych zamerov;
-    private class ListenerForIntentsMapping implements JavaFilesMonitor.JavaFileChangeListener {
+    @ProjectionConfigurationChange(propagation = true)
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    private class ProjectionsChangeListener implements JavaFilesMonitor.JavaFileChangeListener {
 
         @Override
         public void javaFileCreated(JavaFileEvent event) {
-            intentsMapping.insertFile(bindingUtilities.getJavaFileUtilities().createJavaFileConcerns(event.getFile()));
+            projectionsModel.insertFile(bindingUtilities.getProjectionsModelCreator().createJavaFileConcerns(event.getFile()));
         }
 
         @Override
         public void javaFileDeleted(JavaFileEvent event) {
-            intentsMapping.deleteFile(intentsMapping.get(event.getFile().getPath()));
+            projectionsModel.deleteFile(projectionsModel.get(event.getFile().getPath()));
         }
 
         @Override
         public void javaFileDocumentChanged(JavaFileEvent event) {
-            JavaFileConcerns javaFileIntents = bindingUtilities.getJavaFileUtilities().createJavaFileConcerns(event.getFile());
-            intentsMapping.updateOrInsertFile(javaFileIntents);
-
-//            if (intentsMapping.updateFile(javaFileIntents) == null) {
-//                intentsMapping.insertFile(javaFileIntents);
-//            }
+            JavaFileConcerns javaFileIntents = bindingUtilities.getProjectionsModelCreator().createJavaFileConcerns(event.getFile());
+            projectionsModel.updateOrInsertFile(javaFileIntents);
         }
     }
 }

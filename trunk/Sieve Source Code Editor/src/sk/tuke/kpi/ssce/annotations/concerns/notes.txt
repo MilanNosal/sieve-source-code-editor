@@ -4,3 +4,4 @@ Meno anotacie s postfixom na simulaciu enum parametra pre viacery vyskyt rovnake
 Ma vyznam anotovat aj napr pouzitie nejakej triedy/rozhrania, sice FindUsages funguje, ale nemam tam priame editovanie.
 Privelky reuse anotacii mi vytvori velke pohlady, potom aby sa v nich clovek nestratil.
 Z hladiska navrhu by bolo zaujimave zhodnotit ci spravit v subore triedu s viacerymi concernami, a potom si to anotaciami rozdelit, alebo naopak, viacero tried napokon spojenych projekciou.
+Vyrazne zaujimave su kombinacie anotacii. Kym jedna antoacia je tiez zaujimava, kombinaciou anotacii a ich parametrov je mozne lacnejsie robit dalsie zaujimave projekcie (Sync + changeMonitor).

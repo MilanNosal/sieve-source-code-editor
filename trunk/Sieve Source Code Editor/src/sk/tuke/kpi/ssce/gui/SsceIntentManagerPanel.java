@@ -13,11 +13,11 @@ import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectNotFoundException;
 import sk.tuke.kpi.ssce.core.Constants;
-import sk.tuke.kpi.ssce.core.SSCEditorCore;
+import sk.tuke.kpi.ssce.core.SSCEditorContainer;
 import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
-import sk.tuke.kpi.ssce.core.model.possibleprojections.CodeSnippetConcerns;
+import sk.tuke.kpi.ssce.core.model.availableprojections.CodeSnippetConcerns;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
-import sk.tuke.kpi.ssce.core.model.possibleprojections.ProjectConcerns;
+import sk.tuke.kpi.ssce.core.model.availableprojections.ProjectionsModel;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
@@ -25,7 +25,7 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
  * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Komponent grafickeho rozhrania;
-public class SsceIntentManagerPanel extends javax.swing.JPanel implements ProjectConcerns.ConcernsChangeListener, ListSelectionListener, ChangeListener {
+public class SsceIntentManagerPanel extends javax.swing.JPanel implements ProjectionsModel.ConcernsChangeListener, ListSelectionListener, ChangeListener {
 
     /**
      * Mod v ako pracuje tento komponent.
@@ -41,7 +41,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
          */
         JAVA_DOCUMENT
     }
-    private SSCEditorCore core = null;
+    private SSCEditorContainer core = null;
     private String filePath = null;
     private EditorCookie editorCookie = null;
     private JEditorPane editorPane = null;
@@ -64,7 +64,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
      * @param doc novy dokument
      */
     //SsceIntent:Aktualizacia grafickeho rozhrania;
-    public void setSSCEditorCore(SSCEditorCore core, BaseDocument doc) {
+    public void setSSCEditorCore(SSCEditorContainer core, BaseDocument doc) {
 
         EditorCookie ec = null;
         switch (mode) {
@@ -122,7 +122,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
         refreshModel();
 
 
-        this.core.getIntentsMapping().addChangeListener(this);
+        this.core.getAvailableProjections().addChangeListener(this);
         if (editorPane != null) {
             editorPane.getCaret().addChangeListener(this);
             System.out.println("textComponent for file = " + editorPane.getDocument().getProperty(Constants.FILE_NAME_PROP));
@@ -157,7 +157,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
 
         this.listIntents.removeListSelectionListener(this);
 
-        core.getIntentsMapping().removeChangeListener(this);
+        core.getAvailableProjections().removeChangeListener(this);
 
         if (editorPane != null) {
             editorPane.getCaret().removeChangeListener(this);//CaretListener(this);
@@ -179,7 +179,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
         if (this.core == null) {
             return;
         }
-        if (core.getIntentsMapping().isOutOfDate()) {
+        if (core.getAvailableProjections().isOutOfDate()) {
             return;
         }
         
@@ -202,7 +202,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
 
 
         DefaultListModel model = new DefaultListModel();
-        List<Concern> intents = new ArrayList<Concern>(this.core.getIntentsMapping().getAllConcerns());
+        List<Concern> intents = new ArrayList<Concern>(this.core.getAvailableProjections().getAllConcerns());
         Collections.sort(intents);
 //        model.addElement(IntentsConfiguration.IntentsConfiguration.UNTAGGED_CODE);
         for (Concern intent : intents) {
@@ -271,7 +271,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
 
         CodeSnippetConcerns codeIntents = null;
         if (javaFilePath != null && javaFileCaret != -1) {
-            codeIntents = this.core.getIntentsMapping().get(javaFilePath).findForOffset(javaFileCaret);
+            codeIntents = this.core.getAvailableProjections().get(javaFilePath).findForOffset(javaFileCaret);
         }
 
         if (mode == Mode.JAVA_DOCUMENT && (filePath == null)) {
@@ -358,7 +358,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
     //This is for IntentsMapping
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @Override
-    public void intentsChanged(ProjectConcerns.ConcernsChangedEvent event) {
+    public void intentsChanged(ProjectionsModel.ConcernsChangedEvent event) {
         System.out.println("Ssce manager   intentsChanged = " + new Date().getTime());
         refreshModel();
 //        ignoreCaretChange = false;
@@ -371,7 +371,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
     //when careet position is changed
     @Override
     public void stateChanged(ChangeEvent e) {
-        if (this.core == null || core.getIntentsMapping().isOutOfDate()) {
+        if (this.core == null || core.getAvailableProjections().isOutOfDate()) {
             return;
         }
         System.out.println("Ssce manager    astateChanged = " + new Date().getTime());
