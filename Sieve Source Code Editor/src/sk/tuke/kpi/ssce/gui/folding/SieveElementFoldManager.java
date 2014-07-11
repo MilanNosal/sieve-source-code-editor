@@ -67,11 +67,11 @@ import org.netbeans.spi.editor.fold.FoldOperation;
 import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
 import sk.tuke.kpi.ssce.core.Constants;
-import sk.tuke.kpi.ssce.core.SSCEditorCore;
+import sk.tuke.kpi.ssce.core.SSCEditorContainer;
 import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
 import sk.tuke.kpi.ssce.core.model.view.ViewModel;
-import sk.tuke.kpi.ssce.core.binding.utilities.ViewModelCreator;
+import sk.tuke.kpi.ssce.core.model.creators.ViewModelCreator;
 import sk.tuke.kpi.ssce.core.utilities.IntentsUtilities;
 import sk.tuke.kpi.ssce.nbinterface.lexer.SieveJavaTokenId;
 
@@ -270,7 +270,7 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
         List<FoldMarkInfo> markList = null;
 
         ViewModel model = null;
-        SSCEditorCore core = (SSCEditorCore) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
+        SSCEditorContainer core = (SSCEditorContainer) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
         if (core != null) {
             model = core.getModel();
         }

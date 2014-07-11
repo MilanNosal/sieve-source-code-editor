@@ -22,7 +22,7 @@ import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
 import sk.tuke.kpi.ssce.core.Constants;
-import sk.tuke.kpi.ssce.core.SSCEditorCore;
+import sk.tuke.kpi.ssce.core.SSCEditorContainer;
 
 //SsceIntent:Spustenie SSC Editora;
 @ActionID(category = "File",
@@ -97,7 +97,7 @@ public final class OpenSSCEAction implements ActionListener {
                 StyledDocument doc = ec.openDocument();
                 // XXX: toto by mohlo hypoteticky vyriesit problem s opakovanim
                 //if (doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP) == null) {
-                doc.putProperty(Constants.SSCE_CORE_OBJECT_PROP, new SSCEditorCore(dobj, context));
+                doc.putProperty(Constants.SSCE_CORE_OBJECT_PROP, new SSCEditorContainer(dobj, context));
                 //}
 
 //                if (ec.getOpenedPanes() == null) {

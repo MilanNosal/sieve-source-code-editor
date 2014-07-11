@@ -7,7 +7,7 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
  * Implementacia searchable pre anotacny typ.
  * @author Milan
  */
-public class AnnotationSearchable implements Concern {
+public class AnnotationBasedConcern implements Concern {
     
     // so far only for later
     private final DeclaredType annotationType;
@@ -17,33 +17,21 @@ public class AnnotationSearchable implements Concern {
      * Konstruktor.
      * @param annotationType ak je null, vytvori "no annotations"
      */
-    public AnnotationSearchable(DeclaredType annotationType) {
+    public AnnotationBasedConcern(DeclaredType annotationType) {
         if(annotationType != null) {
             this.annotationType = annotationType;
             uniquePresentation = "@" + annotationType.asElement().getSimpleName().toString();
         } else {
             this.annotationType = null;
             uniquePresentation = "NO ANNOTATIONS";
-        }
-        
+        }        
     }
-    
-    @Override
-    public String getUniquePresentation() {
-        return uniquePresentation;
-    }
-    
-    @Override
-    public boolean equalsPresentation(String presenation) {
-        return uniquePresentation.equals(presenation);
-    }
-    
     
     @Override
     public boolean equals(Object o) {
-        if(o == null || !(o instanceof AnnotationSearchable)) {
+        if(o == null || !(o instanceof AnnotationBasedConcern)) {
             return false;
-        } else if(this.equalsPresentation(((AnnotationSearchable) o).getUniquePresentation())) {
+        } else if(this.uniquePresentation.equals(((AnnotationBasedConcern) o).uniquePresentation)) {
             return true;
         }
         return false;
@@ -56,15 +44,15 @@ public class AnnotationSearchable implements Concern {
     
     @Override
     public String toString() {
-        return getUniquePresentation();
+        return uniquePresentation;
     }
 
     @Override
     public int compareTo(Concern o) {
-        if(o == null) {
+        if(o == null || !(o instanceof AnnotationBasedConcern)) {
             return -1;
         } else {
-            return this.getUniquePresentation().compareTo(o.getUniquePresentation());
+            return this.uniquePresentation.compareTo(((AnnotationBasedConcern)o).uniquePresentation);
         }
     }
 }

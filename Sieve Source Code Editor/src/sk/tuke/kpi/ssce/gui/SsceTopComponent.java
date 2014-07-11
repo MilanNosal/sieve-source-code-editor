@@ -23,7 +23,7 @@ import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import sk.tuke.kpi.ssce.gui.Bundle;
 import sk.tuke.kpi.ssce.core.Constants;
-import sk.tuke.kpi.ssce.core.SSCEditorCore;
+import sk.tuke.kpi.ssce.core.SSCEditorContainer;
 
 /**
  * Top component which displays something.
@@ -171,7 +171,7 @@ public final class SsceTopComponent extends TopComponent implements PropertyChan
         }
         this.document = document;
         this.javaIntentManagerPanel.removeSSCEditorCore();
-        SSCEditorCore core = (SSCEditorCore) document.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
+        SSCEditorContainer core = (SSCEditorContainer) document.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
         this.ssceIntentFilterPanel.setSSCEditorCore(core);
         this.ssceIntentManagerPanel.setSSCEditorCore(core, this.document);
 
@@ -205,7 +205,7 @@ public final class SsceTopComponent extends TopComponent implements PropertyChan
         this.ssceIntentFilterPanel.removeSSCEditorCore();
         this.ssceIntentManagerPanel.removeSSCEditorCore();
 
-        this.javaIntentManagerPanel.setSSCEditorCore((SSCEditorCore) document.getProperty(Constants.SSCE_CORE_OBJECT_PROP), this.document);
+        this.javaIntentManagerPanel.setSSCEditorCore((SSCEditorContainer) document.getProperty(Constants.SSCE_CORE_OBJECT_PROP), this.document);
 
         for (Component comp : getComponents()) {
             if (comp.equals(javaTabbedPanel)) {

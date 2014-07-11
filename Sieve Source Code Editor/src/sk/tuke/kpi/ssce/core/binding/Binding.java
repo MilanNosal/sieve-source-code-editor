@@ -16,7 +16,8 @@ import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.View;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
-import sk.tuke.kpi.ssce.core.binding.utilities.ViewModelCreator;
+import sk.tuke.kpi.ssce.core.model.creators.ProjectionsModelCreator;
+import sk.tuke.kpi.ssce.core.model.creators.ViewModelCreator;
 import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
 import sk.tuke.kpi.ssce.core.model.view.importshandling.Imports;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
@@ -52,15 +53,18 @@ public class Binding {
         UPDATE
     }
     //SsceIntent:Praca s java suborom;
-    @Synchronization(direction = Direction.SJTOJAVA)
-    private final ViewModelCreator javaFileUtilities;
+    @Synchronization(direction = Direction.JAVATOSJ)
+    private final ViewModelCreator viewModelCreator;
+    
+    private final ProjectionsModelCreator projectionsModelCreator;
 
     /**
      * Vytvori nastroj pre realizovanie prepojenia medzi java subormi a pomocnym
      * suborom .sj.
      */
-    public Binding(ViewModelCreator javaFileUtilities) {
-        this.javaFileUtilities = javaFileUtilities;
+    public Binding(ViewModelCreator viewModelCreator, ProjectionsModelCreator projectionsModelCreator) {
+        this.viewModelCreator = viewModelCreator;
+        this.projectionsModelCreator = projectionsModelCreator;
     }
 
     /**
@@ -69,9 +73,19 @@ public class Binding {
      * @return nastroj pre pracu s java subormi.
      */
     //SsceIntent:Praca s java suborom;
-    @Synchronization(direction = Direction.SJTOJAVA)
-    public ViewModelCreator getJavaFileUtilities() {
-        return javaFileUtilities;
+    @Synchronization(direction = Direction.JAVATOSJ)
+    public ViewModelCreator getViewModelCreator() {
+        return viewModelCreator;
+    }
+    
+    /**
+     * Vrati nastroj pre pracu s java subormi.
+     *
+     * @return nastroj pre pracu s java subormi.
+     */
+    //SsceIntent:Praca s java suborom;
+    public ProjectionsModelCreator getProjectionsModelCreator() {
+        return projectionsModelCreator;
     }
 
     /**
@@ -525,6 +539,7 @@ public class Binding {
     @Synchronization(direction = Direction.JAVATOSJ)
     @SievedDocument
     @Guarding
+    @SourceCodeSieving(postProcessing = true)
     private boolean markGuardedSieveDoument(StyledDocument doc, ViewModel model) {
 //        NbDocument.unmarkGuarded((StyledDocument) doc, 0, doc.getLength());
         JavaFile javaFile;
@@ -583,7 +598,7 @@ public class Binding {
 
             sieveDoc.readLock();
             try {
-                Imports imports = javaFileUtilities.getImports(sieveDoc, javaFile.getImportsBinding().getStartPositionSieveDocument(), javaFile.getImportsBinding().getEndPositionSieveDocument() - javaFile.getImportsBinding().getStartPositionSieveDocument() + 1);
+                Imports imports = viewModelCreator.getImports(sieveDoc, javaFile.getImportsBinding().getStartPositionSieveDocument(), javaFile.getImportsBinding().getEndPositionSieveDocument() - javaFile.getImportsBinding().getStartPositionSieveDocument() + 1);
                 if (imports == null) {
                     return false;
                 }

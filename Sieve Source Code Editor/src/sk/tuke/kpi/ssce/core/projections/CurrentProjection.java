@@ -32,7 +32,7 @@ public class CurrentProjection implements Serializable {
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @ProjectionConfigurationChange(propagation=true)
-    public boolean addConfigurationChangeListener(CurrentProjectionChangeListener listener) {
+    public boolean addCurrentProjectionChangeListener(CurrentProjectionChangeListener listener) {
         return listeners.add(listener);
     }
 
@@ -43,13 +43,13 @@ public class CurrentProjection implements Serializable {
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @ProjectionConfigurationChange(propagation=true)
-    public boolean removeConfigurationChangeListener(CurrentProjectionChangeListener listener) {
+    public boolean removeCurrentProjectionChangeListener(CurrentProjectionChangeListener listener) {
         return listeners.remove(listener);
     }
 
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @ProjectionConfigurationChange(propagation=true)
-    private void fireConfigurationChanged(CurrentProjectionChangedEvent event) {
+    private void fireCurrentProjectionChange(CurrentProjectionChangedEvent event) {
         if (event == null) {
             return;
         }
@@ -80,15 +80,15 @@ public class CurrentProjection implements Serializable {
 
     /**
      * Nastavi novu mnozinu zamerov.
-     * @param selectedIntents nova mnozina zamerov.
+     * @param selectedConcerns nova mnozina zamerov.
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @ProjectionConfiguration
     @ProjectionConfigurationChange
-    public void setSelectedIntents(Set<Concern> selectedIntents) {
+    public void setSelectedConcerns(Set<Concern> selectedConcerns) {
         this.currentlySelectedConcerns.clear();
-        this.currentlySelectedConcerns.addAll(selectedIntents);
-        fireConfigurationChanged(new CurrentProjectionChangedEvent(this));
+        this.currentlySelectedConcerns.addAll(selectedConcerns);
+        fireCurrentProjectionChange(new CurrentProjectionChangedEvent(this));
     }
 
     /**
@@ -110,7 +110,7 @@ public class CurrentProjection implements Serializable {
     @ProjectionConfigurationChange
     public void setParams(Map<String, Object> params) {
         this.params = params;
-        fireConfigurationChanged(new CurrentProjectionChangedEvent(this));
+        fireCurrentProjectionChange(new CurrentProjectionChangedEvent(this));
     }
 
     /**

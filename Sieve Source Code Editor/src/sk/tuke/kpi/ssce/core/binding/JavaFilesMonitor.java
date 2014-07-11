@@ -10,24 +10,11 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 import javax.swing.text.StyledDocument;
-import org.netbeans.api.editor.mimelookup.MimeLookup;
-import org.netbeans.api.java.source.CompilationController;
-import org.netbeans.api.java.source.CompilationInfo;
-import org.netbeans.api.java.source.JavaSource;
-import org.netbeans.editor.BaseDocument;
-import org.netbeans.modules.parsing.api.ResultIterator;
-import org.netbeans.modules.parsing.api.Snapshot;
-import org.netbeans.modules.parsing.api.UserTask;
-import org.netbeans.modules.parsing.impl.Utilities;
-import org.netbeans.modules.parsing.spi.ParseException;
-import org.netbeans.modules.parsing.spi.Parser;
-import org.netbeans.modules.parsing.spi.ParserFactory;
 import org.openide.cookies.EditorCookie;
 import org.openide.filesystems.*;
 import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
-import org.openide.util.Lookup;
 import sk.tuke.kpi.ssce.annotations.concerns.ChangeMonitoring;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Source;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Type;
@@ -207,7 +194,7 @@ public class JavaFilesMonitor {
      * Listenery, ktore bude JavaFilesMonitor informovat o zmenach.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
+    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
     private final Set<JavaFilesMonitor.JavaFileChangeListener> javaFileListeners = new HashSet<JavaFilesMonitor.JavaFileChangeListener>();
     /**
      * Priecinok, ktory je monitorovany.
