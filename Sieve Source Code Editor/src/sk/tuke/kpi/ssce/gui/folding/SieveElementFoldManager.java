@@ -1,46 +1,3 @@
-/*
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
- *
- * Copyright 1997-2010 Oracle and/or its affiliates. All rights reserved.
- *
- * Oracle and Java are registered trademarks of Oracle and/or its affiliates.
- * Other names may be trademarks of their respective owners.
- *
- * The contents of this file are subject to the terms of either the GNU
- * General Public License Version 2 only ("GPL") or the Common
- * Development and Distribution License("CDDL") (collectively, the
- * "License"). You may not use this file except in compliance with the
- * License. You can obtain a copy of the License at
- * http://www.netbeans.org/cddl-gplv2.html
- * or nbbuild/licenses/CDDL-GPL-2-CP. See the License for the
- * specific language governing permissions and limitations under the
- * License.  When distributing the software, include this License Header
- * Notice in each file and include the License file at
- * nbbuild/licenses/CDDL-GPL-2-CP.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the GPL Version 2 section of the License file that
- * accompanied this code. If applicable, add the following below the
- * License Header, with the fields enclosed by brackets [] replaced by
- * your own identifying information:
- * "Portions Copyrighted [year] [name of copyright owner]"
- *
- * Contributor(s):
- *
- * The Original Software is NetBeans. The Initial Developer of the Original
- * Software is Sun Microsystems, Inc. Portions Copyright 1997-2006 Sun
- * Microsystems, Inc. All Rights Reserved.
- *
- * If you wish your version of this file to be governed by only the CDDL
- * or only the GPL Version 2, indicate your decision by adding
- * "[Contributor] elects to include this software in this distribution
- * under the [CDDL or GPL Version 2] license." If you do not indicate a
- * single choice of license, a recipient has the option to distribute
- * your version of this file under either the CDDL, the GPL Version 2 or
- * to extend the choice of license to its licensees as provided above.
- * However, if you add GPL Version 2 code and therefore, elected the GPL
- * Version 2 license, then the option applies only if the new code is
- * made subject to such option by the copyright holder.
- */
 package sk.tuke.kpi.ssce.gui.folding;
 
 import javax.swing.text.Document;
@@ -51,12 +8,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import org.netbeans.api.editor.fold.Fold;
 import org.netbeans.api.editor.fold.FoldHierarchy;
 import org.netbeans.api.editor.fold.FoldType;
-import org.netbeans.api.lexer.Token;
 import org.netbeans.api.lexer.TokenHierarchy;
 import org.netbeans.api.lexer.TokenSequence;
 import org.netbeans.editor.BaseDocument;
@@ -67,12 +21,10 @@ import org.netbeans.spi.editor.fold.FoldOperation;
 import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
 import sk.tuke.kpi.ssce.core.Constants;
-import sk.tuke.kpi.ssce.core.SSCEditorContainer;
+import sk.tuke.kpi.ssce.core.SSCEditorCore;
 import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
 import sk.tuke.kpi.ssce.core.model.view.ViewModel;
-import sk.tuke.kpi.ssce.core.model.creators.ViewModelCreator;
-import sk.tuke.kpi.ssce.core.utilities.IntentsUtilities;
 import sk.tuke.kpi.ssce.nbinterface.lexer.SieveJavaTokenId;
 
 /**
@@ -270,7 +222,7 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
         List<FoldMarkInfo> markList = null;
 
         ViewModel model = null;
-        SSCEditorContainer core = (SSCEditorContainer) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
+        SSCEditorCore core = (SSCEditorCore) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
         if (core != null) {
             model = core.getModel();
         }
@@ -286,7 +238,8 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
 
 
             try {
-                if (new ViewModelCreator().getImports((BaseDocument) doc, file.getImportsBinding().getStartPositionSieveDocument(), file.getImportsBinding().getLengthBindingAreaSieveDocument()).getCount() > 0) {
+                if (core != null &&
+                        core.getBindingUtilities().getViewModelCreator().getImports((BaseDocument) doc, file.getImportsBinding().getStartPositionSieveDocument(), file.getImportsBinding().getLengthBindingAreaSieveDocument()).getCount() > 0) {
                     fold = new FoldMarkInfo(file.getImportsBinding().getStartPositionSieveDocument(), file.getImportsBinding().getEndPositionSieveDocument(), 0, 0, true, "imports");
                 }
             } catch (BadLocationException ex) {
@@ -302,8 +255,6 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
 
 
             for (CodeSnippet code : file.getCodeSnippets()) {
-
-
 
                 seq.move(code.getCodeBinding().getStartPositionSieveDocument());
                 while (seq.movePrevious() && !SieveJavaTokenId.CODE.equals(seq.token().id()));
@@ -329,58 +280,9 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
                     }
                 }
 
-//                fold = null;
-//                try {
-//                    fold = new FoldMarkInfo(code.getCodeBinding().getStartPositionSieveDocument(), code.getCodeBinding().getEndPositionSieveDocument() + 1, true, "...");
-//                } catch (BadLocationException ex) {
-//                    Exceptions.printStackTrace(ex);
-//                    fold = null;
-//                }
-//                if (fold != null) {
-//                    if (markList == null) {
-//                        markList = new ArrayList<FoldMarkInfo>();
-//                    }
-//                    markList.add(fold);
-//                }
-
             }
 
-
-//            fold = null;
-//            try {
-//                fold = new FoldMarkInfo(file.getStartFile(), file.getEndFile(), true, "File");
-//            } catch (BadLocationException ex) {
-//                Exceptions.printStackTrace(ex);
-//                fold = null;
-//            }
-//            if (fold != null) {
-//                if (markList == null) {
-//                    markList = new ArrayList<FoldMarkInfo>();
-//                }
-//                markList.add(fold);
-//            }
-
         }
-
-
-
-//        for (seq.moveStart(); seq.moveNext();) {
-//            Token token = seq.token();
-//            FoldMarkInfo info;
-//            try {
-//                info = scanToken(token);
-//            } catch (BadLocationException e) {
-//                LOG.log(Level.WARNING, null, e);
-//                info = null;
-//            }
-//
-//            if (info != null) {
-//                if (markList == null) {
-//                    markList = new ArrayList<FoldMarkInfo>();
-//                }
-//                markList.add(info);
-//            }
-//        }
 
         return markList;
     }
@@ -453,15 +355,6 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
 
         // Find the first mark to update and init the prevMark and parentMark prior the loop
         int index = findMarkIndex(minUpdateMarkOffset);
-//        FoldMarkInfo prevMark;
-//        FoldMarkInfo parentMark;
-//        if (index == 0) { // start from begining
-//            prevMark = null;
-//            parentMark = null;
-//        } else {
-//            prevMark = getMark(index - 1);
-//            parentMark = prevMark.getParentMark();
-//        }
 
         // Iterate through the changed marks in the mark array 
         int markCount = getMarkCount();
@@ -479,42 +372,6 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
             }
 
             mark.ensureFoldExists(transaction);
-
-
-//            // Update mark's status (folds, parentMark etc.)
-//            if (mark.isStartMark()) { // starting a new fold
-//                if (prevMark == null || prevMark.isStartMark()) { // new level
-//                    mark.setParentMark(prevMark); // prevMark == null means root level
-//                    parentMark = prevMark;
-//
-//                } // same level => parent to the parent of the prevMark
-//
-//            } else { // end mark
-//                if (prevMark != null) {
-//                    if (prevMark.isStartMark()) { // closing nearest fold
-//                        prevMark.setEndMark(mark, false, transaction);
-//
-//                    } else { // prevMark is end mark - closing its parent fold
-//                        if (parentMark != null) {
-//                            // mark's parent gets set as well
-//                            parentMark.setEndMark(mark, false, transaction);
-//                            parentMark = parentMark.getParentMark();
-//
-//                        } else { // prevMark's parentMark is null (top level)
-//                            mark.makeSolitaire(false, transaction);
-//                        }
-//                    }
-//                    
-//                } else { // prevMark is null
-//                    mark.makeSolitaire(false, transaction);
-//                }
-//            }
-//
-//            // Set parent mark of the mark
-//            mark.setParentMark(parentMark);
-//
-//            
-//            prevMark = mark;
 
             index++;
         }
@@ -588,18 +445,6 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
             this.collapsed = collapsed;
         }
 
-//        public boolean isSolitaire() {
-//            return false;//(pairMark == null);
-//        }
-//        public void makeSolitaire(boolean forced, FoldHierarchyTransaction transaction) {
-//            if (!isSolitaire()) {
-//                if (isStartMark()) {
-//                    setEndMark(null, forced, transaction);
-//                } else { // end mark
-//                    getPairMark().setEndMark(null, forced, transaction);
-//                }
-//            }
-//        }
         public boolean isReleased() {
             return released;
         }
@@ -615,47 +460,7 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
             }
         }
 
-//        public FoldMarkInfo getPairMark() {
-//            return pairMark;
-//        }
-//        private void setPairMark(FoldMarkInfo pairMark) {
-//            this.pairMark = pairMark;
-//        }
-//        public void setEndMark(FoldMarkInfo endMark, boolean forced,
-//        FoldHierarchyTransaction transaction) {
-//            if (!isStartMark()) {
-//                throw new IllegalStateException("Not start mark"); // NOI18N
-//            }
-//            if (pairMark == endMark) {
-//                return;
-//            }
-//            
-//            if (pairMark != null) { // is currently paired to an end mark
-//                releaseFold(forced, transaction);
-//                pairMark.setPairMark(null);
-//            }
-//
-//            pairMark = endMark;
-//            if (endMark != null) {
-//                if (!endMark.isSolitaire()) { // make solitaire first
-//                    endMark.makeSolitaire(false, transaction); // not forced here
-//                }
-//                endMark.setPairMark(this);
-//                endMark.setParentMark(this.getParentMark());
-//                ensureFoldExists(transaction);
-//            }
-//        }
-//        public FoldMarkInfo getParentMark() {
-//            return parentMark;
-//        }
-//        
-//        public void setParentMark(FoldMarkInfo parentMark) {
-//            this.parentMark = parentMark;
-//        }
         private void releaseFold(boolean forced, FoldHierarchyTransaction transaction) {
-//            if (isSolitaire() || !isStartMark()) {
-//               throw new IllegalStateException();
-//            }
 
             if (fold != null) {
                 setCollapsed(fold.isCollapsed()); // serialize the collapsed info
@@ -667,21 +472,10 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
         }
 
         public Fold getFold() {
-//            if (isSolitaire()) {
-//                return null;
-//            }
-//            if (!isStartMark()) {
-//                return pairMark.getFold();
-//            }
             return fold;
         }
 
-        //<editor-fold>
-        //</editor-fold>
         public void ensureFoldExists(FoldHierarchyTransaction transaction) {
-//            if (isSolitaire() || !isStartMark()) {
-//                throw new IllegalStateException();
-//            }
 
             if (fold == null) {
                 try {
@@ -699,48 +493,6 @@ final class SieveElementFoldManager implements FoldManager, Runnable {
                 }
             }
         }
-//        public @Override String toString() {
-//            StringBuffer sb = new StringBuffer();
-//            sb.append(isStartMark() ? 'S' : 'E');  // NOI18N
-//            
-//            // Check whether this mark (or its pair) has fold
-//            if (hasFold() || (!isSolitaire() && getPairMark().hasFold())) {
-//                sb.append("F"); // NOI18N
-//                
-//                // Check fold's status
-//                if (isStartMark() && (isSolitaire()
-//                        || getStartOffset() != fold.getStartOffset()
-//                        || getPairMark().getEndOffset() != fold.getEndOffset())
-//                ) {
-//                    sb.append("!!<"); // NOI18N
-//                    sb.append(fold.getStartOffset());
-//                    sb.append(","); // NOI18N
-//                    sb.append(fold.getEndOffset());
-//                    sb.append(">!!"); // NOI18N
-//                }
-//            }
-//
-//            // Append mark's internal status
-//            sb.append(" ("); // NOI18N
-//            sb.append("o="); // NOI18N
-//            sb.append(startPos.getOffset());
-//            sb.append(", l="); // NOI18N
-//            sb.append(length);
-//            sb.append(", d='"); // NOI18N
-//            sb.append(description);
-//            sb.append('\'');
-//            if (getPairMark() != null) {
-//                sb.append(", <->"); // NOI18N
-//                sb.append(getPairMark().getStartOffset());
-//            }
-//            if (getParentMark() != null) {
-//                sb.append(", ^"); // NOI18N
-//                sb.append(getParentMark().getStartOffset());
-//            }
-//            sb.append(')');
-//            
-//            return sb.toString();
-//        }
     }
 
     public static final class Factory implements FoldManagerFactory {

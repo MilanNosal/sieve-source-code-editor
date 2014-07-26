@@ -29,7 +29,7 @@ public class DefaultSimpleSiever implements CodeSiever {
         if (selectedIntents.isEmpty()) {
             match = false;
         } else {
-            if ("AND".equals(currentProjection.getParams().get("mode"))) {
+            if ("OR".equals(currentProjection.getParams().get("mode"))) {
                 match = true;
                 if (selectedIntents.contains(extractor.getNilConcern())) {
                     if (!codeIntents.isEmpty()) {

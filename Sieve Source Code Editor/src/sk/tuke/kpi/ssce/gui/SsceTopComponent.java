@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package sk.tuke.kpi.ssce.gui;
 
 import java.awt.BorderLayout;
@@ -12,7 +8,6 @@ import java.io.IOException;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import org.netbeans.api.editor.EditorRegistry;
-import org.netbeans.api.settings.ConvertAsProperties;
 import org.netbeans.editor.BaseDocument;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -21,9 +16,8 @@ import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
-import sk.tuke.kpi.ssce.gui.Bundle;
 import sk.tuke.kpi.ssce.core.Constants;
-import sk.tuke.kpi.ssce.core.SSCEditorContainer;
+import sk.tuke.kpi.ssce.core.SSCEditorCore;
 
 /**
  * Top component which displays something.
@@ -171,7 +165,7 @@ public final class SsceTopComponent extends TopComponent implements PropertyChan
         }
         this.document = document;
         this.javaIntentManagerPanel.removeSSCEditorCore();
-        SSCEditorContainer core = (SSCEditorContainer) document.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
+        SSCEditorCore core = (SSCEditorCore) document.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
         this.ssceIntentFilterPanel.setSSCEditorCore(core);
         this.ssceIntentManagerPanel.setSSCEditorCore(core, this.document);
 
@@ -205,7 +199,7 @@ public final class SsceTopComponent extends TopComponent implements PropertyChan
         this.ssceIntentFilterPanel.removeSSCEditorCore();
         this.ssceIntentManagerPanel.removeSSCEditorCore();
 
-        this.javaIntentManagerPanel.setSSCEditorCore((SSCEditorContainer) document.getProperty(Constants.SSCE_CORE_OBJECT_PROP), this.document);
+        this.javaIntentManagerPanel.setSSCEditorCore((SSCEditorCore) document.getProperty(Constants.SSCE_CORE_OBJECT_PROP), this.document);
 
         for (Component comp : getComponents()) {
             if (comp.equals(javaTabbedPanel)) {

@@ -7,7 +7,7 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import sk.tuke.kpi.ssce.core.SSCEditorContainer;
+import sk.tuke.kpi.ssce.core.SSCEditorCore;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
 import sk.tuke.kpi.ssce.core.model.availableprojections.ProjectionsModel;
 import sk.tuke.kpi.ssce.core.model.availableprojections.ProjectionsModel.ConcernsChangedEvent;
@@ -21,7 +21,7 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 //SsceIntent:Komponent grafickeho rozhrania;
 public class SsceIntentFilterPanel extends javax.swing.JPanel implements ProjectionsModel.ConcernsChangeListener, ActionListener, ListSelectionListener {
 
-    private SSCEditorContainer core = null;
+    private SSCEditorCore core = null;
 
     /**
      * Creates new form SsceIntentFilterPanel
@@ -30,7 +30,7 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Project
     public SsceIntentFilterPanel() {
         initComponents();
 
-        jComboBoxMode.setModel(new DefaultComboBoxModel(new Object[]{CurrentProjection.MODE_AND, CurrentProjection.MODE_OR}));
+        //jComboBoxMode.setModel(new DefaultComboBoxModel(new Object[]{CurrentProjection.MODE_AND, CurrentProjection.MODE_OR}));
 //        jListIntents.setSelectionModel(new DefaultListSelectionModel() {
 //
 //            @Override
@@ -51,7 +51,7 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Project
      * @param core nove jadro editora modulu SSCE.
      */
     //SsceIntent:Aktualizacia grafickeho rozhrania;
-    public void setSSCEditorCore(SSCEditorContainer core) {
+    public void setSSCEditorCore(SSCEditorCore core) {
         if (this.core != null) {
             if (this.core.equals(core)) {
                 //TODO: co treba: actualize
@@ -222,11 +222,11 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Project
         if (this.core == null) {
             return;
         }
-        if (CurrentProjection.MODE_AND.equals(jComboBoxMode.getSelectedItem())) {
-            this.core.getConfiguration().setParams(CurrentProjection.MODE_AND);
-        } else if (CurrentProjection.MODE_OR.equals(jComboBoxMode.getSelectedItem())) {
-            this.core.getConfiguration().setParams(CurrentProjection.MODE_OR);
-        }
+//        if (CurrentProjection.MODE_AND.equals(jComboBoxMode.getSelectedItem())) {
+//            this.core.getConfiguration().setParams(CurrentProjection.MODE_AND);
+//        } else if (CurrentProjection.MODE_OR.equals(jComboBoxMode.getSelectedItem())) {
+//            this.core.getConfiguration().setParams(CurrentProjection.MODE_OR);
+//        }
 
     }
 

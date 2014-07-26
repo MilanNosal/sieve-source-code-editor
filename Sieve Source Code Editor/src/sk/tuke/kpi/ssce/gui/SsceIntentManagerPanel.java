@@ -13,7 +13,7 @@ import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectNotFoundException;
 import sk.tuke.kpi.ssce.core.Constants;
-import sk.tuke.kpi.ssce.core.SSCEditorContainer;
+import sk.tuke.kpi.ssce.core.SSCEditorCore;
 import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
 import sk.tuke.kpi.ssce.core.model.availableprojections.CodeSnippetConcerns;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
@@ -41,7 +41,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
          */
         JAVA_DOCUMENT
     }
-    private SSCEditorContainer core = null;
+    private SSCEditorCore core = null;
     private String filePath = null;
     private EditorCookie editorCookie = null;
     private JEditorPane editorPane = null;
@@ -64,7 +64,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
      * @param doc novy dokument
      */
     //SsceIntent:Aktualizacia grafickeho rozhrania;
-    public void setSSCEditorCore(SSCEditorContainer core, BaseDocument doc) {
+    public void setSSCEditorCore(SSCEditorCore core, BaseDocument doc) {
 
         EditorCookie ec = null;
         switch (mode) {
