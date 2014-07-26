@@ -1,5 +1,9 @@
 package sk.tuke.kpi.ssce.core.model.view;
 
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.GuardingRequest;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.FoldingRequest;
+import java.util.LinkedList;
+import java.util.List;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
 import org.netbeans.editor.BaseDocument;
@@ -8,7 +12,9 @@ import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 
 /**
- * Trieda sluzi na prepojenie dvoch usekoch, jedneho v pomocnom subore .sj a druheho v java subore.
+ * Trieda sluzi na prepojenie dvoch usekoch, jedneho v pomocnom subore .sj a
+ * druheho v java subore.
+ *
  * @author Matej Nosal
  */
 //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
@@ -20,6 +26,9 @@ public class BindingPositions {
     private int lengthJavaDocument;
     private Position startPositionSieveDocument;
     private Position endPositionSieveDocument;
+    
+    private final List<GuardingRequest> guardingRequests = new LinkedList<GuardingRequest>();
+    private final List<FoldingRequest> foldingRequests = new LinkedList<FoldingRequest>();
 
     /**
      * Vytvori nedefinovane prepojenie dvoch usekov.
@@ -28,7 +37,9 @@ public class BindingPositions {
     }
 
     /**
-     * Vytvori ciastocne definovane prepojenie dvoch usekov. Usek v java subore je definovany.
+     * Vytvori ciastocne definovane prepojenie dvoch usekov. Usek v java subore
+     * je definovany.
+     *
      * @param startPositionJavaDocument zaciatocna pozicia useku v java subore.
      * @param lengthJavaDocument dlzka useku v java subore.
      */
@@ -37,8 +48,37 @@ public class BindingPositions {
         this.lengthJavaDocument = lengthJavaDocument;
     }
     
+    public void addGuardingRequest(GuardingRequest request) {
+        this.guardingRequests.add(request);
+    }
+    
+    public List<GuardingRequest> getGuardingRequests() {
+        List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
+        for(GuardingRequest request : this.guardingRequests) {
+            updatedGuardingRequests.add(GuardingRequest.create(
+                    request.getStartOffset() + this.startPositionSieveDocument.getOffset(),
+                    request.getEndOffset() + this.startPositionJavaDocument.getOffset()));
+        }
+        return updatedGuardingRequests;
+    }
+    
+    public void addFoldingRequest(FoldingRequest request) {
+        this.foldingRequests.add(request);
+    }
+    
+    public List<FoldingRequest> getFoldingRequests() {
+        List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
+        for(FoldingRequest request : this.foldingRequests) {
+            updatedFoldingRequests.add(FoldingRequest.create(
+                    request.getStartOffset() + this.startPositionSieveDocument.getOffset(),
+                    request.getEndOffset() + this.startPositionJavaDocument.getOffset()));
+        }
+        return updatedFoldingRequests;
+    }
+
     /**
      * Vrati dlzku useku v java subore.
+     *
      * @return dlzku useku v java subore.
      */
     public int getLengthBindingAreaJavaDocument() {
@@ -47,14 +87,16 @@ public class BindingPositions {
 
     /**
      * Vrati koncovu poziciu (offset) useku v java subore.
+     *
      * @return koncovu poziciu (offset) useku v java subore.
      */
     public int getEndPositionJavaDocument() {
-        return startPositionJavaDocument.getOffset()+lengthJavaDocument;
+        return startPositionJavaDocument.getOffset() + lengthJavaDocument;
     }
 
     /**
      * Nastavi dlzku useku v java subore.
+     *
      * @param lengthJavaDocument dlzka useku v java subore.
      */
     public void setLengthJavaDocument(int lengthJavaDocument) {
@@ -63,6 +105,7 @@ public class BindingPositions {
 
     /**
      * Vrati koncovu poziciu (offset) useku v pomocnom subore .sj.
+     *
      * @return koncovu poziciu (offset) useku v pomocnom subore .sj.
      */
     public int getEndPositionSieveDocument() {
@@ -71,8 +114,10 @@ public class BindingPositions {
 
     /**
      * Nastavi koncovu poziciu v pomocnom subore .sj.
+     *
      * @param doc dokument pomocneho suboru .sj.
-     * @param endPositionSieveDocument koncova pozicia (offset) useku v pomocnom subore .sj.
+     * @param endPositionSieveDocument koncova pozicia (offset) useku v pomocnom
+     * subore .sj.
      * @throws BadLocationException
      */
     //SsceIntent:Praca s pomocnym suborom;
@@ -82,6 +127,7 @@ public class BindingPositions {
 
     /**
      * Vrati dlzku useku v pomocnom subore .sj.
+     *
      * @return dlzku useku v pomocnom subore .sj.
      */
     public int getLengthBindingAreaSieveDocument() {
@@ -90,6 +136,7 @@ public class BindingPositions {
 
     /**
      * Vrati zaciatocnu poziciu (offset) useku v java subore.
+     *
      * @return zaciatocnu poziciu (offset) useku v java subore.
      */
     public int getStartPositionJavaDocument() {
@@ -98,6 +145,7 @@ public class BindingPositions {
 
     /**
      * Nastavi zaciatocnu poziciu useku v java subore.
+     *
      * @param doc dokument pre java subor.
      * @param startPositionJavaDocument zaciatocna pozicia (offset) useku.
      * @throws BadLocationException
@@ -108,6 +156,7 @@ public class BindingPositions {
 
     /**
      * Vrati zaciatocnu poziciu (offset) useku v pomocnom subore .sj.
+     *
      * @return zaciatocnu poziciu (offset) useku v pomocnom subore .sj.
      */
     public int getStartPositionSieveDocument() {
@@ -116,6 +165,7 @@ public class BindingPositions {
 
     /**
      * Nastavi zaciatocnu poziciu useku v pomocnom subore .sj.
+     *
      * @param doc dokument pre pomocny subor .sj.
      * @param startPositionSieveDocument zaciatocna pozicia (offset) useku.
      * @throws BadLocationException
@@ -126,12 +176,14 @@ public class BindingPositions {
     }
 
     /**
-     * Overi ci prepojenie usekov je konzistentne. T.j. oba useky su jednoznacne definovane.
+     * Overi ci prepojenie usekov je konzistentne. T.j. oba useky su jednoznacne
+     * definovane.
+     *
      * @return true, ak je prepojenie konzistentne, v opacnom pripade false.
      */
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
     public boolean isInitialized() {
-        return startPositionJavaDocument!=null && lengthJavaDocument > -1
+        return startPositionJavaDocument != null && lengthJavaDocument > -1
                 && startPositionSieveDocument != null && endPositionSieveDocument != null
                 && startPositionSieveDocument.getOffset() <= endPositionSieveDocument.getOffset();
     }

@@ -1,8 +1,11 @@
 package sk.tuke.kpi.ssce.core.model.view;
 
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.GuardingRequest;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.FoldingRequest;
 import sk.tuke.kpi.ssce.core.model.view.importshandling.Imports;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
@@ -39,6 +42,9 @@ public class JavaFile {
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
     private BindingPositions importsBinding; //binding between allImports in file and necesaryImports in sieve file
     
+    private final List<GuardingRequest> guardingRequests = new LinkedList<GuardingRequest>();
+    private final List<FoldingRequest> foldingRequests = new LinkedList<FoldingRequest>();
+    
     @ImportsManagement
     private Imports allImports;
     @ImportsManagement
@@ -57,6 +63,34 @@ public class JavaFile {
         this.filePath = filePath;
         this.fileName = fileName;
         initialize();
+    }
+    
+    public void addGuardingRequest(GuardingRequest request) {
+        this.guardingRequests.add(request);
+    }
+    
+    public List<GuardingRequest> getGuardingRequests() {
+        List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
+        for(GuardingRequest request : this.guardingRequests) {
+            updatedGuardingRequests.add(GuardingRequest.create(
+                    request.getStartOffset() + this.beginInSJ.getOffset(),
+                    request.getEndOffset() + this.endInSJ.getOffset()));
+        }
+        return updatedGuardingRequests;
+    }
+    
+    public void addFoldingRequest(FoldingRequest request) {
+        this.foldingRequests.add(request);
+    }
+    
+    public List<FoldingRequest> getFoldingRequests() {
+        List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
+        for(FoldingRequest request : this.foldingRequests) {
+            updatedFoldingRequests.add(FoldingRequest.create(
+                    request.getStartOffset() + this.beginInSJ.getOffset(),
+                    request.getEndOffset() + this.endInSJ.getOffset()));
+        }
+        return updatedFoldingRequests;
     }
 
     private void initialize() {

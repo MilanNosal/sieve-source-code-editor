@@ -66,7 +66,6 @@ import org.netbeans.spi.editor.fold.FoldManagerFactory;
 import org.netbeans.spi.editor.fold.FoldOperation;
 import org.openide.util.RequestProcessor;
 import sk.tuke.kpi.ssce.core.Constants;
-import sk.tuke.kpi.ssce.core.utilities.IntentsUtilities;
 
 /**
  * Fold maintainer that creates and updates custom folds.
@@ -462,17 +461,19 @@ final class SsceIntentFoldManager implements FoldManager, Runnable {
 //            // id must be first, the rest of attributes in random order
 //            "(?:(?:\\s+id=\"(\\S*)\")?(?:\\s+defaultstate=\"(\\S*?)\")?(?:\\s+desc=\"([\\S \\t]*?)\")?(?:\\s+defaultstate=\"(\\S*?)\")?)" +
 //            "\\s*>)|(?:</\\s*editor-fold\\s*>)"); // NOI18N
+ 
+    
+//SsceIntent:Komentar uchovavajuci zamer;
+//    private static Pattern pattern = Pattern.compile(Constants.SSCE_COMMENT_REGEX);
     //SsceIntent:Komentar uchovavajuci zamer;
-    private static Pattern pattern = Pattern.compile(Constants.SSCE_COMMENT_REGEX);
-    //SsceIntent:Komentar uchovavajuci zamer;
-    private static IntentsUtilities intentsUtilities = new IntentsUtilities();
+//    private static IntentsUtilities intentsUtilities = new IntentsUtilities();
 
     //SsceIntent:Komentar uchovavajuci zamer;
     private FoldMarkInfo scanToken(Token token) throws BadLocationException {
         // ignore any token that is not comment
         if (token.id().primaryCategory() != null && "comment".equals(token.id().primaryCategory())) { //NOI18N
-            Matcher matcher = pattern.matcher(token.text());
-            if (matcher.find()) {
+           /* Matcher matcher = pattern.matcher(token.text());
+            if (matcher.find()) { */
 
 
 
@@ -491,12 +492,12 @@ final class SsceIntentFoldManager implements FoldManager, Runnable {
 //                        else
 //                            tagFoldId.put(matcher.group(2), Boolean.valueOf(state));
 //                    }
-                int startOffset = token.offset(null);
-                return new FoldMarkInfo(startOffset, startOffset + token.length() - 1, true, intentsUtilities.getIntents(matcher.group(), null, null, null)); // NOI18N
+             /*   int startOffset = token.offset(null);
+                return new FoldMarkInfo(startOffset, startOffset + token.length() - 1, true, intentsUtilities.getIntents(matcher.group(), null, null, null)); // NOI18N */
 //                } else { // fold's end mark found
 //                    return new FoldMarkInfo(false, token.offset(null), matcher.end(0), null, false, null);
 //                }
-            }
+            /*}*/
         }
         return null;
     }

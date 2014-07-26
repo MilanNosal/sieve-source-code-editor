@@ -43,7 +43,7 @@ import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
  *
  * @author Matej Nosal
  */
-public class SSCEditorContainer {
+public class SSCEditorCore {
 
     /**
      * Nastroj pre obojsmerne prepojovanie java suborov s pomocnym suborom.
@@ -114,7 +114,7 @@ public class SSCEditorContainer {
      * @throws IOException ak dojde k nejakej I/O chybe.
      */
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v java zdrojovom kode;Notifikacia na zmeny v pomocnom subore .sj;Monitorovanie java suborov;Model pre mapovanie zamerov;Prepojenie java suborov s pomocnym suborom .sj;Notifikacia na zmeny v priradenych zamerov;Model pre synchronizaciu kodu;
-    public SSCEditorContainer(final DataObject dataObject, Project projectContext,
+    public SSCEditorCore(final DataObject dataObject, Project projectContext,
             ConcernExtractor extractor, CodeSiever siever) throws IOException {
         viewModel = new ViewModel();
         projectionsModel = new ProjectionsModel();
@@ -176,7 +176,7 @@ public class SSCEditorContainer {
             public void propertyChange(PropertyChangeEvent evt) {
                 if (EditorRegistry.FOCUS_GAINED_PROPERTY.equals(evt.getPropertyName())) {
                     JTextComponent component = evt.getNewValue() != null && evt.getNewValue() instanceof JTextComponent ? ((JTextComponent) evt.getNewValue()) : null;
-                    if (component != null && component.getDocument() != null && SSCEditorContainer.this.equals(component.getDocument().getProperty(Constants.SSCE_CORE_OBJECT_PROP))) {
+                    if (component != null && component.getDocument() != null && SSCEditorCore.this.equals(component.getDocument().getProperty(Constants.SSCE_CORE_OBJECT_PROP))) {
 //                        bindingUtilities.markGuardedSieveDoument((StyledDocument) component.getDocument(), model);
                         System.out.println("--- focus gained + refreshDocumentListening --- time: " + new Date().toString());
                         javaFilesMonitor.refreshDocumentListening();
@@ -186,7 +186,7 @@ public class SSCEditorContainer {
         });
 
     }
-
+    
     //SsceIntent:Monitorovanie java suborov;Dopyt na zdrojovy kod, konfiguracia zamerov;Prepojenie java suborov s pomocnym suborom .sj;Model pre synchronizaciu kodu;
     private boolean reloadModel() {
 //        model.setFiles(this.javaFileUtilities.createJavaFiles(new String[]{projectContext.getProjectDirectory().getPath() + File.separator + "src"}, null));
