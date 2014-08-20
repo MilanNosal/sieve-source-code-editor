@@ -3,6 +3,7 @@ package sk.tuke.kpi.ssce.sieving;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
+import org.netbeans.api.java.source.CompilationInfo;
 import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
@@ -20,38 +21,39 @@ public class DefaultSimpleSiever implements CodeSiever {
     public boolean sieveCode(
             Stack<Set<Concern>> contextOfConcerns,
             CurrentProjection currentProjection,
-            ConcernExtractor extractor) {
-        Set<Concern> codeIntents = getConcernsForCode(contextOfConcerns);
+            ConcernExtractor extractor,
+            CompilationInfo info) {
+        Set<Concern> codeConcerns = getConcernsForCode(contextOfConcerns);
         
         boolean match = false;
 
-        Set<Concern> selectedIntents = new HashSet<Concern>(currentProjection.getCurrentlySelectedConcerns());
-        if (selectedIntents.isEmpty()) {
+        Set<Concern> selectedConcerns = new HashSet<Concern>(currentProjection.getCurrentlySelectedConcerns());
+        if (selectedConcerns.isEmpty()) {
             match = false;
         } else {
-            if ("OR".equals(currentProjection.getParams().get("mode"))) {
+            if ("AND".equals(currentProjection.getParams().get("mode"))) {
                 match = true;
-                if (selectedIntents.contains(extractor.getNilConcern())) {
-                    if (!codeIntents.isEmpty()) {
+                if (selectedConcerns.contains(extractor.getNilConcern())) {
+                    if (!codeConcerns.isEmpty()) {
                         match = false;
                     }
-                    selectedIntents.remove(extractor.getNilConcern());
+                    selectedConcerns.remove(extractor.getNilConcern());
                 }
-                for (Concern selectedIntent : selectedIntents) {
-                    if (!codeIntents.contains(selectedIntent)) {
+                for (Concern selectedConcern : selectedConcerns) {
+                    if (!codeConcerns.contains(selectedConcern)) {
                         match = false;
                         break;
                     }
                 }
             } else {//if (CurrentProjection.MODE_OR.equals(currentProjection.getParams())) {
                 match = false;
-                if (selectedIntents.contains(extractor.getNilConcern())) {
-                    if (codeIntents.isEmpty()) {
+                if (selectedConcerns.contains(extractor.getNilConcern())) {
+                    if (codeConcerns.isEmpty()) {
                         match = true;
                     }
                 }
-                for (Concern selectedIntent : selectedIntents) {
-                    if (codeIntents.contains(selectedIntent)) {
+                for (Concern selectedConcern : selectedConcerns) {
+                    if (codeConcerns.contains(selectedConcern)) {
                         match = true;
                         break;
                     }

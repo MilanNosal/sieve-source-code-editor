@@ -10,13 +10,15 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
 import org.netbeans.api.editor.EditorRegistry;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.project.Project;
 import org.netbeans.editor.BaseDocument;
 import org.openide.cookies.EditorCookie;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
 import sk.tuke.kpi.ssce.annotations.concerns.ChangeMonitoring;
-import sk.tuke.kpi.ssce.annotations.concerns.ProjectionConfigurationChange;
+import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjectionChange;
 import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
@@ -116,10 +118,17 @@ public class SSCEditorCore {
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v java zdrojovom kode;Notifikacia na zmeny v pomocnom subore .sj;Monitorovanie java suborov;Model pre mapovanie zamerov;Prepojenie java suborov s pomocnym suborom .sj;Notifikacia na zmeny v priradenych zamerov;Model pre synchronizaciu kodu;
     public SSCEditorCore(final DataObject dataObject, Project projectContext,
             ConcernExtractor extractor, CodeSiever siever) throws IOException {
+        
+        ProgressHandle handle = ProgressHandleFactory.createHandle("Building SSCE core");
+        
+        handle.start(100);
         viewModel = new ViewModel();
+        handle.progress("View created", 5);
         projectionsModel = new ProjectionsModel();
+        handle.progress("Projections created", 10);
         currentProjection = new CurrentProjection();
         this.dataObject = dataObject;
+        handle.progress("Data object created", 20);
 
         currentProjection.addCurrentProjectionChangeListener(new CurrentProjection.CurrentProjectionChangeListener() {
             @Override
@@ -138,6 +147,7 @@ public class SSCEditorCore {
                 new Binding(new ViewModelCreator(extractor, siever),
                         new ProjectionsModelCreator(extractor));
         this.viewModel.setEditorCookieSieveDocument(dataObject.getCookie(EditorCookie.class));
+        handle.progress("Listeners and binding prepared", 30);
         
         
 //        DataObject.getRegistry().addChangeListener(new ChangeListener() {
@@ -157,13 +167,18 @@ public class SSCEditorCore {
         this.sieveDocument.addDocumentListener(this.sieveDocumentListener);
   
         this.projectContext = projectContext;
+        handle.progress("Context prepared", 35);
 
 //        projectContext.getLookup().lookup(Sources.class).getSourceGroups(Source);
 
         reloadModel();
-        reloadIntentsMapping();
+        handle.progress("Model created", 55);
+        reloadCurrentProjections();
+        handle.progress("Available projections created", 75);
         reloadSieveDocument();
 
+        handle.progress("Document built", 95);
+        
         this.javaFilesMonitor.addJavaFileListener(javaDocumentListener);
 
         this.javaFilesMonitor.addJavaFileListener(concernsMappingListener);
@@ -184,7 +199,9 @@ public class SSCEditorCore {
                 }
             }
         });
+        handle.progress("Projection core finished", 99);
 
+        handle.finish();
     }
     
     //SsceIntent:Monitorovanie java suborov;Dopyt na zdrojovy kod, konfiguracia zamerov;Prepojenie java suborov s pomocnym suborom .sj;Model pre synchronizaciu kodu;
@@ -195,7 +212,7 @@ public class SSCEditorCore {
     }
 
     //SsceIntent:Monitorovanie java suborov;Model pre mapovanie zamerov;
-    private boolean reloadIntentsMapping() {
+    private boolean reloadCurrentProjections() {
         projectionsModel.setFiles(this.bindingUtilities.getProjectionsModelCreator().createJavaFilesConcerns(this.javaFilesMonitor.getMonitoringJavaFilePaths()));
         return true;
     }
@@ -416,7 +433,7 @@ public class SSCEditorCore {
     }
 
     //SsceIntent:Model pre mapovanie zamerov;Notifikacia na zmeny v priradenych zamerov;
-    @ProjectionConfigurationChange(propagation = true)
+    @CurrentProjectionChange(propagation = true)
     @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
     private class ProjectionsChangeListener implements JavaFilesMonitor.JavaFileChangeListener {
 

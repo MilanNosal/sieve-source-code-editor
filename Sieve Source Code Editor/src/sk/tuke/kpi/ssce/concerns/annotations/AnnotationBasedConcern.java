@@ -1,5 +1,6 @@
 package sk.tuke.kpi.ssce.concerns.annotations;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.DeclaredType;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
@@ -12,18 +13,21 @@ public class AnnotationBasedConcern implements Concern {
     // so far only for later
     private final DeclaredType annotationType;
     private final String uniquePresentation;
+    private final AnnotationMirror annotation;
 
     /**
      * Konstruktor.
      * @param annotationType ak je null, vytvori "no annotations"
      */
-    public AnnotationBasedConcern(DeclaredType annotationType) {
-        if(annotationType != null) {
-            this.annotationType = annotationType;
+    public AnnotationBasedConcern(AnnotationMirror annotation) {
+        if(annotation != null) {
+            this.annotation = annotation;
+            this.annotationType = annotation.getAnnotationType();
             uniquePresentation = "@" + annotationType.asElement().getSimpleName().toString();
         } else {
+            this.annotation = null;
             this.annotationType = null;
-            uniquePresentation = "NO ANNOTATIONS";
+            uniquePresentation = "@";
         }        
     }
     
@@ -54,5 +58,17 @@ public class AnnotationBasedConcern implements Concern {
         } else {
             return this.uniquePresentation.compareTo(((AnnotationBasedConcern)o).uniquePresentation);
         }
+    }
+
+    public DeclaredType getAnnotationType() {
+        return annotationType;
+    }
+
+    public String getUniquePresentation() {
+        return uniquePresentation;
+    }
+
+    public AnnotationMirror getAnnotation() {
+        return annotation;
     }
 }

@@ -19,7 +19,7 @@ import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 
 /**
- *
+ * XXX: toto treba zefektivnit
  * @author Matej Nosal, Milan Nosal
  */
 public class CompilationUtilities {
@@ -54,7 +54,7 @@ public class CompilationUtilities {
             p.parse(snapshot, task, null);
 
             CompilationInfo info = CompilationInfo.get(p.getResult(task));
-            ((CompilationController) info).toPhase(JavaSource.Phase.PARSED);
+            ((CompilationController) info).toPhase(JavaSource.Phase.ELEMENTS_RESOLVED);
             return info;
 
         } catch (IOException ex) {
@@ -96,7 +96,7 @@ public class CompilationUtilities {
             p.parse(snapshot, task, null);
 
             CompilationInfo info = CompilationInfo.get(p.getResult(task));
-            ((CompilationController) info).toPhase(JavaSource.Phase.PARSED);
+            ((CompilationController) info).toPhase(JavaSource.Phase.ELEMENTS_RESOLVED);
             return info;
 
         } catch (IOException ex) {
