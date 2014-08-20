@@ -96,12 +96,12 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
         
-        contextOfConcerns.push(extractor.getConcernsFor(node, doc));
+        contextOfConcerns.push(extractor.getConcernsFor(node, info));
         contextCounter.push(nameElement);
         super.visitClass(node, p);
         contextCounter.pop();
 
-        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor)) {
+        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor, info)) {
             try {
                 CodeSnippet codeSnippet = new CodeSnippet(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "TYPE");
                 codeSnippet.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
@@ -145,13 +145,13 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
 
-        contextOfConcerns.push(extractor.getConcernsFor(node, doc));
+        contextOfConcerns.push(extractor.getConcernsFor(node, info));
         contextCounter.push(nameElement);
         super.visitMethod(node, p);
         contextCounter.pop();
 
 
-        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor)) {
+        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor, info)) {
             try {
                 CodeSnippet code = new CodeSnippet(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "METHOD");
                 code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
@@ -183,12 +183,12 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         int start = (int) sp.getStartPosition(cu, node);
         int end = (int) sp.getEndPosition(cu, node);
 
-        contextOfConcerns.push(extractor.getConcernsFor(node, doc));
+        contextOfConcerns.push(extractor.getConcernsFor(node, info));
         contextCounter.push(nameElement);
         super.visitVariable(node, p);
         contextCounter.pop();
 
-        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor)) {
+        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor, info)) {
             try {
                 CodeSnippet code = new CodeSnippet(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "FIELD");
                 code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));

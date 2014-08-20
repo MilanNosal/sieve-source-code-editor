@@ -1,6 +1,6 @@
 package sk.tuke.kpi.ssce.concerns.interfaces;
 
-import sk.tuke.kpi.ssce.annotations.concerns.ProjectionConfiguration;
+import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection;
 import sk.tuke.kpi.ssce.annotations.concerns.View;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
 
@@ -8,7 +8,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
  * Rozhranie vyhladavanych elementov (alebo vlastnosti) v zdrojovom kode.
  * @author Milan
  */
-@ProjectionConfiguration
+@CurrentProjection
 @View(aspect = ViewAspect.CONCERN_EXTRACTION)
 public interface Concern extends Comparable<Concern> {
     

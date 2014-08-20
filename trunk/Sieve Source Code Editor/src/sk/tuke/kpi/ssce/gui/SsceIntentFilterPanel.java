@@ -204,7 +204,7 @@ public class SsceIntentFilterPanel extends javax.swing.JPanel implements Project
     //This is for IntentsMapping
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @Override
-    public void intentsChanged(ConcernsChangedEvent event) {
+    public void concernsChanged(ConcernsChangedEvent event) {
 //            System.out.println("INTENTS CHANGED       ScceIntentFilterPanel   event.isIntentsSetChanged()="+event.isIntentsSetChanged());
 //        if (event.isIntentsSetChanged()) {
         refreshdModel();

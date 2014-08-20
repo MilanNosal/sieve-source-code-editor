@@ -280,7 +280,7 @@ public class ProjectionsModel {
             return;
         }
         for (ConcernsChangeListener listener : listeners) {
-            listener.intentsChanged(event);
+            listener.concernsChanged(event);
         }
     }
 
@@ -306,52 +306,52 @@ public class ProjectionsModel {
     public static class ConcernsChangedEvent {
 
 //        private final File file;
-        private final Set<Concern> newIntents;
-        private final Set<Concern> removedIntents;
-        private final Set<Concern> allIntents;
+        private final Set<Concern> newConcerns;
+        private final Set<Concern> removedConcerns;
+        private final Set<Concern> allConcerns;
 
         /**
          * Vytvori event pre zmenu v mapovani zamerov na fragmenty kodu.
-         * @param allIntents nova mnozina vsetkych zamerov.
-         * @param newIntents  mnozina novo pridanych zamerov.
-         * @param removedIntents mnozina odobratych zamerov.
+         * @param allConcerns nova mnozina vsetkych zamerov.
+         * @param newConcerns  mnozina novo pridanych zamerov.
+         * @param removedConcerns mnozina odobratych zamerov.
          */
-        public ConcernsChangedEvent(Set<Concern> allIntents, Set<Concern> newIntents, Set<Concern> removedIntents) {
-            this.newIntents = newIntents;
-            this.removedIntents = removedIntents;
-            this.allIntents = allIntents;
+        public ConcernsChangedEvent(Set<Concern> allConcerns, Set<Concern> newConcerns, Set<Concern> removedConcerns) {
+            this.newConcerns = newConcerns;
+            this.removedConcerns = removedConcerns;
+            this.allConcerns = allConcerns;
         }
 
         /**
          * Overi ci doslo k zmene mnozny mapovanych zamerov.
          * @return true, ak doslo k zmene celkovej mnoziny zamerov, inak false.
          */
-        public boolean isIntentsSetChanged() {
-            return !(newIntents.isEmpty() && removedIntents.isEmpty());
+        public boolean isConcernsSetChanged() {
+            return !(newConcerns.isEmpty() && removedConcerns.isEmpty());
         }
 
         /**
          * Vrati mnozinu novo pridanych zamerov.
          * @return mnozinu novo pridanych zamerov.
          */
-        public Set<Concern> getNewIntents() {
-            return newIntents;
+        public Set<Concern> getNewConcerns() {
+            return newConcerns;
         }
 
         /**
          * Vrati mnozinu odobratych zamerov.
          * @return mnozinu odobratych zamerov.
          */
-        public Set<Concern> getRemovedIntents() {
-            return removedIntents;
+        public Set<Concern> getRemovedConcerns() {
+            return removedConcerns;
         }
 
         /**
          * Vrati novu mnozinu vsetkych zamerov.
          * @return novu mnozinu vsetkych zamerov.
          */
-        public Set<Concern> getAllIntents() {
-            return allIntents;
+        public Set<Concern> getAllConcerns() {
+            return allConcerns;
         }
     }
 
@@ -366,6 +366,6 @@ public class ProjectionsModel {
          * Metoda je volana ak doslo k zmene v mapovani zamerov na fragmenty kodu.
          * @param event event
          */
-        public void intentsChanged(ProjectionsModel.ConcernsChangedEvent event);
+        public void concernsChanged(ProjectionsModel.ConcernsChangedEvent event);
     }
 }

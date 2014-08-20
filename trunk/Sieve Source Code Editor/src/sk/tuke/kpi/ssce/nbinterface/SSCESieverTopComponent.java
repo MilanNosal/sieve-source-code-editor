@@ -1,28 +1,22 @@
 package sk.tuke.kpi.ssce.nbinterface;
 
-import java.io.File;
-import java.io.IOException;
-import javax.swing.text.StyledDocument;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import org.netbeans.api.project.Project;
 import org.netbeans.api.project.ProjectUtils;
-import org.netbeans.api.project.ui.OpenProjects;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.awt.StatusDisplayer;
-import org.openide.cookies.EditorCookie;
-import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileUtil;
-import org.openide.loaders.DataObject;
-import org.openide.loaders.DataObjectNotFoundException;
-import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.Utilities;
-import sk.tuke.kpi.ssce.core.Constants;
+import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
+import sk.tuke.kpi.ssce.projection.provider.AbstractProjectionProvider;
+import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
 
 /**
  * Top component which displays something.
@@ -48,12 +42,18 @@ import sk.tuke.kpi.ssce.core.Constants;
     "CTL_SSCESieverTopComponent=SSCESiever Window",
     "HINT_SSCESieverTopComponent=This is a SSCESiever window"
 })
+@SSCE_UI
 public final class SSCESieverTopComponent extends TopComponent {
 
-    private Project currentlySelectedProject = null;
+    private Project currentlySelectedProject;
     private Lookup genlokup;
+    private Collection<? extends ProjectionProviderFactory> availableImplementations;
+    private AbstractProjectionProvider currentProjectionProvider;
 
     public SSCESieverTopComponent() {
+        Lookup lookup = Lookup.getDefault();
+        availableImplementations = lookup.lookupAll(ProjectionProviderFactory.class);
+
         initComponents();
         setName(Bundle.CTL_SSCESieverTopComponent());
         setToolTipText(Bundle.HINT_SSCESieverTopComponent());
@@ -67,7 +67,10 @@ public final class SSCESieverTopComponent extends TopComponent {
 
             @Override
             public void resultChanged(LookupEvent le) {
-                currentlySelectedProject = genlokup.lookup(Project.class);
+                Project newSelection = genlokup.lookup(Project.class);
+                if (newSelection != null) {
+                    currentlySelectedProject = newSelection;
+                }
                 projectChanged();
             }
         };
@@ -80,55 +83,10 @@ public final class SSCESieverTopComponent extends TopComponent {
     }
 
     private void showCurrentProject() {
-        currentProjectTextBox.setText(
-                currentlySelectedProject == null ? "None" : ProjectUtils.getInformation(currentlySelectedProject).getDisplayName()
-        );
-    }
-
-    private void openSJDocumentForCurrentProject(Project currentlySelectedProject) {
-        File file = new File(currentlySelectedProject.getProjectDirectory().getPath()
-                + File.separator
-                + ProjectUtils.getInformation(currentlySelectedProject).getDisplayName() + ".sj");
-        if (!file.exists()) {
-            // XXX: toto by mohlo hypoteticky vyriesit problem s opakovanim
-            file.delete();
-        }
-        try {
-            file.createNewFile();
-            // TODO use context
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        file.deleteOnExit();
-
-        FileObject fobj = FileUtil.toFileObject(file);
-        DataObject dobj = null;
-
-        try {
-            dobj = DataObject.find(fobj);
-            if (dobj != null) {
-                EditorCookie ec = dobj.getCookie(EditorCookie.class);
-                StyledDocument doc = ec.openDocument();
-                // XXX: toto by mohlo hypoteticky vyriesit problem s opakovanim
-                if (doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP) == null) {
-                    // XXX: delete existing container
-                }
-
-                StatusDisplayer.getDefault().setStatusText("Should open the editor for " + file.getName());
-
-                // XXX: create core and open document
-                // doc.putProperty(Constants.SSCE_CORE_OBJECT_PROP, new SSCEditorCore(dobj, context));
-//                Action action = findAction("SsceTopComponent");
-//                if (action != null) {
-//                    action.actionPerformed(null);
-//                }
-//
-//                ec.open();
-            }
-        } catch (DataObjectNotFoundException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
+        if (currentlySelectedProject == null) {
+            currentProjectTextBox.setText("None");
+        } else {
+            currentProjectTextBox.setText(ProjectUtils.getInformation(currentlySelectedProject).getDisplayName());
         }
     }
 
@@ -139,14 +97,19 @@ public final class SSCESieverTopComponent extends TopComponent {
      */
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        java.awt.GridBagConstraints gridBagConstraints;
 
+        jLabel1 = new javax.swing.JLabel();
         SSCETabPanel = new javax.swing.JTabbedPane();
         jScrollPane1 = new javax.swing.JScrollPane();
         SSCEPanel = new javax.swing.JPanel();
         currentProjectLabel = new javax.swing.JLabel();
         currentProjectTextBox = new javax.swing.JTextField();
-        ProjectionPanel = new javax.swing.JPanel();
+        availableImplementationsLabel = new javax.swing.JLabel();
+        availableImplementationsCombo = new javax.swing.JComboBox();
+        startButton = new javax.swing.JButton();
+        projectionsPanel = new javax.swing.JScrollPane();
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.jLabel1.text")); // NOI18N
 
         setLayout(new java.awt.BorderLayout());
 
@@ -157,15 +120,36 @@ public final class SSCESieverTopComponent extends TopComponent {
         currentProjectTextBox.setEditable(false);
         currentProjectTextBox.setText(org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.currentProjectTextBox.text")); // NOI18N
 
+        org.openide.awt.Mnemonics.setLocalizedText(availableImplementationsLabel, org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.availableImplementationsLabel.text")); // NOI18N
+
+        availableImplementations = Lookup.getDefault().lookupAll(ProjectionProviderFactory.class);
+        List<String> names = new ArrayList<String>();
+        for (ProjectionProviderFactory projectionProvider : availableImplementations) {
+            names.add(projectionProvider.getDisplayName());
+        }
+        availableImplementationsCombo.setModel(new javax.swing.DefaultComboBoxModel(names.toArray(new String[names.size()])));
+
+        org.openide.awt.Mnemonics.setLocalizedText(startButton, org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.startButton.text")); // NOI18N
+        startButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout SSCEPanelLayout = new javax.swing.GroupLayout(SSCEPanel);
         SSCEPanel.setLayout(SSCEPanelLayout);
         SSCEPanelLayout.setHorizontalGroup(
             SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(SSCEPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(currentProjectLabel)
+                .addGroup(SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(currentProjectLabel)
+                    .addComponent(availableImplementationsLabel))
                 .addGap(26, 26, 26)
-                .addComponent(currentProjectTextBox, javax.swing.GroupLayout.DEFAULT_SIZE, 201, Short.MAX_VALUE)
+                .addGroup(SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(currentProjectTextBox, javax.swing.GroupLayout.DEFAULT_SIZE, 170, Short.MAX_VALUE)
+                    .addComponent(availableImplementationsCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(startButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         SSCEPanelLayout.setVerticalGroup(
@@ -175,36 +159,53 @@ public final class SSCESieverTopComponent extends TopComponent {
                 .addGroup(SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(currentProjectLabel)
                     .addComponent(currentProjectTextBox))
-                .addGap(272, 272, 272))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(availableImplementationsLabel)
+                    .addComponent(availableImplementationsCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(startButton)
+                .addGap(210, 210, 210))
         );
 
         jScrollPane1.setViewportView(SSCEPanel);
 
         SSCETabPanel.addTab(org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.jScrollPane1.TabConstraints.tabTitle"), jScrollPane1); // NOI18N
-
-        javax.swing.GroupLayout ProjectionPanelLayout = new javax.swing.GroupLayout(ProjectionPanel);
-        ProjectionPanel.setLayout(ProjectionPanelLayout);
-        ProjectionPanelLayout.setHorizontalGroup(
-            ProjectionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 374, Short.MAX_VALUE)
-        );
-        ProjectionPanelLayout.setVerticalGroup(
-            ProjectionPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 264, Short.MAX_VALUE)
-        );
-
-        SSCETabPanel.addTab(org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.ProjectionPanel.TabConstraints.tabTitle"), ProjectionPanel); // NOI18N
+        SSCETabPanel.addTab(org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.projectionsPanel.TabConstraints.tabTitle"), projectionsPanel); // NOI18N
 
         add(SSCETabPanel, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
+    private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
+        String selectedImplementation = (String) availableImplementationsCombo.getSelectedItem();
+        ProjectionProviderFactory selectedFactory = null;
+        for (ProjectionProviderFactory factory : availableImplementations) {
+            if (factory.getDisplayName().equals(selectedImplementation)) {
+                selectedFactory = factory;
+            }
+        }
+        
+        if (selectedFactory != null) {
+            if (currentProjectionProvider != null) {
+                currentProjectionProvider.destroy();
+            }
+            SSCETabPanel.setSelectedComponent(projectionsPanel);
+            currentProjectionProvider = selectedFactory.createProjectionProviderFor(currentlySelectedProject);
+            projectionsPanel.setViewportView(currentProjectionProvider);
+        }
+    }//GEN-LAST:event_startButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel ProjectionPanel;
     private javax.swing.JPanel SSCEPanel;
     private javax.swing.JTabbedPane SSCETabPanel;
+    private javax.swing.JComboBox availableImplementationsCombo;
+    private javax.swing.JLabel availableImplementationsLabel;
     private javax.swing.JLabel currentProjectLabel;
     private javax.swing.JTextField currentProjectTextBox;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane projectionsPanel;
+    private javax.swing.JButton startButton;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {

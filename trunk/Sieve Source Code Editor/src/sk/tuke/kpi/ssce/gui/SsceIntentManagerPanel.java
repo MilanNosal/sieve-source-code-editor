@@ -358,7 +358,7 @@ public class SsceIntentManagerPanel extends javax.swing.JPanel implements Projec
     //This is for IntentsMapping
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @Override
-    public void intentsChanged(ProjectionsModel.ConcernsChangedEvent event) {
+    public void concernsChanged(ProjectionsModel.ConcernsChangedEvent event) {
         System.out.println("Ssce manager   intentsChanged = " + new Date().getTime());
         refreshModel();
 //        ignoreCaretChange = false;
