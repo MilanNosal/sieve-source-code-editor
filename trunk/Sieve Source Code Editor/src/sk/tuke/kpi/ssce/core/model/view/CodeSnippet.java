@@ -26,7 +26,7 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
     @Synchronization
     private BindingPositions codeBinding;
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
-    private final String tab;
+    private final String initialTab;
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
     private final String codeContext;
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
@@ -42,9 +42,9 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
     @SievedDocument
     public String getStartTextForSJDoc() {
         if (codeContext == null || codeContext.trim().length() == 0) {
-            return START_TEXT_1_IN_SJDOC + " " + START_TEXT_2_IN_SJDOC + this.tab;
+            return START_TEXT_1_IN_SJDOC + " " + START_TEXT_2_IN_SJDOC + this.initialTab;
         } else {
-            return START_TEXT_1_IN_SJDOC + " ( " + codeContext + " )" + START_TEXT_2_IN_SJDOC + this.tab;
+            return START_TEXT_1_IN_SJDOC + " ( " + this.getCodeContext() + " )" + START_TEXT_2_IN_SJDOC + this.initialTab;
         }
     }
     
@@ -61,16 +61,11 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
      * @param elementType typ fragmentu kodu (elementu).
      */
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
-    public CodeSnippet(int initialTabSize, String codeContext, String codeElementName, String elementType) {
+    public CodeSnippet(String initialTab, String codeContext, String codeElementName, String elementType) {
         this.codeContext = codeContext;
         this.codeElementName = codeElementName;
         this.elementType = elementType;
-
-        if (initialTabSize > 0) {
-            this.tab = String.format("%" + initialTabSize + "s", "");
-        } else {
-            this.tab = "";
-        }
+        this.initialTab = initialTab;
     }
 
     /**

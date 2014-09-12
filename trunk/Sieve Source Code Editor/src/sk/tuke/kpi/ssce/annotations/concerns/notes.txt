@@ -5,3 +5,5 @@ Ma vyznam anotovat aj napr pouzitie nejakej triedy/rozhrania, sice FindUsages fu
 Privelky reuse anotacii mi vytvori velke pohlady, potom aby sa v nich clovek nestratil.
 Z hladiska navrhu by bolo zaujimave zhodnotit ci spravit v subore triedu s viacerymi concernami, a potom si to anotaciami rozdelit, alebo naopak, viacero tried napokon spojenych projekciou.
 Vyrazne zaujimave su kombinacie anotacii. Kym jedna antoacia je tiez zaujimava, kombinaciou anotacii a ich parametrov je mozne lacnejsie robit dalsie zaujimave projekcie (Sync + changeMonitor).
+
+Teraz ked upravujem a opravujem veci tak mi pomahaju orientovat sa v kode a otvarat spravne subory, davam si hladat find usages. Napr. pri opravovani saveovania si hladan synchronizaciu, lebo ona sa stara o prenos udajov a teda tam sa bude dat zistit co bolo zmenene a co treba ulozit.
