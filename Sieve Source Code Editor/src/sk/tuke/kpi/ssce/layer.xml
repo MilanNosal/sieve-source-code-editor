@@ -27,7 +27,7 @@
                 </folder>
                 
                 <file name="language.instance">
-                    <attr name="instanceCreate" methodvalue="sk.tuke.kpi.ssce.nbinterface.lexer.JavaTokenId.language"/>
+                    <attr name="instanceCreate" methodvalue="sk.tuke.kpi.ssce.nbinterface.lexer.SieveJavaTokenId.language"/>
                     <attr name="instanceOf" stringvalue="org.netbeans.api.lexer.Language"/>
                 </file>
                 
@@ -129,14 +129,7 @@
                         <attr name="position" intvalue="1200"/>
                     </file>
                 </folder>
-                <folder name="Factories">
-                    <file name="SieveJavaDataLoader.instance">
-                        <attr name="dataObjectClass" stringvalue="sk.tuke.kpi.ssce.nbinterface.file.SieveJavaDataObject"/>
-                        <attr name="iconBase" stringvalue="sk/tuke/kpi/ssce/nbinterface/file/ssce.png"/>
-                        <attr name="instanceCreate" methodvalue="org.openide.loaders.DataLoaderPool.factory"/>
-                        <attr name="mimeType" stringvalue="text/x-sieve-java"/>
-                    </file>
-                </folder>
+                <folder name="Factories"/>
             </folder>
         </folder>
     </folder>

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Position;
 import javax.swing.text.StyledDocument;
 import org.netbeans.api.java.lexer.JavaTokenId;
 import org.netbeans.api.java.source.CompilationInfo;
@@ -103,7 +104,15 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
 
         if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor, info)) {
             try {
-                CodeSnippet codeSnippet = new CodeSnippet(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "TYPE");
+                String initialTab = "";
+                int lineNum = NbDocument.findLineNumber((StyledDocument) doc, (int) start);
+                int lineOffset = NbDocument.findLineOffset((StyledDocument) doc, lineNum);
+                if(start - lineOffset > 0) {
+                    initialTab = doc.getText(lineOffset, start - lineOffset);
+                } else {
+                    System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
+                }
+                CodeSnippet codeSnippet = new CodeSnippet(initialTab, getContextForCode(), nameElement, "TYPE");
                 codeSnippet.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
                 p.getCodeSnippets().add(codeSnippet);
             } catch (BadLocationException ex) {
@@ -143,7 +152,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         String nameElement = builder.toString();
 
         int start = (int) sp.getStartPosition(cu, node);
-        int end = (int) sp.getEndPosition(cu, node);
+        int end = (int) sp.getEndPosition(cu, node);        
 
         contextOfConcerns.push(extractor.getConcernsFor(node, info));
         contextCounter.push(nameElement);
@@ -153,7 +162,15 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
 
         if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor, info)) {
             try {
-                CodeSnippet code = new CodeSnippet(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "METHOD");
+                String initialTab = "";
+                int lineNum = NbDocument.findLineNumber((StyledDocument) doc, (int) start);
+                int lineOffset = NbDocument.findLineOffset((StyledDocument) doc, lineNum);
+                if(start - lineOffset > 0) {
+                    initialTab = doc.getText(lineOffset, start - lineOffset);
+                } else {
+                    System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
+                }
+                CodeSnippet code = new CodeSnippet(initialTab, getContextForCode(), nameElement, "METHOD");
                 code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
                 p.getCodeSnippets().add(code);
             } catch (BadLocationException ex) {
@@ -190,7 +207,15 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
 
         if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor, info)) {
             try {
-                CodeSnippet code = new CodeSnippet(NbDocument.findLineColumn((StyledDocument) doc, (int) start), getContextForCode(), nameElement, "FIELD");
+                String initialTab = "";
+                int lineNum = NbDocument.findLineNumber((StyledDocument) doc, (int) start);
+                int lineOffset = NbDocument.findLineOffset((StyledDocument) doc, lineNum);
+                if(start - lineOffset > 0) {
+                    initialTab = doc.getText(lineOffset, start - lineOffset);
+                } else {
+                    System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
+                }
+                CodeSnippet code = new CodeSnippet(initialTab, getContextForCode(), nameElement, "FIELD");
                 code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
                 p.getCodeSnippets().add(code);
             } catch (BadLocationException ex) {

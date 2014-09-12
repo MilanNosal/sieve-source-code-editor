@@ -17,6 +17,7 @@ import org.netbeans.editor.BaseDocument;
 import org.openide.cookies.EditorCookie;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
+import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.ChangeMonitoring;
 import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjectionChange;
 import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
@@ -78,27 +79,27 @@ public class SSCEditorCore {
     //SsceIntent:Praca s pomocnym suborom;
     @SievedDocument
     private final BaseDocument sieveDocument;
-    
+
     /**
      * Uvidime na co vsetko to bude dobre, ale zatial to tu davam kvoli tomu,
      * aby som sa vedel chytat na Ctrl + S
      */
     private final DataObject dataObject;
-    
+
     /**
      * Aktualna konfiguracia (dopyt) zamerov na zdrojovy kod.
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
     private final CurrentProjection currentProjection;
-    
+
     private final Project projectContext;
-    
+
     /**
      * Model pre synchronizaciu java suborov a pomocneho suboru .sj.
      */
     //SsceIntent:Model pre synchronizaciu kodu;
     private final ViewModel viewModel;
-    
+
     /**
      * Mapovanie zamerov na fragmenty kodu.
      */
@@ -118,9 +119,9 @@ public class SSCEditorCore {
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v java zdrojovom kode;Notifikacia na zmeny v pomocnom subore .sj;Monitorovanie java suborov;Model pre mapovanie zamerov;Prepojenie java suborov s pomocnym suborom .sj;Notifikacia na zmeny v priradenych zamerov;Model pre synchronizaciu kodu;
     public SSCEditorCore(final DataObject dataObject, Project projectContext,
             ConcernExtractor extractor, CodeSiever siever) throws IOException {
-        
+
         ProgressHandle handle = ProgressHandleFactory.createHandle("Building SSCE core");
-        
+
         handle.start(100);
         viewModel = new ViewModel();
         handle.progress("View created", 5);
@@ -143,34 +144,34 @@ public class SSCEditorCore {
         sieveDocumentListener = new SieveDocumentListener();
         javaDocumentListener = new JavaDocumentListener();
         concernsMappingListener = new ProjectionsChangeListener();
-        bindingUtilities = 
-                new Binding(new ViewModelCreator(extractor, siever),
+        bindingUtilities
+                = new Binding(new ViewModelCreator(extractor, siever),
                         new ProjectionsModelCreator(extractor));
-        this.viewModel.setEditorCookieSieveDocument(dataObject.getCookie(EditorCookie.class));
+        this.viewModel.setEditorCookieSieveDocument(dataObject.getLookup().lookup(EditorCookie.class));
+        
+        // TODO: temporary save event hook
+        dataObject.addPropertyChangeListener(new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    if (evt.getPropertyName().equals(DataObject.PROP_MODIFIED)) {
+                        if (!((Boolean) evt.getOldValue()) & ((Boolean) evt.getNewValue())) {
+                            // Starts modification
+                        } else {
+                            SSCEditorCore.this.tryToSaveModifiedJavaFiles();
+                        }
+                    }
+                }
+            });
+        
         handle.progress("Listeners and binding prepared", 30);
-        
-        
-//        DataObject.getRegistry().addChangeListener(new ChangeListener() {
-//            @Override
-//            public void stateChanged(ChangeEvent e) {
-//                System.out.println(">>>>>>>>>>>>>>>>>>> " + e.toString());
-//                System.out.println(">>>>>>>>>>>>>>> " + e.getSource());
-//                for (DataObject dobj : DataObject.getRegistry().getModified()) {
-//                    System.out.println(">>> " + dobj.getName());
-//                    System.out.println("::: " + dobj.equals(dataObject));
-//                }
-//            }
-//        });
-        
-        
+
         this.sieveDocument = (BaseDocument) this.viewModel.getEditorCookieSieveDocument().openDocument();
         this.sieveDocument.addDocumentListener(this.sieveDocumentListener);
-  
+
         this.projectContext = projectContext;
         handle.progress("Context prepared", 35);
 
 //        projectContext.getLookup().lookup(Sources.class).getSourceGroups(Source);
-
         reloadModel();
         handle.progress("Model created", 55);
         reloadCurrentProjections();
@@ -178,15 +179,14 @@ public class SSCEditorCore {
         reloadSieveDocument();
 
         handle.progress("Document built", 95);
-        
+
         this.javaFilesMonitor.addJavaFileListener(javaDocumentListener);
 
         this.javaFilesMonitor.addJavaFileListener(concernsMappingListener);
 
         EditorRegistry.addPropertyChangeListener(new PropertyChangeListener() {
-            
-            // XXX: toto je tu naco?
 
+            // XXX: toto je tu naco?
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 if (EditorRegistry.FOCUS_GAINED_PROPERTY.equals(evt.getPropertyName())) {
@@ -203,7 +203,7 @@ public class SSCEditorCore {
 
         handle.finish();
     }
-    
+
     //SsceIntent:Monitorovanie java suborov;Dopyt na zdrojovy kod, konfiguracia zamerov;Prepojenie java suborov s pomocnym suborom .sj;Model pre synchronizaciu kodu;
     private boolean reloadModel() {
 //        model.setFiles(this.javaFileUtilities.createJavaFiles(new String[]{projectContext.getProjectDirectory().getPath() + File.separator + "src"}, null));
@@ -344,12 +344,34 @@ public class SSCEditorCore {
                     //System.out.println("Time = " + new Date().getTime());
                     javaDocumentListener.addIgnoredFilePath(javaFile.getFilePath());
 
-                    bindingUtilities.updateJavaDocument(viewModel, javaFile, e.getOffset());
+                    if (bindingUtilities.updateJavaDocument(viewModel, javaFile, e.getOffset())) {
+                        javaFile.setModified(true);
+                    }
                     javaDocumentListener.removeIgnoredFilePath(javaFile.getFilePath());
                 }
             });
 
         }
+    }
+
+    public void tryToSaveModifiedJavaFiles() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                for (JavaFile javaFile : viewModel.getFiles()) {
+                    if (javaFile.isModified() && javaFile.getEditorCookie().isModified()) {
+                        try {
+                            javaDocumentListener.addIgnoredFilePath(javaFile.getFilePath());
+                            javaFile.getEditorCookie().saveDocument();
+                            javaDocumentListener.removeIgnoredFilePath(javaFile.getFilePath());
+                        } catch (IOException ex) {
+                            Exceptions.printStackTrace(ex);
+                        }
+                    }
+                }
+            }
+        });
+
     }
 
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
@@ -368,7 +390,7 @@ public class SSCEditorCore {
             ignoreList.put(path, new Date().getTime());
             return true;
         }
-
+        
         //SsceIntent:Praca s pomocnym suborom;Prepojenie java suborov s pomocnym suborom .sj;Model pre synchronizaciu kodu;
         @Override
         public void javaFileCreated(final JavaFileEvent event) {
@@ -408,11 +430,10 @@ public class SSCEditorCore {
         //SsceIntent:Praca s pomocnym suborom;Prepojenie java suborov s pomocnym suborom .sj;Model pre synchronizaciu kodu;
         @Override
         public void javaFileDocumentChanged(final JavaFileEvent event) {
-
             Long time = ignoreList.get(event.getFile().getPath());
             if (time != null) {
                 if (event.getTime() <= time) {
-                    //System.out.println("Skipped event javaFileCreated!");
+                    // System.out.println("Skipped event javaFileChanged! " + event.getFile().getName());
                     return;
                 } else {
                     ignoreList.remove(event.getFile().getPath());
@@ -426,7 +447,6 @@ public class SSCEditorCore {
                     sieveDocumentListener.deactivate();
                     bindingUtilities.updateSieveDocument(Binding.UpdateModelAction.UPDATE, viewModel, bindingUtilities.getViewModelCreator().createJavaFile(event.getFile(), currentProjection));
                     sieveDocumentListener.activate();
-
                 }
             });
         }

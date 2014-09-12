@@ -26,6 +26,8 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
 //SsceIntent:Model pre synchronizaciu kodu;
 @Model(model = RepresentationOf.VIEW)
 public class JavaFile {
+    
+    private boolean modified = false;
 
     @Synchronization
     private Position beginInSJ; // in sieve document
@@ -64,6 +66,14 @@ public class JavaFile {
         this.fileName = fileName;
         initialize();
     }
+
+    public boolean isModified() {
+        return modified;
+    }
+
+    public void setModified(boolean modified) {
+        this.modified = modified;
+    }
     
     public void addGuardingRequest(GuardingRequest request) {
         this.guardingRequests.add(request);
@@ -71,6 +81,7 @@ public class JavaFile {
     
     public List<GuardingRequest> getGuardingRequests() {
         List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
+        // TODO: zdedene zo snippetov?
         for(GuardingRequest request : this.guardingRequests) {
             updatedGuardingRequests.add(GuardingRequest.create(
                     request.getStartOffset() + this.beginInSJ.getOffset(),
@@ -85,6 +96,7 @@ public class JavaFile {
     
     public List<FoldingRequest> getFoldingRequests() {
         List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
+        // TODO: zdedene zo snippetov?
         for(FoldingRequest request : this.foldingRequests) {
             updatedFoldingRequests.add(FoldingRequest.create(
                     request.getStartOffset() + this.beginInSJ.getOffset(),

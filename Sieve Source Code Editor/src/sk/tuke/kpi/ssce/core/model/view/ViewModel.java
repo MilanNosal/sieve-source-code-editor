@@ -40,6 +40,7 @@ public class ViewModel {
     
     public List<GuardingRequest> getGuardingRequests() {
         List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
+        // TODO: zdedene z fileov?
         for(GuardingRequest request : this.guardingRequests) {
             updatedGuardingRequests.add(GuardingRequest.create(
                     request.getStartOffset(),
@@ -54,6 +55,7 @@ public class ViewModel {
     
     public List<FoldingRequest> getFoldingRequests() {
         List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
+        // TODO: zdedene z fileov?
         for(FoldingRequest request : this.foldingRequests) {
             updatedFoldingRequests.add(FoldingRequest.create(
                     request.getStartOffset(),
@@ -103,6 +105,10 @@ public class ViewModel {
     public boolean setFiles(List<JavaFile> files) {
         this.files.clear();
         return this.files.addAll(files);
+    }
+
+    public List<JavaFile> getFiles() {
+        return files;
     }
 
     /**
