@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.Position;
 import javax.swing.text.StyledDocument;
 import org.netbeans.api.java.lexer.JavaTokenId;
 import org.netbeans.api.java.source.CompilationInfo;
@@ -109,6 +108,8 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
                 int lineOffset = NbDocument.findLineOffset((StyledDocument) doc, lineNum);
                 if(start - lineOffset > 0) {
                     initialTab = doc.getText(lineOffset, start - lineOffset);
+                } else if(start - lineOffset == 0) {
+                    // everything is okay, there is just no tab
                 } else {
                     System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
                 }
@@ -167,6 +168,8 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
                 int lineOffset = NbDocument.findLineOffset((StyledDocument) doc, lineNum);
                 if(start - lineOffset > 0) {
                     initialTab = doc.getText(lineOffset, start - lineOffset);
+                } else if(start - lineOffset == 0) {
+                    // everything is okay, there is just no tab
                 } else {
                     System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
                 }
@@ -212,6 +215,8 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
                 int lineOffset = NbDocument.findLineOffset((StyledDocument) doc, lineNum);
                 if(start - lineOffset > 0) {
                     initialTab = doc.getText(lineOffset, start - lineOffset);
+                } else if(start - lineOffset == 0) {
+                    // everything is okay, there is just no tab
                 } else {
                     System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
                 }

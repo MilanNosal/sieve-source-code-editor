@@ -1,10 +1,11 @@
 - zle vypisy pri code (dake blbnosti tam ukazuje)       -- toto je dobre, len ja som myslel ze je to zle (ale vieme to este upresnit ten kontext)
 - zle zarovnanie zaciatku kodu                          -- DONE
-- zda sa ze zla synchronizacia                          -- so far so good, uvidime este, vyzera to ze skutocny problem je so saveom, a to este treba fixnut
+- zda sa ze zla synchronizacia                          -- so far so good, uvidime este, vyzera to ze skutocny problem je s uvolnenim zdrojov, a to este treba fixnut
 - save                                                  -- nejak som to spravil
 - vymysliet lepsie spustanie a ovladanie
     - spustanie pravym nad projektom
 - vyriesit otvaranie, zatvaranie a obnovu sieve suboru
+    - vsetky objekty musia byt disposable on demand     -- dispose spraveny na core
     - zatvorenie suboru a uprava sledovanych suborov sposobi samozrejme problem 
         - zatvorenie suboru alebo explicitne vypnutie musi vsetko zrusit
 - custom guard + fold

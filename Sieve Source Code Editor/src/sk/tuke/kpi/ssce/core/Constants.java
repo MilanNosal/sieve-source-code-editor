@@ -11,6 +11,7 @@ public interface Constants {
      * Kluc pre ulozenie a ziskanie property, ktora reprezentuje cestu k suboru.
      */
     //SsceIntent:Konstanta;
+    @Deprecated
     public static final String FILE_NAME_PROP = "file_path_name_property";
     /**
      * Kluc pre ulozenie a ziskanie property, ktora reprezentuje jadro Ssce
