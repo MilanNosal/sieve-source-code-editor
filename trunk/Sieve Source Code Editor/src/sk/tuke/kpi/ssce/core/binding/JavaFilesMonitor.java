@@ -358,7 +358,6 @@ public class JavaFilesMonitor {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                System.out.println("clear java file listeners");
                 javaFileListeners.clear();
             }
         });
