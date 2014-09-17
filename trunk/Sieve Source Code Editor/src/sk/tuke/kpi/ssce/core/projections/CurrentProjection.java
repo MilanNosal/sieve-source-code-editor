@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjectionChange;
+import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
 import sk.tuke.kpi.ssce.annotations.concerns.ProjectionComposition;
 import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
@@ -119,6 +120,12 @@ public class CurrentProjection implements Serializable {
         this.currentlySelectedConcerns.addAll(selectedConcerns);
         this.params = params;
         fireCurrentProjectionChange(new CurrentProjectionChangedEvent(this));
+    }
+    
+    @Disposal
+    public void dispose() {
+        this.listeners.clear();
+        this.currentlySelectedConcerns.clear();
     }
 
     /**

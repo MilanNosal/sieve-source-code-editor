@@ -154,13 +154,9 @@ public class AnnotationBasedProjectionProvider extends AbstractProjectionProvide
     // End of variables declaration//GEN-END:variables
 
     @Override
-    public void restart() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void destroy() {
+    public void dispose() {
         StatusDisplayer.getDefault().setStatusText("Attemtping to destroy the projection provider");
+        core.dispose();
     }
 
     private class ConcernsListModel extends AbstractListModel implements ProjectionsModel.ConcernsChangeListener {

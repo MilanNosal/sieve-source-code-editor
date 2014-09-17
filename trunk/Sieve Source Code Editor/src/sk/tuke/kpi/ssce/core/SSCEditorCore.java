@@ -8,8 +8,6 @@ import java.util.*;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.JTextComponent;
-import org.netbeans.api.editor.EditorRegistry;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.project.Project;
@@ -20,6 +18,7 @@ import org.openide.loaders.DataObject;
 import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.ChangeMonitoring;
 import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjectionChange;
+import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
 import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
@@ -93,6 +92,11 @@ public class SSCEditorCore {
     private final CurrentProjection currentProjection;
 
     private final Project projectContext;
+    
+    @Synchronization(direction = Direction.SJTOJAVA)
+    private final PropertyChangeListener saveListener;
+    
+    private final CurrentProjection.CurrentProjectionChangeListener currentProjectionChangeListener;
 
     /**
      * Model pre synchronizaciu java suborov a pomocneho suboru .sj.
@@ -105,7 +109,7 @@ public class SSCEditorCore {
      */
     //SsceIntent:Model pre mapovanie zamerov;Notifikacia na zmeny v priradenych zamerov;
     private final ProjectionsModel projectionsModel;
-
+    
     /**
      * Vytvori jadro editora modulu SSCE. Realizuje zaujmovo-oreientovanu
      * projekciu zdrojoveho kodu, synchronizaciu kodu medzi java subormi a
@@ -131,13 +135,15 @@ public class SSCEditorCore {
         this.dataObject = dataObject;
         handle.progress("Data object created", 20);
 
-        currentProjection.addCurrentProjectionChangeListener(new CurrentProjection.CurrentProjectionChangeListener() {
+        this.currentProjectionChangeListener = new CurrentProjection.CurrentProjectionChangeListener() {
             @Override
             public void projectionChanged(CurrentProjectionChangedEvent event) {
                 reloadModel();
                 reloadSieveDocument();
             }
-        });
+        };
+        currentProjection.addCurrentProjectionChangeListener(this.currentProjectionChangeListener);
+        
         Map<Object, Object> props = new HashMap<Object, Object>();
         props.put(Constants.SSCE_CORE_OBJECT_PROP, this);
         javaFilesMonitor = new JavaFilesMonitor(FileUtil.toFile(projectContext.getProjectDirectory()).getPath(), props);
@@ -148,20 +154,21 @@ public class SSCEditorCore {
                 = new Binding(new ViewModelCreator(extractor, siever),
                         new ProjectionsModelCreator(extractor));
         this.viewModel.setEditorCookieSieveDocument(dataObject.getLookup().lookup(EditorCookie.class));
-        
-        // TODO: temporary save event hook
-        dataObject.addPropertyChangeListener(new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent evt) {
-                    if (evt.getPropertyName().equals(DataObject.PROP_MODIFIED)) {
-                        if (!((Boolean) evt.getOldValue()) & ((Boolean) evt.getNewValue())) {
-                            // Starts modification
-                        } else {
-                            SSCEditorCore.this.tryToSaveModifiedJavaFiles();
-                        }
+
+        saveListener = new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (evt.getPropertyName().equals(DataObject.PROP_MODIFIED)) {
+                    if (!((Boolean) evt.getOldValue()) & ((Boolean) evt.getNewValue())) {
+                        // Starts modification
+                    } else {
+                        // we need to save both when the document is saved, but also when it comes back to unmodified state 
+                        SSCEditorCore.this.tryToSaveModifiedJavaFiles();
                     }
                 }
-            });
+            }
+        };
+        dataObject.addPropertyChangeListener(saveListener);
         
         handle.progress("Listeners and binding prepared", 30);
 
@@ -184,21 +191,6 @@ public class SSCEditorCore {
 
         this.javaFilesMonitor.addJavaFileListener(concernsMappingListener);
 
-        EditorRegistry.addPropertyChangeListener(new PropertyChangeListener() {
-
-            // XXX: toto je tu naco?
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                if (EditorRegistry.FOCUS_GAINED_PROPERTY.equals(evt.getPropertyName())) {
-                    JTextComponent component = evt.getNewValue() != null && evt.getNewValue() instanceof JTextComponent ? ((JTextComponent) evt.getNewValue()) : null;
-                    if (component != null && component.getDocument() != null && SSCEditorCore.this.equals(component.getDocument().getProperty(Constants.SSCE_CORE_OBJECT_PROP))) {
-//                        bindingUtilities.markGuardedSieveDoument((StyledDocument) component.getDocument(), model);
-                        System.out.println("--- focus gained + refreshDocumentListening --- time: " + new Date().toString());
-                        javaFilesMonitor.refreshDocumentListening();
-                    }
-                }
-            }
-        });
         handle.progress("Projection core finished", 99);
 
         handle.finish();
@@ -220,7 +212,6 @@ public class SSCEditorCore {
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v pomocnom subore .sj;
     @SievedDocument
     private boolean reloadSieveDocument() {
-
         SwingUtilities.invokeLater(new Runnable() {
 
             @Override
@@ -231,6 +222,42 @@ public class SSCEditorCore {
             }
         });
         return true;
+    }
+
+    public void tryToSaveModifiedJavaFiles() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                for (JavaFile javaFile : viewModel.getFiles()) {
+                    if (javaFile.isModified() && javaFile.getEditorCookie().isModified()) {
+                        try {
+                            //javaDocumentListener.addIgnoredFilePath(javaFile.getFilePath());
+                            javaFile.getEditorCookie().saveDocument();
+                            //javaDocumentListener.removeIgnoredFilePath(javaFile.getFilePath());
+                        } catch (IOException ex) {
+                            Exceptions.printStackTrace(ex);
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    @Disposal
+    public void dispose() {
+        // this should be obsolete with JavaFilesMonitor.dispose() call, but just to make sure everything stays consistent
+        this.currentProjection.removeCurrentProjectionChangeListener(this.currentProjectionChangeListener);
+        this.javaFilesMonitor.removeJavaFileListener(this.javaDocumentListener);
+        this.javaFilesMonitor.removeJavaFileListener(this.concernsMappingListener);
+        
+        // takes care of javaFilesMonitor but also of javaDocumentListener and concernsMappingListener
+        this.javaFilesMonitor.dispose();
+        
+        this.currentProjection.dispose();
+        this.dataObject.removePropertyChangeListener(this.saveListener);
+        this.sieveDocument.removeDocumentListener(this.sieveDocumentListener);
+        
+        this.projectionsModel.dispose();
     }
 
     /**
@@ -344,34 +371,13 @@ public class SSCEditorCore {
                     //System.out.println("Time = " + new Date().getTime());
                     javaDocumentListener.addIgnoredFilePath(javaFile.getFilePath());
 
-                    if (bindingUtilities.updateJavaDocument(viewModel, javaFile, e.getOffset())) {
-                        javaFile.setModified(true);
-                    }
+                    bindingUtilities.updateJavaDocument(viewModel, javaFile, e.getOffset());
+                    javaFile.setModified(true);
                     javaDocumentListener.removeIgnoredFilePath(javaFile.getFilePath());
                 }
             });
 
         }
-    }
-
-    public void tryToSaveModifiedJavaFiles() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                for (JavaFile javaFile : viewModel.getFiles()) {
-                    if (javaFile.isModified() && javaFile.getEditorCookie().isModified()) {
-                        try {
-                            javaDocumentListener.addIgnoredFilePath(javaFile.getFilePath());
-                            javaFile.getEditorCookie().saveDocument();
-                            javaDocumentListener.removeIgnoredFilePath(javaFile.getFilePath());
-                        } catch (IOException ex) {
-                            Exceptions.printStackTrace(ex);
-                        }
-                    }
-                }
-            }
-        });
-
     }
 
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
@@ -390,7 +396,7 @@ public class SSCEditorCore {
             ignoreList.put(path, new Date().getTime());
             return true;
         }
-        
+
         //SsceIntent:Praca s pomocnym suborom;Prepojenie java suborov s pomocnym suborom .sj;Model pre synchronizaciu kodu;
         @Override
         public void javaFileCreated(final JavaFileEvent event) {

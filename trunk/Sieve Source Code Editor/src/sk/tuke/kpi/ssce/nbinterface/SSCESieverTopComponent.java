@@ -107,6 +107,7 @@ public final class SSCESieverTopComponent extends TopComponent {
         availableImplementationsLabel = new javax.swing.JLabel();
         availableImplementationsCombo = new javax.swing.JComboBox();
         startButton = new javax.swing.JButton();
+        killButton = new javax.swing.JButton();
         projectionsPanel = new javax.swing.JScrollPane();
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.jLabel1.text")); // NOI18N
@@ -136,6 +137,13 @@ public final class SSCESieverTopComponent extends TopComponent {
             }
         });
 
+        org.openide.awt.Mnemonics.setLocalizedText(killButton, org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.killButton.text")); // NOI18N
+        killButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                killButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout SSCEPanelLayout = new javax.swing.GroupLayout(SSCEPanel);
         SSCEPanel.setLayout(SSCEPanelLayout);
         SSCEPanelLayout.setHorizontalGroup(
@@ -149,7 +157,8 @@ public final class SSCESieverTopComponent extends TopComponent {
                 .addGroup(SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(currentProjectTextBox, javax.swing.GroupLayout.DEFAULT_SIZE, 170, Short.MAX_VALUE)
                     .addComponent(availableImplementationsCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(startButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(startButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(killButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         SSCEPanelLayout.setVerticalGroup(
@@ -165,7 +174,9 @@ public final class SSCESieverTopComponent extends TopComponent {
                     .addComponent(availableImplementationsCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(startButton)
-                .addGap(210, 210, 210))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(killButton)
+                .addGap(181, 181, 181))
         );
 
         jScrollPane1.setViewportView(SSCEPanel);
@@ -187,13 +198,17 @@ public final class SSCESieverTopComponent extends TopComponent {
         
         if (selectedFactory != null) {
             if (currentProjectionProvider != null) {
-                currentProjectionProvider.destroy();
+                currentProjectionProvider.dispose();
             }
             SSCETabPanel.setSelectedComponent(projectionsPanel);
             currentProjectionProvider = selectedFactory.createProjectionProviderFor(currentlySelectedProject);
             projectionsPanel.setViewportView(currentProjectionProvider);
         }
     }//GEN-LAST:event_startButtonActionPerformed
+
+    private void killButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_killButtonActionPerformed
+        currentProjectionProvider.dispose();
+    }//GEN-LAST:event_killButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel SSCEPanel;
@@ -204,6 +219,7 @@ public final class SSCESieverTopComponent extends TopComponent {
     private javax.swing.JTextField currentProjectTextBox;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JButton killButton;
     private javax.swing.JScrollPane projectionsPanel;
     private javax.swing.JButton startButton;
     // End of variables declaration//GEN-END:variables

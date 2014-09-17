@@ -1,6 +1,7 @@
 package sk.tuke.kpi.ssce.projection.provider;
 
 import org.netbeans.api.project.Project;
+import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
 import sk.tuke.kpi.ssce.annotations.concerns.ProvidersPluginSystem;
 import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 
@@ -15,7 +16,6 @@ import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 public interface ProjectionProvider {
     public Project getProjectContext();
     
-    public void restart();
-    
-    public void destroy();
+    @Disposal
+    public void dispose();
 }

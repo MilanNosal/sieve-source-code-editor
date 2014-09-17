@@ -2,6 +2,7 @@ package sk.tuke.kpi.ssce.core.model.availableprojections;
 
 import java.util.*;
 import sk.tuke.kpi.ssce.annotations.concerns.AvailableProjectionsChange;
+import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
 import sk.tuke.kpi.ssce.annotations.concerns.Model;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
@@ -296,6 +297,11 @@ public class ProjectionsModel {
 //            return null;
 //        }
         return new ConcernsChangedEvent(newAllConcerns, newConcerns, removedConcerns);
+    }
+    
+    @Disposal
+    public void dispose() {
+        this.listeners.clear();
     }
 
     /**
