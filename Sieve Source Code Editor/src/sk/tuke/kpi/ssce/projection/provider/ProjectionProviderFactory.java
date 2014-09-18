@@ -21,5 +21,5 @@ public interface ProjectionProviderFactory {
      * @param projectContext
      * @return 
      */
-    public AbstractProjectionProvider createProjectionProviderFor(Project projectContext);
+    public ProjectionProvider createProjectionProviderFor(Project projectContext);
 }
