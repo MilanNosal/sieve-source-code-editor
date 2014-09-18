@@ -9,9 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import javax.swing.AbstractListModel;
+import javax.swing.JPanel;
 import org.netbeans.api.project.Project;
 import org.openide.awt.StatusDisplayer;
-import org.openide.loaders.DataObject;
 import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 import sk.tuke.kpi.ssce.concerns.annotations.AnnotationBasedConcernExtractor;
@@ -19,7 +19,7 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import sk.tuke.kpi.ssce.core.SSCEditorCore;
 import sk.tuke.kpi.ssce.core.model.availableprojections.ProjectionsModel;
-import sk.tuke.kpi.ssce.projection.provider.AbstractProjectionProvider;
+import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
 import sk.tuke.kpi.ssce.sieving.annotations.AnnotationBasedSiever;
 
 /**
@@ -27,35 +27,47 @@ import sk.tuke.kpi.ssce.sieving.annotations.AnnotationBasedSiever;
  * @author Milan
  */
 @SSCE_UI(source = "annotations")
-public class AnnotationBasedProjectionProvider extends AbstractProjectionProvider {
+public class AnnotationBasedProjectionProvider extends JPanel implements ProjectionProvider {
 
     private SSCEditorCore core;
     private final ConcernsListModel listModel;
+    private final Project projectContext;
 
     /**
      * Creates new form AnnotationBasedProjectionProvider
      */
     public AnnotationBasedProjectionProvider(Project projectContext) {
-        super(projectContext);
+        super();
+        this.projectContext = projectContext;
         startProjection();
         listModel = new ConcernsListModel(core.getAvailableProjections());
         initComponents();
     }
 
     private void startProjection() {
-        DataObject dObj = openSJDocumentForGivenProject();
         ConcernExtractor extractor = new AnnotationBasedConcernExtractor();
         AnnotationBasedSiever siever = new AnnotationBasedSiever();
         try {
-            core = new SSCEditorCore(dObj, getProjectContext(), extractor, siever);
+            core = new SSCEditorCore(getProjectContext(), extractor, siever);
             core.getConfiguration().addCurrentProjectionChangeListener(siever);
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         }
     }
     
-    public SSCEditorCore getCore() {
+    @Override
+    public SSCEditorCore getSSCECore() {
         return core;
+    }
+    
+    @Override
+    public Project getProjectContext() {
+        return this.projectContext;
+    }
+    
+    @Override
+    public JPanel getView() {
+        return this;
     }
 
     /**

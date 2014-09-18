@@ -3,22 +3,29 @@ package sk.tuke.kpi.ssce.core;
 import sk.tuke.kpi.ssce.core.binding.JavaFilesMonitor;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.StyledDocument;
 import org.netbeans.api.editor.mimelookup.MimeRegistration;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.project.Project;
+import org.netbeans.api.project.ProjectUtils;
 import org.netbeans.editor.BaseDocument;
 import org.netbeans.modules.editor.NbEditorUtilities;
 import org.netbeans.spi.editor.document.OnSaveTask;
+import org.openide.awt.StatusDisplayer;
 import org.openide.cookies.EditorCookie;
+import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
+import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
+import org.openide.windows.TopComponent;
 import sk.tuke.kpi.ssce.annotations.concerns.ChangeMonitoring;
 import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjectionChange;
 import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
@@ -96,8 +103,12 @@ public class SSCEditorCore {
 
     private final Project projectContext;
 
+    private boolean disposed = false;
+
     @Synchronization(direction = Direction.SJTOJAVA)
     private final PropertyChangeListener saveListener;
+
+    private final PropertyChangeListener closeListener;
 
     private final CurrentProjection.CurrentProjectionChangeListener currentProjectionChangeListener;
 
@@ -124,18 +135,51 @@ public class SSCEditorCore {
      * @throws IOException ak dojde k nejakej I/O chybe.
      */
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v java zdrojovom kode;Notifikacia na zmeny v pomocnom subore .sj;Monitorovanie java suborov;Model pre mapovanie zamerov;Prepojenie java suborov s pomocnym suborom .sj;Notifikacia na zmeny v priradenych zamerov;Model pre synchronizaciu kodu;
-    public SSCEditorCore(final DataObject dataObject, Project projectContext,
+    public SSCEditorCore(final Project projectContext,
             ConcernExtractor extractor, CodeSiever siever) throws IOException {
 
         ProgressHandle handle = ProgressHandleFactory.createHandle("Building SSCE core");
 
+        this.projectContext = projectContext;
         handle.start(100);
         viewModel = new ViewModel();
         handle.progress("View created", 5);
         projectionsModel = new ProjectionsModel();
         handle.progress("Projections created", 10);
         currentProjection = new CurrentProjection();
-        this.dataObject = dataObject;
+
+        // dobj preparation
+        this.dataObject = openSJDocumentForGivenProject();
+        EditorCookie ec = this.dataObject.getLookup().lookup(EditorCookie.class);
+        StyledDocument doc = ec.getDocument();
+        doc.putProperty(Constants.SSCE_CORE_OBJECT_PROP, this);
+        ec.open();
+
+        // XXX: treba toto spravit iba raz
+        closeListener = new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (evt.getPropertyName().equals("tcClosed") && evt.getOldValue() == null) {
+                    EditorCookie cookie = ((TopComponent) evt.getNewValue()).getLookup().lookup(EditorCookie.class);
+                    if (cookie != null && cookie.equals(SSCEditorCore.this.viewModel.getEditorCookieSieveDocument())) {
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                SSCEditorCore.this.dispose();
+                                DataObject dobj = SSCEditorCore.this.getSJDataObject();
+                                try {
+                                    dobj.delete();
+                                } catch (IOException ex) {
+                                    Exceptions.printStackTrace(ex);
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        };
+        TopComponent.getRegistry().addPropertyChangeListener(closeListener);
+
         handle.progress("Data object created", 20);
 
         this.currentProjectionChangeListener = new CurrentProjection.CurrentProjectionChangeListener() {
@@ -156,7 +200,7 @@ public class SSCEditorCore {
         bindingUtilities
                 = new Binding(new ViewModelCreator(extractor, siever),
                         new ProjectionsModelCreator(extractor));
-        this.viewModel.setEditorCookieSieveDocument(dataObject.getLookup().lookup(EditorCookie.class));
+        this.viewModel.setEditorCookieSieveDocument(ec);
 
         saveListener = new PropertyChangeListener() {
             @Override
@@ -175,10 +219,9 @@ public class SSCEditorCore {
 
         handle.progress("Listeners and binding prepared", 30);
 
-        this.sieveDocument = (BaseDocument) this.viewModel.getEditorCookieSieveDocument().openDocument();
+        this.sieveDocument = (BaseDocument) doc;
         this.sieveDocument.addDocumentListener(this.sieveDocumentListener);
 
-        this.projectContext = projectContext;
         handle.progress("Context prepared", 35);
 
 //        projectContext.getLookup().lookup(Sources.class).getSourceGroups(Source);
@@ -197,41 +240,6 @@ public class SSCEditorCore {
         handle.progress("Projection core finished", 99);
 
         handle.finish();
-    }
-
-    public static class CustomOnSaveTask implements OnSaveTask {
-
-        private final Context context;
-
-        public CustomOnSaveTask(Context ctx) {
-            context = ctx;
-        }
-
-        @Override
-        public void performTask() {
-            System.out.println(">>> Save performed on " + 
-                    NbEditorUtilities.getDataObject(context.getDocument()).toString());
-        }
-
-        @Override
-        public void runLocked(Runnable r) {
-            r.run();
-        }
-
-        @Override
-        public boolean cancel() {
-            return true;
-        }
-
-        @MimeRegistration(mimeType = "text/x-sieve-java", service = OnSaveTask.Factory.class, position = 1600)
-        public static class CustomOnSaveTaskFactory implements OnSaveTask.Factory {
-
-            @Override
-            public OnSaveTask createTask(Context cntxt) {
-                return new CustomOnSaveTask(cntxt);
-            }
-
-        }
     }
 
     public DataObject getSJDataObject() {
@@ -287,6 +295,11 @@ public class SSCEditorCore {
 
     @Disposal
     public void dispose() {
+        if (disposed) {
+            return;
+        }
+        disposed = true;
+
         // this should be obsolete with JavaFilesMonitor.dispose() call, but just to make sure everything stays consistent
         this.currentProjection.removeCurrentProjectionChangeListener(this.currentProjectionChangeListener);
         this.javaFilesMonitor.removeJavaFileListener(this.javaDocumentListener);
@@ -300,6 +313,52 @@ public class SSCEditorCore {
         this.sieveDocument.removeDocumentListener(this.sieveDocumentListener);
 
         this.projectionsModel.dispose();
+
+        TopComponent.getRegistry().removePropertyChangeListener(closeListener);
+    }
+
+    @SievedDocument
+    protected DataObject openSJDocumentForGivenProject() {//Project projectContext) {
+        String parentDirectory = projectContext.getProjectDirectory().getPath();
+        String projectName = ProjectUtils.getInformation(projectContext).getDisplayName();
+        File file = new File(parentDirectory
+                + File.separator
+                + projectName + ".sj");
+        if (file.exists()) {
+            // XXX: this should not be necessary, but just to be precise
+            file.delete();
+        }
+        try {
+            file.createNewFile();
+            // TODO use context
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        file.deleteOnExit();
+
+        FileObject fobj = FileUtil.toFileObject(file);
+        try {
+            final DataObject dobj = DataObject.find(fobj);
+            if (dobj != null) {
+                EditorCookie ec = dobj.getLookup().lookup(EditorCookie.class);
+
+                StyledDocument doc = ec.openDocument();
+
+                // XXX: toto by mohlo hypoteticky vyriesit problem s opakovanim
+                if (doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP) != null) {
+                    ((SSCEditorCore) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP)).dispose();
+                }
+
+                StatusDisplayer.getDefault().setStatusText("Should open the editor for " + file.getName());
+
+                return dobj;
+            }
+        } catch (DataObjectNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        return null;
     }
 
     /**

@@ -5,7 +5,6 @@
 - vymysliet lepsie spustanie a ovladanie
     - spustanie pravym nad projektom
 - vyriesit otvaranie, zatvaranie a obnovu sieve suboru
-    - vsetky objekty musia byt disposable on demand     -- dispose spraveny na core
-    - zatvorenie suboru a uprava sledovanych suborov sposobi samozrejme problem 
-        - zatvorenie suboru alebo explicitne vypnutie musi vsetko zrusit
+    - vsetky objekty musia byt disposable on demand                                 -- dispose spraveny na core
+    - zatvorenie suboru a uprava sledovanych suborov sposobi samozrejme problem     -- listening na zatvaranie, davam tam dispose a zmazanie suboru
 - custom guard + fold

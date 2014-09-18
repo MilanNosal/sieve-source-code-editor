@@ -2,7 +2,7 @@ package sk.tuke.kpi.ssce.projection.annotations;
 
 import org.netbeans.api.project.Project;
 import org.openide.util.lookup.ServiceProvider;
-import sk.tuke.kpi.ssce.projection.provider.AbstractProjectionProvider;
+import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
 
 /**
@@ -19,7 +19,7 @@ public class AnnotationBasedProjectionProviderFactory
     }
 
     @Override
-    public AbstractProjectionProvider createProjectionProviderFor(Project projectContext) {
+    public ProjectionProvider createProjectionProviderFor(Project projectContext) {
         return new AnnotationBasedProjectionProvider(projectContext);
     }
 

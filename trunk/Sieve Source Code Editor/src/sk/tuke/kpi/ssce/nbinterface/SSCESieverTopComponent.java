@@ -1,21 +1,13 @@
 package sk.tuke.kpi.ssce.nbinterface;
 
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import javax.swing.JEditorPane;
 import org.netbeans.api.project.Project;
 import org.netbeans.api.project.ProjectUtils;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.cookies.EditorCookie;
-import org.openide.loaders.DataObject;
-import org.openide.nodes.Node;
-import org.openide.nodes.NodeListener;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -23,8 +15,7 @@ import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.Utilities;
 import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
-import sk.tuke.kpi.ssce.projection.annotations.AnnotationBasedProjectionProvider;
-import sk.tuke.kpi.ssce.projection.provider.AbstractProjectionProvider;
+import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
 
 /**
@@ -57,7 +48,7 @@ public final class SSCESieverTopComponent extends TopComponent {
     private Project currentlySelectedProject;
     private Lookup genlokup;
     private Collection<? extends ProjectionProviderFactory> availableImplementations;
-    private AbstractProjectionProvider currentProjectionProvider;
+    private ProjectionProvider currentProjectionProvider;
 
     public SSCESieverTopComponent() {
         Lookup lookup = Lookup.getDefault();
@@ -211,7 +202,7 @@ public final class SSCESieverTopComponent extends TopComponent {
             }
             SSCETabPanel.setSelectedComponent(projectionsPanel);
             currentProjectionProvider = selectedFactory.createProjectionProviderFor(currentlySelectedProject);
-            projectionsPanel.setViewportView(currentProjectionProvider);
+            projectionsPanel.setViewportView(currentProjectionProvider.getView());
         }
     }//GEN-LAST:event_startButtonActionPerformed
 
