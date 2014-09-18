@@ -14,9 +14,11 @@ import javax.swing.Icon;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.StyledDocument;
 import org.netbeans.api.project.Project;
 import org.netbeans.api.project.ProjectUtils;
+import org.netbeans.modules.editor.NbEditorUtilities;
 import org.netbeans.spi.actions.AbstractSavable;
 import org.openide.awt.StatusDisplayer;
 import org.openide.cookies.EditorCookie;
@@ -80,7 +82,7 @@ public abstract class AbstractProjectionProvider
                 + File.separator
                 + projectName + ".sj");
         if (file.exists()) {
-            // XXX: toto by mohlo hypoteticky vyriesit problem s opakovanim
+            // XXX: this should not be necessary, but just to be precise
             file.delete();
         }
         try {
@@ -96,6 +98,7 @@ public abstract class AbstractProjectionProvider
             final DataObject dobj = DataObject.find(fobj);
             if (dobj != null) {
                 EditorCookie ec = dobj.getLookup().lookup(EditorCookie.class);
+                
                 StyledDocument doc = ec.openDocument();
                 // XXX: toto by mohlo hypoteticky vyriesit problem s opakovanim
                 if (doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP) == null) {

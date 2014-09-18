@@ -8,10 +8,13 @@ import java.util.*;
 import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import org.netbeans.api.editor.mimelookup.MimeRegistration;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.project.Project;
 import org.netbeans.editor.BaseDocument;
+import org.netbeans.modules.editor.NbEditorUtilities;
+import org.netbeans.spi.editor.document.OnSaveTask;
 import org.openide.cookies.EditorCookie;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
@@ -92,10 +95,10 @@ public class SSCEditorCore {
     private final CurrentProjection currentProjection;
 
     private final Project projectContext;
-    
+
     @Synchronization(direction = Direction.SJTOJAVA)
     private final PropertyChangeListener saveListener;
-    
+
     private final CurrentProjection.CurrentProjectionChangeListener currentProjectionChangeListener;
 
     /**
@@ -109,7 +112,7 @@ public class SSCEditorCore {
      */
     //SsceIntent:Model pre mapovanie zamerov;Notifikacia na zmeny v priradenych zamerov;
     private final ProjectionsModel projectionsModel;
-    
+
     /**
      * Vytvori jadro editora modulu SSCE. Realizuje zaujmovo-oreientovanu
      * projekciu zdrojoveho kodu, synchronizaciu kodu medzi java subormi a
@@ -143,7 +146,7 @@ public class SSCEditorCore {
             }
         };
         currentProjection.addCurrentProjectionChangeListener(this.currentProjectionChangeListener);
-        
+
         Map<Object, Object> props = new HashMap<Object, Object>();
         props.put(Constants.SSCE_CORE_OBJECT_PROP, this);
         javaFilesMonitor = new JavaFilesMonitor(FileUtil.toFile(projectContext.getProjectDirectory()).getPath(), props);
@@ -169,7 +172,7 @@ public class SSCEditorCore {
             }
         };
         dataObject.addPropertyChangeListener(saveListener);
-        
+
         handle.progress("Listeners and binding prepared", 30);
 
         this.sieveDocument = (BaseDocument) this.viewModel.getEditorCookieSieveDocument().openDocument();
@@ -194,6 +197,45 @@ public class SSCEditorCore {
         handle.progress("Projection core finished", 99);
 
         handle.finish();
+    }
+
+    public static class CustomOnSaveTask implements OnSaveTask {
+
+        private final Context context;
+
+        public CustomOnSaveTask(Context ctx) {
+            context = ctx;
+        }
+
+        @Override
+        public void performTask() {
+            System.out.println(">>> Save performed on " + 
+                    NbEditorUtilities.getDataObject(context.getDocument()).toString());
+        }
+
+        @Override
+        public void runLocked(Runnable r) {
+            r.run();
+        }
+
+        @Override
+        public boolean cancel() {
+            return true;
+        }
+
+        @MimeRegistration(mimeType = "text/x-sieve-java", service = OnSaveTask.Factory.class, position = 1600)
+        public static class CustomOnSaveTaskFactory implements OnSaveTask.Factory {
+
+            @Override
+            public OnSaveTask createTask(Context cntxt) {
+                return new CustomOnSaveTask(cntxt);
+            }
+
+        }
+    }
+
+    public DataObject getSJDataObject() {
+        return dataObject;
     }
 
     //SsceIntent:Monitorovanie java suborov;Dopyt na zdrojovy kod, konfiguracia zamerov;Prepojenie java suborov s pomocnym suborom .sj;Model pre synchronizaciu kodu;
@@ -242,21 +284,21 @@ public class SSCEditorCore {
             }
         });
     }
-    
+
     @Disposal
     public void dispose() {
         // this should be obsolete with JavaFilesMonitor.dispose() call, but just to make sure everything stays consistent
         this.currentProjection.removeCurrentProjectionChangeListener(this.currentProjectionChangeListener);
         this.javaFilesMonitor.removeJavaFileListener(this.javaDocumentListener);
         this.javaFilesMonitor.removeJavaFileListener(this.concernsMappingListener);
-        
+
         // takes care of javaFilesMonitor but also of javaDocumentListener and concernsMappingListener
         this.javaFilesMonitor.dispose();
-        
+
         this.currentProjection.dispose();
         this.dataObject.removePropertyChangeListener(this.saveListener);
         this.sieveDocument.removeDocumentListener(this.sieveDocumentListener);
-        
+
         this.projectionsModel.dispose();
     }
 

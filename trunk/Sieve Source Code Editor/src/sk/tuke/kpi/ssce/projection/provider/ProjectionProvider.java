@@ -16,6 +16,12 @@ import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 public interface ProjectionProvider {
     public Project getProjectContext();
     
+    /**
+     * Each projection provider is required to implement a dispose method that
+     * invalidates the projectional editing of a single project. It has to 
+     * use the dispose() method of the SSCEditorCore and to remove the .sj
+     * file.
+     */
     @Disposal
     public void dispose();
 }

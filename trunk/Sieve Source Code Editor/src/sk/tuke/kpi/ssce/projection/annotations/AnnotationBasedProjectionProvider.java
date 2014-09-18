@@ -53,6 +53,10 @@ public class AnnotationBasedProjectionProvider extends AbstractProjectionProvide
             Exceptions.printStackTrace(ex);
         }
     }
+    
+    public SSCEditorCore getCore() {
+        return core;
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
