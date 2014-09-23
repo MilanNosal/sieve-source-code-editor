@@ -12,7 +12,7 @@ import sk.tuke.kpi.ssce.core.model.view.postprocessing.GuardingRequest;
 
 /**
  * Trieda modeluje fragment kodu.
- * @author Matej Nosal
+ * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Model pre synchronizaciu kodu;
 @Model(model = RepresentationOf.VIEW)
@@ -76,57 +76,62 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
         this.initialTab = initialTab;
     }
     
-    public void addGuardingRequest(int relativeStartOffset, int relativeEndOffset) {
-        this.guardingRequests.add(GuardingRequest.create(relativeStartOffset, relativeEndOffset));
+    public void addGuardingRequestAbsolute(int absoluteStartOffset, int absoluteEndOffset) {
+        this.guardingRequests.add(GuardingRequest.create(absoluteStartOffset, absoluteEndOffset));
+    }
+    
+    public void addGuardingRequestRelative(int relativeStartOffset, int relativeEndOffset) {
+        int startInSieve = this.codeBinding.getStartPositionSieveDocument();
+        this.guardingRequests.add(GuardingRequest.create(
+                startInSieve + relativeStartOffset,
+                startInSieve + relativeEndOffset));
+    }
+    
+    public void clearGuardingRequests() {
+        this.guardingRequests.clear();
     }
     
     public List<GuardingRequest> getGuardingRequests() {
-        List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
-        int startInSieve = this.codeBinding.getStartPositionSieveDocument();
-        for(GuardingRequest request : this.guardingRequests) {
-            updatedGuardingRequests.add(GuardingRequest.create(
-                    startInSieve + request.getStartOffset(),
-                    startInSieve + request.getEndOffset()));
-        }
-        for(GuardingRequest request : standardGuardingRequests()) {
-            updatedGuardingRequests.add(GuardingRequest.create(
-                    startInSieve + request.getStartOffset(),
-                    startInSieve + request.getEndOffset()));
-        }
+        List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>(this.guardingRequests);
+        updatedGuardingRequests.addAll(standardGuardingRequests());
         return updatedGuardingRequests;
     }
     
-    public void addFoldingRequest(int relativeStartOffset, int relativeEndOffset, String description) {
-        this.foldingRequests.add(FoldingRequest.create(relativeStartOffset, relativeEndOffset, description));
+    public void addFoldingRequestAbsolute(int absoluteStartOffset, int absoluteEndOffset, String description) {
+        this.foldingRequests.add(FoldingRequest.create(absoluteStartOffset, absoluteEndOffset, description));
     }
     
-    public void addFoldingRequest(int relativeStartOffset, int relativeEndOffset, String description,
+    public void addFoldingRequestAbsolute(int absoluteStartOffset, int absoluteEndOffset, String description,
             int guardedLengthStart, int guardedLengthEnd) {
-        this.foldingRequests.add(FoldingRequest.create(relativeStartOffset, relativeEndOffset, description,
+        this.foldingRequests.add(FoldingRequest.create(absoluteStartOffset, absoluteEndOffset, description,
                 guardedLengthStart, guardedLengthEnd));
     }
     
-    public List<FoldingRequest> getFoldingRequests() {
-        List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
+    public void addFoldingRequestRelative(int relativeStartOffset, int relativeEndOffset, String description) {
         int startInSieve = this.codeBinding.getStartPositionSieveDocument();
-        for(FoldingRequest request : this.foldingRequests) {
-            updatedFoldingRequests.add(FoldingRequest.create(
-                    startInSieve + request.getStartOffset(),
-                    startInSieve + request.getEndOffset(),
-                    request.getDescription(),
-                    request.getGuardedStartLength(),
-                    request.getGuardedEndLength()
-            ));
-        }
-        for(FoldingRequest request : standardFoldingRequests()) {
-            updatedFoldingRequests.add(FoldingRequest.create(
-                    startInSieve + request.getStartOffset(),
-                    startInSieve + request.getEndOffset(),
-                    request.getDescription(),
-                    request.getGuardedStartLength(),
-                    request.getGuardedEndLength()
-            ));
-        }
+        this.foldingRequests.add(FoldingRequest.create(
+                startInSieve + relativeStartOffset,
+                startInSieve + relativeEndOffset,
+                description));
+    }
+    
+    public void addFoldingRequestRelative(int relativeStartOffset, int relativeEndOffset, String description,
+            int guardedLengthStart, int guardedLengthEnd) {
+        int startInSieve = this.codeBinding.getStartPositionSieveDocument();
+        this.foldingRequests.add(FoldingRequest.create(
+                startInSieve + relativeStartOffset,
+                startInSieve + relativeEndOffset,
+                description,
+                guardedLengthStart, guardedLengthEnd));
+    }
+    
+    public void clearFoldingRequests() {
+        this.foldingRequests.clear();
+    }
+    
+    public List<FoldingRequest> getFoldingRequests() {
+        List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>(this.foldingRequests);
+        updatedFoldingRequests.addAll(standardFoldingRequests());
         return updatedFoldingRequests;
     }
 
@@ -200,21 +205,36 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
         return elementType;
     }
     
+    /**
+     * Has to use absolute offsets.
+     * @return 
+     */
     private List<FoldingRequest> standardFoldingRequests() {
         List<FoldingRequest> folds = new ArrayList<FoldingRequest>();
         if (this.codeBinding.isInitialized()) {
+            int startInSieve = this.codeBinding.getStartPositionSieveDocument();
             folds.add(FoldingRequest.create(
-                    1 - (this.getStartTextForSJDoc().length() - START_TEXT_1_IN_SJDOC.length()),
-                    this.codeBinding.getLengthBindingAreaSieveDocument(), 
+                    startInSieve + 1 - (this.getStartTextForSJDoc().length() - START_TEXT_1_IN_SJDOC.length()),
+                    this.codeBinding.getEndPositionSieveDocument() + 1, 
                     " " + this.getFullElementName() + " : " + this.getElementType() + " "));
         }
-        // TODO
         return folds;
     }
     
+    /**
+     * Has to use absolute offsets.
+     * @return 
+     */
     private List<GuardingRequest> standardGuardingRequests() {
         List<GuardingRequest> guards = new ArrayList<GuardingRequest>();
-        // TODO
+        guards.add(GuardingRequest.create(
+                this.getCodeBinding().getStartPositionSieveDocument() - this.getStartTextForSJDoc().length(),
+                this.getCodeBinding().getStartPositionSieveDocument()
+        ));
+        guards.add(GuardingRequest.create(
+                this.getCodeBinding().getEndPositionSieveDocument() + 1,
+                this.getCodeBinding().getEndPositionSieveDocument() + this.getEndTextForSJDoc().length()
+        ));
         return guards;
     }
 }
