@@ -13,7 +13,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 
 /**
  * Trieda predstavuje celkovy model prepojenia vsetkych java suborov s pomocnym suborom .sj.
- * @author Matej Nosal
+ * @author Matej Nosal, Milan Nosal
  */
 //SsceIntent:Model pre synchronizaciu kodu;
 @Model(model = RepresentationOf.VIEW)

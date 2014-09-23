@@ -22,6 +22,7 @@ import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
 import sk.tuke.kpi.ssce.core.model.view.importshandling.Imports;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
 import sk.tuke.kpi.ssce.core.model.view.ViewModel;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.GuardingRequest;
 
 /**
  * Trieda predstavuje nastroj pre realizovanie prepojenia medzi java subormi a
@@ -198,7 +199,7 @@ public class Binding {
                     throw new RuntimeException("Model is not consistent!");
                 }
                 //TODO: dokoncit
-                markGuardedSieveDoument((StyledDocument) sieveDocument, model);
+                processGuardingRequests((StyledDocument) sieveDocument, model);
             } finally {
                 sieveDocument.extWriteUnlock();
             }
@@ -277,7 +278,7 @@ public class Binding {
 //                model.getEditorCookieSieveDocument().saveDocument();
                 //TODO: dokoncit
                 // XXX: nespravi sa nekonzistentnym?
-                markGuardedSieveDoument((StyledDocument) sieveDocument, model);
+                processGuardingRequests((StyledDocument) sieveDocument, model);
                 return true;
             } finally {
                 sieveDocument.extWriteUnlock();
@@ -404,7 +405,7 @@ public class Binding {
                 }
                 //TODO: dokoncit
                 // XXX: tiez to vyzera ze treba dorobit update star a end files..
-                markGuardedSieveDoument((StyledDocument) sieveDocument, model);
+                processGuardingRequests((StyledDocument) sieveDocument, model);
 
             } finally {
                 sieveDocument.extWriteUnlock();
@@ -509,7 +510,7 @@ public class Binding {
                 }
                 //TODO: dokoncit
                 // XXX: to iste co vyssie
-                markGuardedSieveDoument((StyledDocument) sieveDocument, model);
+                processGuardingRequests((StyledDocument) sieveDocument, model);
 
                 return true;
             } finally {
@@ -534,41 +535,15 @@ public class Binding {
         return true;
     }
 
-    //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;
-    
-    @Synchronization(direction = Direction.JAVATOSJ)
     @SievedDocument
     @Guarding
     @SourceCodeSieving(postProcessing = true)
-    private boolean markGuardedSieveDoument(StyledDocument doc, ViewModel model) {
-//        NbDocument.unmarkGuarded((StyledDocument) doc, 0, doc.getLength());
-        JavaFile javaFile;
-        for (int i = 0; i < model.size(); i++) {
-            javaFile = model.getFileAt(i);
-            NbDocument.markGuarded(doc, javaFile.getBeginInSJ(), javaFile.getImportsBinding().getStartPositionSieveDocument() - javaFile.getBeginInSJ());
-            if (javaFile.getCodeSnippets().isEmpty()) {
-                NbDocument.markGuarded(doc, javaFile.getImportsBinding().getEndPositionSieveDocument() + 1, javaFile.getEndInSJ() - javaFile.getImportsBinding().getEndPositionSieveDocument());
-            } else {
-                NbDocument.markGuarded(
-                        doc, 
-                        javaFile.getImportsBinding().getEndPositionSieveDocument() + 1, 
-                        javaFile.getCodeSnippets().get(0).getCodeBinding().getStartPositionSieveDocument() - javaFile.getImportsBinding().getEndPositionSieveDocument() - 1);
-                for (int j = 1; j < javaFile.getCodeSnippets().size(); j++) {
-                    NbDocument.markGuarded(doc, javaFile.getCodeSnippets().get(j - 1).getCodeBinding().getEndPositionSieveDocument() + 2, javaFile.getCodeSnippets().get(j).getCodeBinding().getStartPositionSieveDocument() - javaFile.getCodeSnippets().get(j - 1).getCodeBinding().getEndPositionSieveDocument() - 2);
-                }
-                NbDocument.markGuarded(
-                        doc, 
-                        javaFile.getCodeSnippets().get(javaFile.getCodeSnippets().size() - 1).getCodeBinding().getEndPositionSieveDocument() + 2,
-                        javaFile.getEndInSJ() - javaFile.getCodeSnippets().get(javaFile.getCodeSnippets().size() - 1).getCodeBinding().getEndPositionSieveDocument());
-            }
-//            
-//            NbDocument.markGuarded(doc, jF.getImporstBinding().getEndPositionSieveDocument().getOffset(), jF.getImporstBinding().getStartPositionSieveDocument().getOffset());
-
+    public void processGuardingRequests(StyledDocument document, ViewModel model) {
+        List<GuardingRequest> guards = model.getGuardingRequests();
+        NbDocument.unmarkGuarded(document, -100, Integer.MAX_VALUE);
+        for (GuardingRequest request : guards) {
+            NbDocument.markGuarded(document, request.getStartOffset(), request.getLength());
         }
-
-        //TODO: fix
-        // XXX: fix coho?
-        return false;
     }
 
     /**
