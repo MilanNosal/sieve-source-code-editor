@@ -1,9 +1,14 @@
 package sk.tuke.kpi.ssce.core.model.view;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import sk.tuke.kpi.ssce.annotations.concerns.Model;
 import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.FoldingRequest;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.GuardingRequest;
 
 /**
  * Trieda modeluje fragment kodu.
@@ -33,6 +38,9 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
     private final String codeElementName;
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
     private final String elementType;
+    
+    private final List<GuardingRequest> guardingRequests = new LinkedList<GuardingRequest>();
+    private final List<FoldingRequest> foldingRequests = new LinkedList<FoldingRequest>();
 
     /**
      * Vrati text, ktory bude v pomocnom subore .sj uvadzat tento fragment kodu.
@@ -41,11 +49,11 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
     @SievedDocument
     public String getStartTextForSJDoc() {
-        if (codeContext == null || codeContext.trim().length() == 0) {
-            return START_TEXT_1_IN_SJDOC + " " + START_TEXT_2_IN_SJDOC + this.initialTab;
-        } else {
-            return START_TEXT_1_IN_SJDOC + " ( " + this.getCodeContext() + " )" + START_TEXT_2_IN_SJDOC + this.initialTab;
-        }
+//        if (codeContext == null || codeContext.trim().length() == 0) {
+//            return START_TEXT_1_IN_SJDOC + " " + START_TEXT_2_IN_SJDOC + this.initialTab;
+//        } else {
+            return START_TEXT_1_IN_SJDOC + " ( " + this.getFullElementName() + " : " + this.getElementType() + " )" + START_TEXT_2_IN_SJDOC + this.initialTab;
+//        }
     }
     
     @SievedDocument
@@ -66,6 +74,60 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
         this.codeElementName = codeElementName;
         this.elementType = elementType;
         this.initialTab = initialTab;
+    }
+    
+    public void addGuardingRequest(int relativeStartOffset, int relativeEndOffset) {
+        this.guardingRequests.add(GuardingRequest.create(relativeStartOffset, relativeEndOffset));
+    }
+    
+    public List<GuardingRequest> getGuardingRequests() {
+        List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
+        int startInSieve = this.codeBinding.getStartPositionSieveDocument();
+        for(GuardingRequest request : this.guardingRequests) {
+            updatedGuardingRequests.add(GuardingRequest.create(
+                    startInSieve + request.getStartOffset(),
+                    startInSieve + request.getEndOffset()));
+        }
+        for(GuardingRequest request : standardGuardingRequests()) {
+            updatedGuardingRequests.add(GuardingRequest.create(
+                    startInSieve + request.getStartOffset(),
+                    startInSieve + request.getEndOffset()));
+        }
+        return updatedGuardingRequests;
+    }
+    
+    public void addFoldingRequest(int relativeStartOffset, int relativeEndOffset, String description) {
+        this.foldingRequests.add(FoldingRequest.create(relativeStartOffset, relativeEndOffset, description));
+    }
+    
+    public void addFoldingRequest(int relativeStartOffset, int relativeEndOffset, String description,
+            int guardedLengthStart, int guardedLengthEnd) {
+        this.foldingRequests.add(FoldingRequest.create(relativeStartOffset, relativeEndOffset, description,
+                guardedLengthStart, guardedLengthEnd));
+    }
+    
+    public List<FoldingRequest> getFoldingRequests() {
+        List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
+        int startInSieve = this.codeBinding.getStartPositionSieveDocument();
+        for(FoldingRequest request : this.foldingRequests) {
+            updatedFoldingRequests.add(FoldingRequest.create(
+                    startInSieve + request.getStartOffset(),
+                    startInSieve + request.getEndOffset(),
+                    request.getDescription(),
+                    request.getGuardedStartLength(),
+                    request.getGuardedEndLength()
+            ));
+        }
+        for(FoldingRequest request : standardFoldingRequests()) {
+            updatedFoldingRequests.add(FoldingRequest.create(
+                    startInSieve + request.getStartOffset(),
+                    startInSieve + request.getEndOffset(),
+                    request.getDescription(),
+                    request.getGuardedStartLength(),
+                    request.getGuardedEndLength()
+            ));
+        }
+        return updatedFoldingRequests;
     }
 
     /**
@@ -136,5 +198,23 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
     public String getElementType() {
         return elementType;
+    }
+    
+    private List<FoldingRequest> standardFoldingRequests() {
+        List<FoldingRequest> folds = new ArrayList<FoldingRequest>();
+        if (this.codeBinding.isInitialized()) {
+            folds.add(FoldingRequest.create(
+                    1 - (this.getStartTextForSJDoc().length() - START_TEXT_1_IN_SJDOC.length()),
+                    this.codeBinding.getLengthBindingAreaSieveDocument(), 
+                    " " + this.getFullElementName() + " : " + this.getElementType() + " "));
+        }
+        // TODO
+        return folds;
+    }
+    
+    private List<GuardingRequest> standardGuardingRequests() {
+        List<GuardingRequest> guards = new ArrayList<GuardingRequest>();
+        // TODO
+        return guards;
     }
 }

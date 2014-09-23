@@ -33,14 +33,15 @@ public class ViewModel {
     public ViewModel() {
     }
     
-    
-    public void addGuardingRequest(GuardingRequest request) {
-        this.guardingRequests.add(request);
+    public void addGuardingRequest(int absoluteStartOffset, int absoluteEndOffset) {
+        this.guardingRequests.add(GuardingRequest.create(absoluteStartOffset, absoluteEndOffset));
     }
     
     public List<GuardingRequest> getGuardingRequests() {
         List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
-        // TODO: zdedene z fileov?
+        for(JavaFile javaFile : files) {
+            updatedGuardingRequests.addAll(javaFile.getGuardingRequests());
+        }
         for(GuardingRequest request : this.guardingRequests) {
             updatedGuardingRequests.add(GuardingRequest.create(
                     request.getStartOffset(),
@@ -49,17 +50,29 @@ public class ViewModel {
         return updatedGuardingRequests;
     }
     
-    public void addFoldingRequest(FoldingRequest request) {
-        this.foldingRequests.add(request);
+    public void addFoldingRequest(int absoluteStartOffset, int absoluteEndOffset, String description) {
+        this.foldingRequests.add(FoldingRequest.create(absoluteStartOffset, absoluteEndOffset, description));
+    }
+    
+    public void addFoldingRequest(int absoluteStartOffset, int absoluteEndOffset, String description,
+            int guardedLengthStart, int guardedLengthEnd) {
+        this.foldingRequests.add(FoldingRequest.create(absoluteStartOffset, absoluteEndOffset, description,
+                guardedLengthStart, guardedLengthEnd));
     }
     
     public List<FoldingRequest> getFoldingRequests() {
         List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
-        // TODO: zdedene z fileov?
+        for(JavaFile javaFile : files) {
+            updatedFoldingRequests.addAll(javaFile.getFoldingRequests());
+        }
         for(FoldingRequest request : this.foldingRequests) {
             updatedFoldingRequests.add(FoldingRequest.create(
                     request.getStartOffset(),
-                    request.getEndOffset()));
+                    request.getEndOffset(),
+                    request.getDescription(),
+                    request.getGuardedStartLength(),
+                    request.getGuardedEndLength()
+            ));
         }
         return updatedFoldingRequests;
     }

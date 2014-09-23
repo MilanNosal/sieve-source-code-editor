@@ -1,9 +1,5 @@
 package sk.tuke.kpi.ssce.core.model.view;
 
-import sk.tuke.kpi.ssce.core.model.view.postprocessing.GuardingRequest;
-import sk.tuke.kpi.ssce.core.model.view.postprocessing.FoldingRequest;
-import java.util.LinkedList;
-import java.util.List;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
 import org.netbeans.editor.BaseDocument;
@@ -27,9 +23,6 @@ public class BindingPositions {
     private Position startPositionSieveDocument;
     private Position endPositionSieveDocument;
     
-    private final List<GuardingRequest> guardingRequests = new LinkedList<GuardingRequest>();
-    private final List<FoldingRequest> foldingRequests = new LinkedList<FoldingRequest>();
-
     /**
      * Vytvori nedefinovane prepojenie dvoch usekov.
      */
@@ -48,33 +41,6 @@ public class BindingPositions {
         this.lengthJavaDocument = lengthJavaDocument;
     }
     
-    public void addGuardingRequest(GuardingRequest request) {
-        this.guardingRequests.add(request);
-    }
-    
-    public List<GuardingRequest> getGuardingRequests() {
-        List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
-        for(GuardingRequest request : this.guardingRequests) {
-            updatedGuardingRequests.add(GuardingRequest.create(
-                    request.getStartOffset() + this.startPositionSieveDocument.getOffset(),
-                    request.getEndOffset() + this.startPositionJavaDocument.getOffset()));
-        }
-        return updatedGuardingRequests;
-    }
-    
-    public void addFoldingRequest(FoldingRequest request) {
-        this.foldingRequests.add(request);
-    }
-    
-    public List<FoldingRequest> getFoldingRequests() {
-        List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
-        for(FoldingRequest request : this.foldingRequests) {
-            updatedFoldingRequests.add(FoldingRequest.create(
-                    request.getStartOffset() + this.startPositionSieveDocument.getOffset(),
-                    request.getEndOffset() + this.startPositionJavaDocument.getOffset()));
-        }
-        return updatedFoldingRequests;
-    }
 
     /**
      * Vrati dlzku useku v java subore.

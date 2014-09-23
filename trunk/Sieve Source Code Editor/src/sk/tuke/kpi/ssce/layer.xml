@@ -15,9 +15,7 @@
         <folder name="text">
             <folder name="x-sieve-java">
                 <folder name="FoldManager">
-                    <file name="sk-tuke-kpi-ssce-gui-folding-SsceIntentFoldManager$Factory.instance">
-                    </file>
-                    <file name="sk-tuke-kpi-ssce-gui-folding-SieveElementFoldManager$Factory.instance">
+                    <file name="sk-tuke-kpi-ssce-nbinterface-folding-SSCEFoldManager$Factory.instance">
                     </file>
                 </folder>
                 <folder name="BracesMatchers">
