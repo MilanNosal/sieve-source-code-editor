@@ -21,12 +21,13 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
 
 /**
  * Trieda modeluje prepojenie jedneho java suboru s pomocnym suborom .sj.
+ *
  * @author Matej Nosal
  */
 //SsceIntent:Model pre synchronizaciu kodu;
 @Model(model = RepresentationOf.VIEW)
 public class JavaFile {
-    
+
     private boolean modified = false;
 
     @Synchronization
@@ -43,19 +44,20 @@ public class JavaFile {
     private String packageName;
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
     private BindingPositions importsBinding; //binding between allImports in file and necesaryImports in sieve file
-    
+
     private final List<GuardingRequest> guardingRequests = new LinkedList<GuardingRequest>();
     private final List<FoldingRequest> foldingRequests = new LinkedList<FoldingRequest>();
-    
+
     @ImportsManagement
     private Imports allImports;
     @ImportsManagement
     private Imports necessaryImports;
-    
+
     private List<CodeSnippet> codeSnippets;
 
     /**
      * Vytvori model prepojenia jedneho java suboru s pomocnym suborom .sj.
+     *
      * @param filePath cesta modelovaneho java suboru.
      * @param fileName meno modelovaneho java suboru.
      * @param editorCookie editorCookie modelovaneho java suboru.
@@ -67,42 +69,72 @@ public class JavaFile {
         initialize();
     }
 
+    public void addGuardingRequest(int relativeStartOffset, int relativeEndOffset) {
+        this.guardingRequests.add(GuardingRequest.create(relativeStartOffset, relativeEndOffset));
+    }
+
+    public List<GuardingRequest> getGuardingRequests() {
+        List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
+        int startInSieve = this.beginInSJ.getOffset();
+        for (CodeSnippet snippet : codeSnippets) {
+            updatedGuardingRequests.addAll(snippet.getGuardingRequests());
+        }
+        for (GuardingRequest request : this.guardingRequests) {
+            updatedGuardingRequests.add(GuardingRequest.create(
+                    startInSieve + request.getStartOffset(),
+                    startInSieve + request.getEndOffset()));
+        }
+        for (GuardingRequest request : standardGuardingRequests()) {
+            updatedGuardingRequests.add(GuardingRequest.create(
+                    startInSieve + request.getStartOffset(),
+                    startInSieve + request.getEndOffset()));
+        }
+        return updatedGuardingRequests;
+    }
+
+    public void addFoldingRequest(int relativeStartOffset, int relativeEndOffset, String description) {
+        this.foldingRequests.add(FoldingRequest.create(relativeStartOffset, relativeEndOffset, description));
+    }
+
+    public void addFoldingRequest(int relativeStartOffset, int relativeEndOffset, String description,
+            int guardedLengthStart, int guardedLengthEnd) {
+        this.foldingRequests.add(FoldingRequest.create(relativeStartOffset, relativeEndOffset, description,
+                guardedLengthStart, guardedLengthEnd));
+    }
+
+    public List<FoldingRequest> getFoldingRequests() {
+        List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
+        int startInSieve = this.beginInSJ.getOffset();
+        for (CodeSnippet snippet : codeSnippets) {
+            updatedFoldingRequests.addAll(snippet.getFoldingRequests());
+        }
+        for (FoldingRequest request : this.foldingRequests) {
+            updatedFoldingRequests.add(FoldingRequest.create(
+                    startInSieve + request.getStartOffset(),
+                    startInSieve + request.getEndOffset(),
+                    request.getDescription(),
+                    request.getGuardedStartLength(),
+                    request.getGuardedEndLength()
+            ));
+        }
+        for (FoldingRequest request : standardFoldingRequests()) {
+            updatedFoldingRequests.add(FoldingRequest.create(
+                    startInSieve + request.getStartOffset(),
+                    startInSieve + request.getEndOffset(),
+                    request.getDescription(),
+                    request.getGuardedStartLength(),
+                    request.getGuardedEndLength()
+            ));
+        }
+        return updatedFoldingRequests;
+    }
+
     public boolean isModified() {
         return modified;
     }
 
     public void setModified(boolean modified) {
         this.modified = modified;
-    }
-    
-    public void addGuardingRequest(GuardingRequest request) {
-        this.guardingRequests.add(request);
-    }
-    
-    public List<GuardingRequest> getGuardingRequests() {
-        List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
-        // TODO: zdedene zo snippetov?
-        for(GuardingRequest request : this.guardingRequests) {
-            updatedGuardingRequests.add(GuardingRequest.create(
-                    request.getStartOffset() + this.beginInSJ.getOffset(),
-                    request.getEndOffset() + this.endInSJ.getOffset()));
-        }
-        return updatedGuardingRequests;
-    }
-    
-    public void addFoldingRequest(FoldingRequest request) {
-        this.foldingRequests.add(request);
-    }
-    
-    public List<FoldingRequest> getFoldingRequests() {
-        List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
-        // TODO: zdedene zo snippetov?
-        for(FoldingRequest request : this.foldingRequests) {
-            updatedFoldingRequests.add(FoldingRequest.create(
-                    request.getStartOffset() + this.beginInSJ.getOffset(),
-                    request.getEndOffset() + this.endInSJ.getOffset()));
-        }
-        return updatedFoldingRequests;
     }
 
     private void initialize() {
@@ -112,9 +144,12 @@ public class JavaFile {
     }
 
     /**
-     * Vrati model prepojenia fragmentu kodu podla offsetu v pomocnom subore .sj, ktory patri do tohto java suboru.
+     * Vrati model prepojenia fragmentu kodu podla offsetu v pomocnom subore
+     * .sj, ktory patri do tohto java suboru.
+     *
      * @param offset offset v pomocnom subore .sj
-     * @return model prepojenia fragmentu kodu, ak na offsete nie je ziaden fragment tak null.
+     * @return model prepojenia fragmentu kodu, ak na offsete nie je ziaden
+     * fragment tak null.
      */
     public CodeSnippet getCodeSnippetBySJOffset(int offset) {
         for (CodeSnippet codeSnippet : codeSnippets) {
@@ -126,8 +161,11 @@ public class JavaFile {
     }
 
     /**
-     * Vrati zaciatocnu poziciu (offset) tohto java suboru v pomocnom subore .sj.
-     * @return zaciatocnu poziciu (offset) tohto java suboru v pomocnom subore .sj.
+     * Vrati zaciatocnu poziciu (offset) tohto java suboru v pomocnom subore
+     * .sj.
+     *
+     * @return zaciatocnu poziciu (offset) tohto java suboru v pomocnom subore
+     * .sj.
      */
     @Synchronization
     public int getEndInSJ() {
@@ -139,6 +177,7 @@ public class JavaFile {
 
     /**
      * Nastavi koncovu poziciu tohto java suboru v pomocnom subore .sj.
+     *
      * @param doc dokument pre pomocny subor .sj.
      * @param enInSJ koncova pozicia tohto java suboru v pomocnom subore .sj.
      * @throws BadLocationException
@@ -151,6 +190,7 @@ public class JavaFile {
 
     /**
      * Vrati koncovu poziciu (offset) tohto java suboru v pomocnom subore .sj.
+     *
      * @return koncovu poziciu (offset) tohto java suboru v pomocnom subore .sj.
      */
     @Synchronization
@@ -163,8 +203,10 @@ public class JavaFile {
 
     /**
      * Nastavi zaciatocnu poziciu tohto java suboru v pomocnom subore .sj.
+     *
      * @param doc dokument pre pomocny subor .sj.
-     * @param startFile zaciatocnu pozicia tohto java suboru v pomocnom subore .sj.
+     * @param startFile zaciatocnu pozicia tohto java suboru v pomocnom subore
+     * .sj.
      * @throws BadLocationException
      */
     @Synchronization
@@ -175,6 +217,7 @@ public class JavaFile {
 
     /**
      * Vrati model importov pre tento java subor.
+     *
      * @return model importov pre tento java subor.
      */
     @ImportsManagement
@@ -184,6 +227,7 @@ public class JavaFile {
 
     /**
      * Nastavi model importov pre tento java subor.
+     *
      * @param allImports model importov pre tento java subor.
      */
     @ImportsManagement
@@ -193,6 +237,7 @@ public class JavaFile {
 
     /**
      * Vrati zoznam vsetkych modelovanych fragmentov kodu.
+     *
      * @return zoznam vsetkych modelovanych fragmentov kodu.
      */
     public List<CodeSnippet> getCodeSnippets() {
@@ -201,6 +246,7 @@ public class JavaFile {
 
     /**
      * Nastavi zoznam vsetkych modelovanych fragmentov kodu.
+     *
      * @param codes zoznam vsetkych modelovanych fragmentov kodu.
      */
     public void setCodeSnippets(List<CodeSnippet> codes) {
@@ -209,6 +255,7 @@ public class JavaFile {
 
     /**
      * Vrati model prepojenia usekov pre importy.
+     *
      * @return model prepojenia usekov pre importy.
      */
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
@@ -218,6 +265,7 @@ public class JavaFile {
 
     /**
      * Nastavi model prepojenia usekov pre importy.
+     *
      * @param importsBinding model prepojenia usekov pre importy.
      */
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
@@ -228,6 +276,7 @@ public class JavaFile {
 
     /**
      * Vrati nazov tohto java suboru.
+     *
      * @return nazov tohto java suboru.
      */
     public String getFileName() {
@@ -236,6 +285,7 @@ public class JavaFile {
 
     /**
      * Vrati nazov balika, v ktorom sa nachadza tento subor.
+     *
      * @return nazov balika, v ktorom sa nachadza tento subor.
      */
     public String getPackageName() {
@@ -244,6 +294,7 @@ public class JavaFile {
 
     /**
      * Nastavi nazov balika, v ktorom sa nachadza tento subor.
+     *
      * @param packageName nazov balika, v ktorom sa nachadza tento subor.
      */
     public void setPackageName(String packageName) {
@@ -251,8 +302,11 @@ public class JavaFile {
     }
 
     /**
-     * Vrati importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
-     * @return importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
+     * Vrati importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java
+     * subor modeluje.
+     *
+     * @return importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java
+     * subor modeluje.
      */
     @ImportsManagement
     public Imports getNecessaryImports() {
@@ -260,8 +314,11 @@ public class JavaFile {
     }
 
     /**
-     * Nastavi importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
-     * @param necessaryImports importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java subor modeluje.
+     * Nastavi importy, ktore su nevyhnutne pre fragmenty kodu, ktore tento java
+     * subor modeluje.
+     *
+     * @param necessaryImports importy, ktore su nevyhnutne pre fragmenty kodu,
+     * ktore tento java subor modeluje.
      */
     @ImportsManagement
     public void setNecessaryImports(Imports necessaryImports) {
@@ -270,6 +327,7 @@ public class JavaFile {
 
     /**
      * Vrati cestu tohto java suboru.
+     *
      * @return cestu tohto java suboru.
      */
     public String getFilePath() {
@@ -278,6 +336,7 @@ public class JavaFile {
 
     /**
      * Vrati editorCookie tohto java suboru.
+     *
      * @return editorCookie tohto java suboru.
      */
     public EditorCookie getEditorCookie() {
@@ -286,6 +345,7 @@ public class JavaFile {
 
     /**
      * Vrati text, ktory uvadza jeden java subor v pomocnom subore .sj.
+     *
      * @return text, ktory uvadza jeden java subor v pomocnom subore .sj.
      */
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;
@@ -300,6 +360,7 @@ public class JavaFile {
 
     /**
      * Vrati text, ktory uzatvara jeden java subor v pomocnom subore .sj.
+     *
      * @return text, ktory uzatvara jeden java subor v pomocnom subore .sj.
      */
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;
@@ -310,7 +371,9 @@ public class JavaFile {
 
     /**
      * Tento model java suboru sa aktualicuje na zaklade java suboru file.
-     * @param file java subor, podla ktoreho bude tento java subor aktualizovany.
+     *
+     * @param file java subor, podla ktoreho bude tento java subor
+     * aktualizovany.
      */
     public void copy(JavaFile file) {
         this.allImports = file.allImports;
@@ -321,7 +384,10 @@ public class JavaFile {
     }
 
     /**
-     * Overi ci prepojenie vsetkych usekov je konzistentne. T.j. vsetky modely prepojenia fragmentov kodu ale aj importov v tomto java subore musia byt konzistentne.
+     * Overi ci prepojenie vsetkych usekov je konzistentne. T.j. vsetky modely
+     * prepojenia fragmentov kodu ale aj importov v tomto java subore musia byt
+     * konzistentne.
+     *
      * @return true, ak prepojenia su konzistentne, v opacnom pripade false.
      */
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
@@ -343,7 +409,7 @@ public class JavaFile {
         }
         return true;
     }
-    
+
     /**
      * Comparator pre usporiadanie java suborov podla balikov.
      */
@@ -404,5 +470,23 @@ public class JavaFile {
 
         builder.append("}");
         return builder.toString();
+    }
+
+    private List<FoldingRequest> standardFoldingRequests() {
+        List<FoldingRequest> folds = new ArrayList<FoldingRequest>();
+        if (this.necessaryImports.getCount() > 0) {
+            folds.add(FoldingRequest.create(
+                    importsBinding.getStartPositionSieveDocument() - this.beginInSJ.getOffset(),
+                    importsBinding.getEndPositionSieveDocument() - this.beginInSJ.getOffset(),
+                    "imports"));
+        }
+        // TODO imports
+        return folds;
+    }
+
+    private List<GuardingRequest> standardGuardingRequests() {
+        List<GuardingRequest> guards = new ArrayList<GuardingRequest>();
+        // TODO
+        return guards;
     }
 }
