@@ -2,6 +2,7 @@ package sk.tuke.kpi.ssce.core.binding;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JEditorPane;
 import javax.swing.text.BadLocationException;
@@ -23,6 +24,7 @@ import sk.tuke.kpi.ssce.core.model.view.importshandling.Imports;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
 import sk.tuke.kpi.ssce.core.model.view.ViewModel;
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.GuardingRequest;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvider;
 
 /**
  * Trieda predstavuje nastroj pre realizovanie prepojenia medzi java subormi a
@@ -56,16 +58,20 @@ public class Binding {
     //SsceIntent:Praca s java suborom;
     @Synchronization(direction = Direction.JAVATOSJ)
     private final ViewModelCreator viewModelCreator;
-    
+
     private final ProjectionsModelCreator projectionsModelCreator;
+
+    private final List<GuardingProvider> guardingProviders;
 
     /**
      * Vytvori nastroj pre realizovanie prepojenia medzi java subormi a pomocnym
      * suborom .sj.
      */
-    public Binding(ViewModelCreator viewModelCreator, ProjectionsModelCreator projectionsModelCreator) {
+    public Binding(ViewModelCreator viewModelCreator, ProjectionsModelCreator projectionsModelCreator,
+            List<GuardingProvider> guardingProviders) {
         this.viewModelCreator = viewModelCreator;
         this.projectionsModelCreator = projectionsModelCreator;
+        this.guardingProviders = guardingProviders;
     }
 
     /**
@@ -78,7 +84,7 @@ public class Binding {
     public ViewModelCreator getViewModelCreator() {
         return viewModelCreator;
     }
-    
+
     /**
      * Vrati nastroj pre pracu s java subormi.
      *
@@ -191,7 +197,7 @@ public class Binding {
             try {
                 NbDocument.unmarkGuarded((StyledDocument) sieveDocument, -100, Integer.MAX_VALUE);
                 sieveDocument.replace(0, sieveDocument.getLength(), buffer.toString(), null);
-                
+
                 updatePositions(updates, sieveDocument); // make update positions in SieveDocument=> model is corect, fully defined
 
 //                System.out.println(model.toString());
@@ -203,9 +209,8 @@ public class Binding {
             } finally {
                 sieveDocument.extWriteUnlock();
             }
-            
-            //model.getEditorCookieSieveDocument().saveDocument();
 
+            //model.getEditorCookieSieveDocument().saveDocument();
             // setting remembered caret positions
             if (carets != null) {
                 for (int i = 0; i < panes.length; i++) {
@@ -539,7 +544,17 @@ public class Binding {
     @Guarding
     @SourceCodeSieving(postProcessing = true)
     public void processGuardingRequests(StyledDocument document, ViewModel model) {
-        List<GuardingRequest> guards = model.getGuardingRequests();
+        List<GuardingRequest> guards = new LinkedList<GuardingRequest>();
+        for (GuardingProvider provider : guardingProviders) {
+            guards.addAll(provider.createGuards(model));
+            for (JavaFile javaFile : model.getFiles()) {
+                guards.addAll(provider.createGuards(javaFile));
+                for (CodeSnippet snippet : javaFile.getCodeSnippets()) {
+                    guards.addAll(provider.createGuards(snippet));
+                }
+            }
+        }
+
         NbDocument.unmarkGuarded(document, -100, Integer.MAX_VALUE);
         for (GuardingRequest request : guards) {
             NbDocument.markGuarded(document, request.getStartOffset(), request.getLength());
@@ -567,7 +582,7 @@ public class Binding {
             Exceptions.printStackTrace(ex);
             return false;
         }
-        
+
         // robi sa aj update import sekcie
         if (javaFile.getImportsBinding().getStartPositionSieveDocument() <= offsetJF && offsetJF <= javaFile.getImportsBinding().getEndPositionSieveDocument()) {
 

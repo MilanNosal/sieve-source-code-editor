@@ -10,6 +10,8 @@ import org.openide.cookies.EditorCookie;
 import sk.tuke.kpi.ssce.annotations.concerns.Model;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.FoldingProvider;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvider;
 
 /**
  * Trieda predstavuje celkovy model prepojenia vsetkych java suborov s pomocnym suborom .sj.
@@ -23,58 +25,11 @@ public class ViewModel {
     private EditorCookie editorCookieSieveDocument;
 //    private DocumentListener javaDocumentListener;
     private final List<JavaFile> files = new ArrayList<JavaFile>();
-    
-    private final List<GuardingRequest> guardingRequests = new LinkedList<GuardingRequest>();
-    private final List<FoldingRequest> foldingRequests = new LinkedList<FoldingRequest>();
 
     /**
      * Vytvori celkovy model prepojenia vsetkych java suborov s pomocnym suborom .sj.
      */
     public ViewModel() {
-    }
-    
-    public void addGuardingRequest(int absoluteStartOffset, int absoluteEndOffset) {
-        this.guardingRequests.add(GuardingRequest.create(absoluteStartOffset, absoluteEndOffset));
-    }
-    
-    public List<GuardingRequest> getGuardingRequests() {
-        List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
-        for(JavaFile javaFile : files) {
-            updatedGuardingRequests.addAll(javaFile.getGuardingRequests());
-        }
-        for(GuardingRequest request : this.guardingRequests) {
-            updatedGuardingRequests.add(GuardingRequest.create(
-                    request.getStartOffset(),
-                    request.getEndOffset()));
-        }
-        return updatedGuardingRequests;
-    }
-    
-    public void addFoldingRequest(int absoluteStartOffset, int absoluteEndOffset, String description) {
-        this.foldingRequests.add(FoldingRequest.create(absoluteStartOffset, absoluteEndOffset, description));
-    }
-    
-    public void addFoldingRequest(int absoluteStartOffset, int absoluteEndOffset, String description,
-            int guardedLengthStart, int guardedLengthEnd) {
-        this.foldingRequests.add(FoldingRequest.create(absoluteStartOffset, absoluteEndOffset, description,
-                guardedLengthStart, guardedLengthEnd));
-    }
-    
-    public List<FoldingRequest> getFoldingRequests() {
-        List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
-        for(JavaFile javaFile : files) {
-            updatedFoldingRequests.addAll(javaFile.getFoldingRequests());
-        }
-        for(FoldingRequest request : this.foldingRequests) {
-            updatedFoldingRequests.add(FoldingRequest.create(
-                    request.getStartOffset(),
-                    request.getEndOffset(),
-                    request.getDescription(),
-                    request.getGuardedStartLength(),
-                    request.getGuardedEndLength()
-            ));
-        }
-        return updatedFoldingRequests;
     }
 
     /**

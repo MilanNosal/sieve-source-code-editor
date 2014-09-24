@@ -15,13 +15,18 @@ import org.netbeans.spi.editor.fold.FoldManagerFactory;
 import org.netbeans.spi.editor.fold.FoldOperation;
 import sk.tuke.kpi.ssce.core.Constants;
 import sk.tuke.kpi.ssce.core.SSCEditorCore;
+import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
+import sk.tuke.kpi.ssce.core.model.view.JavaFile;
+import sk.tuke.kpi.ssce.core.model.view.ViewModel;
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.FoldingRequest;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.FoldingProvider;
+import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
 
-public class SSCEFoldManager implements FoldManager {
+public class SSCEFoldManager implements FoldManager, CurrentProjection.CurrentProjectionChangeListener {
 
     private FoldOperation operation;
-    private Document doc;
     private static final Logger LOG = Logger.getLogger(SSCEFoldManager.class.getName());
+    private boolean done = false;
 
     @Override
     public void init(FoldOperation fo) {
@@ -30,12 +35,17 @@ public class SSCEFoldManager implements FoldManager {
 
     @Override
     public void initFolds(FoldHierarchyTransaction fht) {
+        Document doc = operation.getHierarchy().getComponent().getDocument();
+        SSCEditorCore core = (SSCEditorCore) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
+        core.getConfiguration().addCurrentProjectionChangeListener(this);
         SwingUtilities.invokeLater(new AddFolds());
     }
 
     @Override
     public void insertUpdate(DocumentEvent de, FoldHierarchyTransaction fht) {
-        SwingUtilities.invokeLater(new AddFolds());
+        if (!done) {
+            SwingUtilities.invokeLater(new AddFolds());
+        }
     }
 
     @Override
@@ -63,8 +73,16 @@ public class SSCEFoldManager implements FoldManager {
 
     @Override
     public void release() {
+        Document doc = operation.getHierarchy().getComponent().getDocument();
+        SSCEditorCore core = (SSCEditorCore) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
+        core.getConfiguration().removeCurrentProjectionChangeListener(this);
     }
-    
+
+    @Override
+    public void projectionChanged(CurrentProjection.CurrentProjectionChangedEvent event) {
+        done = false;
+    }
+
     private class AddFolds implements Runnable {
 
         private boolean insideRender;
@@ -75,16 +93,25 @@ public class SSCEFoldManager implements FoldManager {
                 operation.getHierarchy().getComponent().getDocument().render(this);
                 return;
             }
-            doc = operation.getHierarchy().getComponent().getDocument();
-            
+            Document doc = operation.getHierarchy().getComponent().getDocument();
+
             SSCEditorCore core = (SSCEditorCore) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
 
             //List<Integer> fromTo = new LinkedList<Integer>();
-
             operation.getHierarchy().lock();
 
             FoldHierarchyTransaction transaction = operation.openTransaction();
-            List<FoldingRequest> folds = core.getModel().getFoldingRequests();
+            List<FoldingRequest> folds = new LinkedList<FoldingRequest>();
+            ViewModel model = core.getModel();
+            for (FoldingProvider provider : core.getFoldingProviders()) {
+                folds.addAll(provider.createFolds(model));
+                for (JavaFile javaFile : model.getFiles()) {
+                    folds.addAll(provider.createFolds(javaFile));
+                    for (CodeSnippet snippet : javaFile.getCodeSnippets()) {
+                        folds.addAll(provider.createFolds(snippet));
+                    }
+                }
+            }
             try {
                 for (FoldingRequest fold : folds) {
                     operation.addToHierarchy(new FoldType("SSCEFold"),
@@ -97,21 +124,16 @@ public class SSCEFoldManager implements FoldManager {
                             fold,
                             transaction);
                 }
+                done = true;
             } catch (BadLocationException ex) {
                 LOG.log(Level.WARNING, null, ex);
             } finally {
                 transaction.commit();
             }
             operation.getHierarchy().unlock();
-
-//            for (Mark mark : marks) {
-//                NbDocument.markGuarded((StyledDocument) doc,
-//                        mark.position.getOffset(),
-//                        mark.ending.position.getOffset() - mark.position.getOffset() + 1);
-//            }
         }
     }
-    
+
     public static final class Factory implements FoldManagerFactory {
 
         @Override

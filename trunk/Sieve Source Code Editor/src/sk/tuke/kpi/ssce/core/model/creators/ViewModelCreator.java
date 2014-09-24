@@ -64,7 +64,6 @@ public class ViewModelCreator {
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;Realizovanie projekcie zdrojoveho kodu;Model pre synchronizaciu kodu;
     @CodeAnalysis(output = RepresentationOf.VIEW)
     public List<JavaFile> createJavaFiles(Set<String> javaFilePaths, CurrentProjection configuration) {
-
         List<JavaFile> javaFiles = new ArrayList<JavaFile>();
         JavaFile jf;
         for (String pathFile : javaFilePaths) {
@@ -132,7 +131,7 @@ public class ViewModelCreator {
 
             CompilationUnitTree cu = info.getCompilationUnit();
             JavaFileVisitor scanner = new JavaFileVisitor(info, extractor, siever, configuration, doc);
-            javaFile = scanner.scan(cu, new JavaFile(FileUtil.toFile(info.getFileObject()).getPath(), info.getFileObject().getName(), ec));
+            javaFile = scanner.scan(cu, new JavaFile(FileUtil.toFile(info.getFileObject()).getPath(), info.getFileObject().getName(), ec, doc));
 
             keepOnlyUnguardedCodes(javaFile, doc); //keeps codes which does not contain guarded blocks
 

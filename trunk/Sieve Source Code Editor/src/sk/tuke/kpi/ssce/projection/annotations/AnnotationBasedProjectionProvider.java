@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +20,10 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import sk.tuke.kpi.ssce.core.SSCEditorCore;
 import sk.tuke.kpi.ssce.core.model.availableprojections.ProjectionsModel;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.FoldingProvider;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvider;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.providers.StandardFoldingProvider;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.providers.StandardGuardingProvider;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
 import sk.tuke.kpi.ssce.sieving.annotations.AnnotationBasedSiever;
 
@@ -48,7 +53,12 @@ public class AnnotationBasedProjectionProvider extends JPanel implements Project
         ConcernExtractor extractor = new AnnotationBasedConcernExtractor();
         AnnotationBasedSiever siever = new AnnotationBasedSiever();
         try {
-            core = new SSCEditorCore(getProjectContext(), extractor, siever);
+            List<GuardingProvider> guards = new LinkedList<GuardingProvider>();
+            guards.add(new StandardGuardingProvider());
+            List<FoldingProvider> folds = new LinkedList<FoldingProvider>();
+            folds.add(new StandardFoldingProvider());
+            core = new SSCEditorCore(getProjectContext(), extractor, siever,
+            folds, guards);
             core.getConfiguration().addCurrentProjectionChangeListener(siever);
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
