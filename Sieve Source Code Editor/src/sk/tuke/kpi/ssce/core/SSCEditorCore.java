@@ -43,6 +43,8 @@ import sk.tuke.kpi.ssce.core.model.creators.ProjectionsModelCreator;
 import sk.tuke.kpi.ssce.core.model.creators.ViewModelCreator;
 import sk.tuke.kpi.ssce.core.model.availableprojections.JavaFileConcerns;
 import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.FoldingProvider;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvider;
 
 /**
  * Jadro celeho modulu, teda SSCE editora. Je vložene do documentu pre pomocny
@@ -108,6 +110,8 @@ public class SSCEditorCore {
     private final PropertyChangeListener closeListener;
 
     private final CurrentProjection.CurrentProjectionChangeListener currentProjectionChangeListener;
+    private final List<FoldingProvider> foldingProviders;
+    private final List<GuardingProvider> guardingProviders;
 
     /**
      * Model pre synchronizaciu java suborov a pomocneho suboru .sj.
@@ -133,8 +137,11 @@ public class SSCEditorCore {
      */
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v java zdrojovom kode;Notifikacia na zmeny v pomocnom subore .sj;Monitorovanie java suborov;Model pre mapovanie zamerov;Prepojenie java suborov s pomocnym suborom .sj;Notifikacia na zmeny v priradenych zamerov;Model pre synchronizaciu kodu;
     public SSCEditorCore(final Project projectContext,
-            ConcernExtractor extractor, CodeSiever siever) throws IOException {
+            ConcernExtractor extractor, CodeSiever siever,
+            List<FoldingProvider> foldingProviders, List<GuardingProvider> guardingProviders) throws IOException {
 
+        this.guardingProviders = guardingProviders;
+        this.foldingProviders = foldingProviders;
         ProgressHandle handle = ProgressHandleFactory.createHandle("Building SSCE core");
 
         this.projectContext = projectContext;
@@ -196,7 +203,8 @@ public class SSCEditorCore {
         concernsMappingListener = new ProjectionsChangeListener();
         bindingUtilities
                 = new Binding(new ViewModelCreator(extractor, siever),
-                        new ProjectionsModelCreator(extractor));
+                        new ProjectionsModelCreator(extractor),
+                        guardingProviders);
         this.viewModel.setEditorCookieSieveDocument(ec);
 
         saveListener = new PropertyChangeListener() {
@@ -229,6 +237,16 @@ public class SSCEditorCore {
         reloadSieveDocument();
 
         handle.progress("Document built", 95);
+        
+        for(FoldingProvider provider : foldingProviders) {
+            provider.injectConcernExtractor(extractor);
+            provider.injectCurrentProjection(currentProjection);
+        }
+        
+        for(GuardingProvider provider : guardingProviders) {
+            provider.injectConcernExtractor(extractor);
+            provider.injectCurrentProjection(currentProjection);
+        }
 
         this.javaFilesMonitor.addJavaFileListener(javaDocumentListener);
 
@@ -237,6 +255,14 @@ public class SSCEditorCore {
         handle.progress("Projection core finished", 99);
 
         handle.finish();
+    }
+
+    public List<FoldingProvider> getFoldingProviders() {
+        return foldingProviders;
+    }
+
+    public List<GuardingProvider> getGuardingProviders() {
+        return guardingProviders;
     }
 
     public DataObject getSJDataObject() {

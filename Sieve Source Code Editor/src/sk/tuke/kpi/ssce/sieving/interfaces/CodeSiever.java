@@ -15,7 +15,7 @@ import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
 @SourceCodeSieving
 public interface CodeSiever {
     public boolean sieveCode(
-            Stack<Set<Concern>> contextOfConcerns, 
+            Stack<Set<Concern>> contextOfConcerns,
             CurrentProjection currentProjection,
             ConcernExtractor concernExtractor,
             CompilationInfo info

@@ -1,11 +1,8 @@
 package sk.tuke.kpi.ssce.core.model.view;
 
-import sk.tuke.kpi.ssce.core.model.view.postprocessing.GuardingRequest;
-import sk.tuke.kpi.ssce.core.model.view.postprocessing.FoldingRequest;
 import sk.tuke.kpi.ssce.core.model.view.importshandling.Imports;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
@@ -45,9 +42,7 @@ public class JavaFile {
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
     private BindingPositions importsBinding; //binding between allImports in file and necesaryImports in sieve file
 
-    // both HAS to always be set to absolute offsets in .sj
-    private final List<GuardingRequest> guardingRequests = new LinkedList<GuardingRequest>();
-    private final List<FoldingRequest> foldingRequests = new LinkedList<FoldingRequest>();
+    private final BaseDocument document;
 
     @ImportsManagement
     private Imports allImports;
@@ -63,78 +58,13 @@ public class JavaFile {
      * @param fileName meno modelovaneho java suboru.
      * @param editorCookie editorCookie modelovaneho java suboru.
      */
-    public JavaFile(String filePath, String fileName, EditorCookie editorCookie) {
+    public JavaFile(String filePath, String fileName, EditorCookie editorCookie,
+            BaseDocument document) {
+        this.document = document;
         this.editorCookie = editorCookie;
         this.filePath = filePath;
         this.fileName = fileName;
         initialize();
-    }
-
-    public void addGuardingRequestAbsolute(int absoluteStartOffset, int absoluteEndOffset) {
-        this.guardingRequests.add(GuardingRequest.create(absoluteStartOffset, absoluteEndOffset));
-    }
-    
-    public void addGuardingRequestRelative(int relativeStartOffset, int relativeEndOffset) {
-        int startInSieve = this.beginInSJ.getOffset();
-        this.guardingRequests.add(GuardingRequest.create(
-                startInSieve + relativeStartOffset,
-                startInSieve + relativeEndOffset));
-    }
-    
-    public void clearGuardingRequests() {
-        this.guardingRequests.clear();
-    }
-
-    public List<GuardingRequest> getGuardingRequests() {
-        List<GuardingRequest> updatedGuardingRequests = new LinkedList<GuardingRequest>();
-        for (CodeSnippet snippet : codeSnippets) {
-            updatedGuardingRequests.addAll(snippet.getGuardingRequests());
-        }
-        updatedGuardingRequests.addAll(this.guardingRequests);
-        updatedGuardingRequests.addAll(standardGuardingRequests());
-        return updatedGuardingRequests;
-    }
-
-    public void addFoldingRequestAbsolute(int absoluteStartOffset, int absoluteEndOffset, String description) {
-        this.foldingRequests.add(FoldingRequest.create(absoluteStartOffset, absoluteEndOffset, description));
-    }
-    
-    public void addFoldingRequestAbsolute(int absoluteStartOffset, int absoluteEndOffset, String description,
-            int guardedLengthStart, int guardedLengthEnd) {
-        this.foldingRequests.add(FoldingRequest.create(absoluteStartOffset, absoluteEndOffset, description,
-                guardedLengthStart, guardedLengthEnd));
-    }
-    
-    public void addFoldingRequestRelative(int relativeStartOffset, int relativeEndOffset, String description) {
-        int startInSieve = this.beginInSJ.getOffset();
-        this.foldingRequests.add(FoldingRequest.create(
-                startInSieve + relativeStartOffset,
-                startInSieve + relativeEndOffset,
-                description));
-    }
-    
-    public void addFoldingRequestRelative(int relativeStartOffset, int relativeEndOffset, String description,
-            int guardedLengthStart, int guardedLengthEnd) {
-        int startInSieve = this.beginInSJ.getOffset();
-        this.foldingRequests.add(FoldingRequest.create(
-                startInSieve + relativeStartOffset,
-                startInSieve + relativeEndOffset,
-                description,
-                guardedLengthStart, guardedLengthEnd));
-    }
-    
-    public void clearFoldingRequests() {
-        this.foldingRequests.clear();
-    }
-
-    public List<FoldingRequest> getFoldingRequests() {
-        List<FoldingRequest> updatedFoldingRequests = new LinkedList<FoldingRequest>();
-        for (CodeSnippet snippet : codeSnippets) {
-            updatedFoldingRequests.addAll(snippet.getFoldingRequests());
-        }
-        updatedFoldingRequests.addAll(this.foldingRequests);
-        updatedFoldingRequests.addAll(standardFoldingRequests());
-        return updatedFoldingRequests;
     }
 
     public boolean isModified() {
@@ -149,6 +79,10 @@ public class JavaFile {
         this.allImports = new Imports();
         this.necessaryImports = new Imports();
         this.codeSnippets = new ArrayList<CodeSnippet>();
+    }
+
+    public BaseDocument getDocument() {
+        return document;
     }
 
     /**
@@ -478,46 +412,5 @@ public class JavaFile {
 
         builder.append("}");
         return builder.toString();
-    }
-
-    /**
-     * Has to use absolute offsets.
-     * @return 
-     */
-    private List<FoldingRequest> standardFoldingRequests() {
-        List<FoldingRequest> folds = new ArrayList<FoldingRequest>();
-        if (this.necessaryImports.getCount() > 0) {
-            folds.add(FoldingRequest.create(
-                    importsBinding.getStartPositionSieveDocument(),
-                    importsBinding.getEndPositionSieveDocument(),
-                    "imports"));
-        }
-        return folds;
-    }
-
-    /**
-     * Has to use absolute offsets.
-     * @return 
-     */
-    private List<GuardingRequest> standardGuardingRequests() {
-        List<GuardingRequest> guards = new ArrayList<GuardingRequest>();
-        guards.add(GuardingRequest.create(this.getBeginInSJ(), this.getImportsBinding().getStartPositionSieveDocument()));
-        if (this.codeSnippets.isEmpty()) {
-            guards.add(GuardingRequest.create(
-                    this.getImportsBinding().getEndPositionSieveDocument() + 1,
-                    this.getEndInSJ() + 1
-            ));
-        } else {
-            guards.add(GuardingRequest.create(
-                    this.getImportsBinding().getEndPositionSieveDocument() + 1,
-                    this.codeSnippets.get(0).getCodeBinding().getStartPositionSieveDocument() - 1
-            ));
-            // codesnippets are handled by themselves, however, we have to handle the end
-            guards.add(GuardingRequest.create(
-                    this.getCodeSnippets().get(this.getCodeSnippets().size() - 1).getCodeBinding().getEndPositionSieveDocument() + 2,
-                    this.getEndInSJ() + 1
-            ));
-        }
-        return guards;
     }
 }

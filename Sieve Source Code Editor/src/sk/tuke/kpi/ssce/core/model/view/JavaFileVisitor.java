@@ -24,6 +24,8 @@ import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.FoldingProvider;
+import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvider;
 
 /**
  * Trieda reprezentuje skener prechadzajuci celou strukturou kompilacneho stromu
@@ -113,7 +115,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
                 } else {
                     System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
                 }
-                CodeSnippet codeSnippet = new CodeSnippet(initialTab, getContextForCode(), nameElement, "TYPE");
+                CodeSnippet codeSnippet = new CodeSnippet(initialTab, getContextForCode(), nameElement, "TYPE", doc);
                 codeSnippet.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
                 p.getCodeSnippets().add(codeSnippet);
             } catch (BadLocationException ex) {
@@ -173,7 +175,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
                 } else {
                     System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
                 }
-                CodeSnippet code = new CodeSnippet(initialTab, getContextForCode(), nameElement, "METHOD");
+                CodeSnippet code = new CodeSnippet(initialTab, getContextForCode(), nameElement, "METHOD", doc);
                 code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
                 p.getCodeSnippets().add(code);
             } catch (BadLocationException ex) {
@@ -220,7 +222,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
                 } else {
                     System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
                 }
-                CodeSnippet code = new CodeSnippet(initialTab, getContextForCode(), nameElement, "FIELD");
+                CodeSnippet code = new CodeSnippet(initialTab, getContextForCode(), nameElement, "FIELD", doc);
                 code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
                 p.getCodeSnippets().add(code);
             } catch (BadLocationException ex) {
