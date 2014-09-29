@@ -23,6 +23,7 @@ import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 import sk.tuke.kpi.ssce.annotations.concerns.ChangeMonitoring;
 import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjectionChange;
 import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
@@ -45,6 +46,7 @@ import sk.tuke.kpi.ssce.core.model.availableprojections.JavaFileConcerns;
 import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.FoldingProvider;
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvider;
+import sk.tuke.kpi.ssce.nbinterface.SSCESieverTopComponent;
 
 /**
  * Jadro celeho modulu, teda SSCE editora. Je vložene do documentu pre pomocny
@@ -169,13 +171,12 @@ public class SSCEditorCore {
                         SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
-                                SSCEditorCore.this.dispose();
-                                DataObject dobj = SSCEditorCore.this.getSJDataObject();
-                                try {
-                                    dobj.delete();
-                                } catch (IOException ex) {
-                                    Exceptions.printStackTrace(ex);
+                                SSCESieverTopComponent outputWindow = (SSCESieverTopComponent) WindowManager.getDefault().findTopComponent("SSCESieverTopComponent");
+                                if (outputWindow != null) {
+                                    outputWindow.dispose();
                                 }
+                                // just to make sure nobody messes with me
+                                SSCEditorCore.this.dispose();
                             }
                         });
                     }
@@ -237,13 +238,13 @@ public class SSCEditorCore {
         reloadSieveDocument();
 
         handle.progress("Document built", 95);
-        
-        for(FoldingProvider provider : foldingProviders) {
+
+        for (FoldingProvider provider : foldingProviders) {
             provider.injectConcernExtractor(extractor);
             provider.injectCurrentProjection(currentProjection);
         }
-        
-        for(GuardingProvider provider : guardingProviders) {
+
+        for (GuardingProvider provider : guardingProviders) {
             provider.injectConcernExtractor(extractor);
             provider.injectCurrentProjection(currentProjection);
         }
@@ -338,10 +339,16 @@ public class SSCEditorCore {
         this.projectionsModel.dispose();
 
         TopComponent.getRegistry().removePropertyChangeListener(closeListener);
+
+        try {
+            this.dataObject.delete();
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
     }
 
     @SievedDocument
-    protected DataObject openSJDocumentForGivenProject() {//Project projectContext) {
+    protected final DataObject openSJDocumentForGivenProject() {//Project projectContext) {
         String parentDirectory = projectContext.getProjectDirectory().getPath();
         String projectName = ProjectUtils.getInformation(projectContext).getDisplayName();
         File file = new File(parentDirectory

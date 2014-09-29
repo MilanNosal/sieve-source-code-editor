@@ -2,9 +2,14 @@ package sk.tuke.kpi.ssce.nbinterface.actions;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import static java.lang.System.out;
+import java.text.MessageFormat;
 import javax.swing.Action;
 import org.netbeans.api.project.Project;
+import org.netbeans.api.project.ProjectUtils;
+import org.openide.DialogDisplayer;
 import org.openide.ErrorManager;
+import org.openide.WizardDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -14,6 +19,11 @@ import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
+import sk.tuke.kpi.ssce.nbinterface.SSCESieverTopComponent;
+import sk.tuke.kpi.ssce.nbinterface.wizard.ProjectionWizardIterator;
+import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
 
 //SsceIntent:Spustenie SSC Editora;
 @ActionID(category = "File",
@@ -56,7 +66,23 @@ public final class OpenSSCEAction implements ActionListener {
      */
     //SsceIntent:Spustenie SSC Editora;
     public void actionPerformed(ActionEvent ev) {
-        // TODO use context
+        ProjectionWizardIterator iterator = new ProjectionWizardIterator();
+        WizardDescriptor wiz = new WizardDescriptor(iterator);
+        // {0} will be replaced by WizardDescriptor.Panel.getComponent().getName()
+        // {1} will be replaced by WizardDescriptor.Iterator.name()
+        wiz.setTitleFormat(new MessageFormat("{0}"));
+        wiz.setTitle("Start Projection for " + ProjectUtils.getInformation(context).getDisplayName());
+        if (DialogDisplayer.getDefault().notify(wiz) == WizardDescriptor.FINISH_OPTION) {
+            ProjectionProviderFactory factory = iterator.getProviderFactory();
+            SSCESieverTopComponent outputWindow = (SSCESieverTopComponent) WindowManager.getDefault().findTopComponent("SSCESieverTopComponent");
+            if (outputWindow != null && !outputWindow.isOpened()) {
+                outputWindow.open();
+            }
+            if (outputWindow != null) {
+                outputWindow.requestActive();
+                outputWindow.startProjection(factory.createProjectionProviderFor(context));
+            }
+        }
     }
 
     /**

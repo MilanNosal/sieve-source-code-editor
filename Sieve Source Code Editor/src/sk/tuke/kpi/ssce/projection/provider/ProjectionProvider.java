@@ -28,7 +28,8 @@ public interface ProjectionProvider {
     
     /**
      * Each projection provider is required to implement a dispose method that
-     * invalidates the projectional editing of a single project. It has to 
+     * invalidates the projectional editing of a single project, the dispose
+     * method HAS TO call the dispose method of the core. It has to 
      * use the dispose() method of the SSCEditorCore and to take care of the 
      * view invalidation.
      */
