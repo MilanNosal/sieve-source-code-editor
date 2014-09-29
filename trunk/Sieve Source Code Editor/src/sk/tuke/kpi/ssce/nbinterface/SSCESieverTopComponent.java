@@ -1,22 +1,12 @@
 package sk.tuke.kpi.ssce.nbinterface;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import org.netbeans.api.project.Project;
-import org.netbeans.api.project.ProjectUtils;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.Utilities;
 import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
-import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
 
 /**
  * Top component which displays something.
@@ -45,51 +35,30 @@ import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
 @SSCE_UI
 public final class SSCESieverTopComponent extends TopComponent {
 
-    private Project currentlySelectedProject;
-    private Lookup genlokup;
-    private Collection<? extends ProjectionProviderFactory> availableImplementations;
     private ProjectionProvider currentProjectionProvider;
 
     public SSCESieverTopComponent() {
-        Lookup lookup = Lookup.getDefault();
-        availableImplementations = lookup.lookupAll(ProjectionProviderFactory.class);
-
         initComponents();
         setName(Bundle.CTL_SSCESieverTopComponent());
         setToolTipText(Bundle.HINT_SSCESieverTopComponent());
-
-        genlokup = Utilities.actionsGlobalContext();
-        currentlySelectedProject = genlokup.lookup(Project.class);
-
-        //Lookup genlokup = Utilities.actionsGlobalContext();
-        Lookup.Result<Project> globalResultOBJ = genlokup.lookup(new Lookup.Template(Project.class)); // or Project.class if you are interested espetialy in Project 
-        LookupListener globalListenerOBJ = new LookupListener() {
-
-            @Override
-            public void resultChanged(LookupEvent le) {
-                Project newSelection = genlokup.lookup(Project.class);
-                if (newSelection != null) {
-                    currentlySelectedProject = newSelection;
-                }
-                projectChanged();
-            }
-        };
-        globalResultOBJ.addLookupListener(globalListenerOBJ);
-        globalResultOBJ.allInstances();
     }
 
-    private void projectChanged() {
-        showCurrentProject();
-    }
-
-    private void showCurrentProject() {
-        if (currentlySelectedProject == null) {
-            currentProjectTextBox.setText("None");
-        } else {
-            currentProjectTextBox.setText(ProjectUtils.getInformation(currentlySelectedProject).getDisplayName());
+    public void startProjection(ProjectionProvider provider) {
+        if (currentProjectionProvider != null) {
+            currentProjectionProvider.dispose();
         }
+        currentProjectionProvider = provider;
+        this.content.setViewportView(currentProjectionProvider.getView());
     }
 
+    public void dispose() {
+        if (currentProjectionProvider != null) {
+            currentProjectionProvider.dispose();
+            currentProjectionProvider = null;
+        }
+        this.content.setViewportView(new NoViewPanel());
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -99,138 +68,33 @@ public final class SSCESieverTopComponent extends TopComponent {
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
-        SSCETabPanel = new javax.swing.JTabbedPane();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        SSCEPanel = new javax.swing.JPanel();
-        currentProjectLabel = new javax.swing.JLabel();
-        currentProjectTextBox = new javax.swing.JTextField();
-        availableImplementationsLabel = new javax.swing.JLabel();
-        availableImplementationsCombo = new javax.swing.JComboBox();
-        startButton = new javax.swing.JButton();
-        killButton = new javax.swing.JButton();
-        projectionsPanel = new javax.swing.JScrollPane();
+        content = new javax.swing.JScrollPane();
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.jLabel1.text")); // NOI18N
 
         setLayout(new java.awt.BorderLayout());
-
-        SSCEPanel.setPreferredSize(new java.awt.Dimension(321, 223));
-
-        org.openide.awt.Mnemonics.setLocalizedText(currentProjectLabel, org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.currentProjectLabel.text")); // NOI18N
-
-        currentProjectTextBox.setEditable(false);
-        currentProjectTextBox.setText(org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.currentProjectTextBox.text")); // NOI18N
-
-        org.openide.awt.Mnemonics.setLocalizedText(availableImplementationsLabel, org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.availableImplementationsLabel.text")); // NOI18N
-
-        availableImplementations = Lookup.getDefault().lookupAll(ProjectionProviderFactory.class);
-        List<String> names = new ArrayList<String>();
-        for (ProjectionProviderFactory projectionProvider : availableImplementations) {
-            names.add(projectionProvider.getDisplayName());
-        }
-        availableImplementationsCombo.setModel(new javax.swing.DefaultComboBoxModel(names.toArray(new String[names.size()])));
-
-        org.openide.awt.Mnemonics.setLocalizedText(startButton, org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.startButton.text")); // NOI18N
-        startButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                startButtonActionPerformed(evt);
-            }
-        });
-
-        org.openide.awt.Mnemonics.setLocalizedText(killButton, org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.killButton.text")); // NOI18N
-        killButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                killButtonActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout SSCEPanelLayout = new javax.swing.GroupLayout(SSCEPanel);
-        SSCEPanel.setLayout(SSCEPanelLayout);
-        SSCEPanelLayout.setHorizontalGroup(
-            SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(SSCEPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(currentProjectLabel)
-                    .addComponent(availableImplementationsLabel))
-                .addGap(26, 26, 26)
-                .addGroup(SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(currentProjectTextBox, javax.swing.GroupLayout.DEFAULT_SIZE, 170, Short.MAX_VALUE)
-                    .addComponent(availableImplementationsCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(startButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(killButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        SSCEPanelLayout.setVerticalGroup(
-            SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(SSCEPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(currentProjectLabel)
-                    .addComponent(currentProjectTextBox))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(SSCEPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(availableImplementationsLabel)
-                    .addComponent(availableImplementationsCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(startButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(killButton)
-                .addGap(181, 181, 181))
-        );
-
-        jScrollPane1.setViewportView(SSCEPanel);
-
-        SSCETabPanel.addTab(org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.jScrollPane1.TabConstraints.tabTitle"), jScrollPane1); // NOI18N
-        SSCETabPanel.addTab(org.openide.util.NbBundle.getMessage(SSCESieverTopComponent.class, "SSCESieverTopComponent.projectionsPanel.TabConstraints.tabTitle"), projectionsPanel); // NOI18N
-
-        add(SSCETabPanel, java.awt.BorderLayout.CENTER);
+        add(content, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
-        String selectedImplementation = (String) availableImplementationsCombo.getSelectedItem();
-        ProjectionProviderFactory selectedFactory = null;
-        for (ProjectionProviderFactory factory : availableImplementations) {
-            if (factory.getDisplayName().equals(selectedImplementation)) {
-                selectedFactory = factory;
-            }
-        }
-
-        if (selectedFactory != null) {
-            if (currentProjectionProvider != null) {
-                currentProjectionProvider.dispose();
-            }
-            SSCETabPanel.setSelectedComponent(projectionsPanel);
-            currentProjectionProvider = selectedFactory.createProjectionProviderFor(currentlySelectedProject);
-            projectionsPanel.setViewportView(currentProjectionProvider.getView());
-        }
-    }//GEN-LAST:event_startButtonActionPerformed
-
-    private void killButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_killButtonActionPerformed
-        currentProjectionProvider.dispose();
-    }//GEN-LAST:event_killButtonActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel SSCEPanel;
-    private javax.swing.JTabbedPane SSCETabPanel;
-    private javax.swing.JComboBox availableImplementationsCombo;
-    private javax.swing.JLabel availableImplementationsLabel;
-    private javax.swing.JLabel currentProjectLabel;
-    private javax.swing.JTextField currentProjectTextBox;
+    private javax.swing.JScrollPane content;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JButton killButton;
-    private javax.swing.JScrollPane projectionsPanel;
-    private javax.swing.JButton startButton;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        if (currentProjectionProvider != null) {
+            currentProjectionProvider.dispose();
+            currentProjectionProvider = null;
+        }
+        this.content.setViewportView(new NoViewPanel());
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        if (currentProjectionProvider != null) {
+            currentProjectionProvider.dispose();
+            currentProjectionProvider = null;
+        }
     }
 
     void writeProperties(java.util.Properties p) {
