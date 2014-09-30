@@ -101,7 +101,7 @@ public class JavaFileVisitor<T extends Concern> extends TreePathScanner<JavaFile
         super.visitClass(node, p);
         contextCounter.pop();
 
-        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor, info)) {
+        if (codeSiever.sieveCode((Stack<Set<T>>) contextOfConcerns.clone(), currentProjection, extractor, info)) {
             try {
                 String initialTab = "";
                 int lineNum = NbDocument.findLineNumber((StyledDocument) doc, (int) start);
@@ -161,7 +161,7 @@ public class JavaFileVisitor<T extends Concern> extends TreePathScanner<JavaFile
         contextCounter.pop();
 
 
-        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor, info)) {
+        if (codeSiever.sieveCode((Stack<Set<T>>) contextOfConcerns.clone(), currentProjection, extractor, info)) {
             try {
                 String initialTab = "";
                 int lineNum = NbDocument.findLineNumber((StyledDocument) doc, (int) start);
@@ -208,7 +208,7 @@ public class JavaFileVisitor<T extends Concern> extends TreePathScanner<JavaFile
         super.visitVariable(node, p);
         contextCounter.pop();
 
-        if (codeSiever.sieveCode(contextOfConcerns, currentProjection, extractor, info)) {
+        if (codeSiever.sieveCode((Stack<Set<T>>) contextOfConcerns.clone(), currentProjection, extractor, info)) {
             try {
                 String initialTab = "";
                 int lineNum = NbDocument.findLineNumber((StyledDocument) doc, (int) start);

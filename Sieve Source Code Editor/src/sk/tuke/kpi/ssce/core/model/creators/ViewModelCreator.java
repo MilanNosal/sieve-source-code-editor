@@ -34,6 +34,7 @@ import sk.tuke.kpi.ssce.core.model.view.importshandling.Imports;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
 import sk.tuke.kpi.ssce.core.model.view.importshandling.Import;
 import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
+import sk.tuke.kpi.ssce.sieving.interfaces.PostProcessingSiever;
 
 /**
  * Trieda reprezentuje nastroj pre pracu s java subormi.
@@ -46,10 +47,13 @@ public class ViewModelCreator<T extends Concern> {
 
     private final ConcernExtractor<T> extractor;
     private final CodeSiever<T> siever;
+    private final List<PostProcessingSiever> postProcessors;
 
-    public ViewModelCreator(ConcernExtractor<T> extractor, CodeSiever<T> siever) {
+    public ViewModelCreator(ConcernExtractor<T> extractor, CodeSiever<T> siever,
+            List<PostProcessingSiever> postProcessors) {
         this.extractor = extractor;
         this.siever = siever;
+        this.postProcessors = postProcessors;
     }
 
     /**
@@ -69,7 +73,7 @@ public class ViewModelCreator<T extends Concern> {
         JavaFile jf;
         for (String pathFile : javaFilePaths) {
             jf = createJavaFile(new File(pathFile), configuration);
-            if (jf.getCodeSnippets() != null && !jf.getCodeSnippets().isEmpty()) {
+            if (jf != null && jf.getCodeSnippets() != null && !jf.getCodeSnippets().isEmpty()) {
                 javaFiles.add(jf);
             }
         }
@@ -134,11 +138,18 @@ public class ViewModelCreator<T extends Concern> {
             JavaFileVisitor<T> scanner = new JavaFileVisitor<T>(info, extractor, siever, configuration, doc);
             javaFile = scanner.scan(cu, new JavaFile<T>(FileUtil.toFile(info.getFileObject()).getPath(), info.getFileObject().getName(), ec, doc));
 
-            keepOnlyUnguardedCodes(javaFile, doc); //keeps codes which does not contain guarded blocks
-
-            keepOnlyRootCodes(javaFile); // start getting root codes: to remove overlaping in codes
-
-            // start getting necesary and editable imports
+            Iterator<PostProcessingSiever> iterator = this.postProcessors.iterator();
+            
+            while (iterator.hasNext() && javaFile != null) {
+                javaFile = iterator.next().process(javaFile, doc);
+            }
+            
+            if(javaFile == null) {
+                return null;
+            }
+            
+            
+            // start getting necessary and editable imports
             Set<String> allImportedTypes = javaFile.getAllImports().getAllTypeIdentifiers();
             Set<String> editableImportedTypes = new HashSet<String>(allImportedTypes);
             Set<String> necessaryImportedTypes = new HashSet<String>();
@@ -175,46 +186,6 @@ public class ViewModelCreator<T extends Concern> {
             doc.readUnlock();
         }
         return javaFile;
-    }
-
-    //SsceIntent:Realizovanie projekcie zdrojoveho kodu;
-    @SourceCodeSieving(postProcessing = true)
-    private boolean keepOnlyRootCodes(JavaFile<T> file) {
-        List<CodeSnippet<T>> codes = file.getCodeSnippets();
-        Collections.sort(codes);
-        for (int i = 1; i < codes.size();) {
-            if (codes.get(i - 1).getCodeBinding().getStartPositionJavaDocument() <= codes.get(i).getCodeBinding().getStartPositionJavaDocument()
-                    && codes.get(i - 1).getCodeBinding().getEndPositionJavaDocument() >= codes.get(i).getCodeBinding().getStartPositionJavaDocument()) {
-                codes.remove(i);
-                continue;
-            }
-            i++;
-        }
-        return true;
-    }
-
-    //SsceIntent:Realizovanie projekcie zdrojoveho kodu;
-    @SourceCodeSieving(postProcessing = true)
-    private boolean keepOnlyUnguardedCodes(JavaFile<T> file, BaseDocument doc) {
-        if (doc instanceof GuardedDocument) {
-            List<CodeSnippet<T>> codes = file.getCodeSnippets();
-//            GuardedDocument guardedDocument = (GuardedDocument) doc;
-            MarkBlock chain = ((GuardedDocument) doc).getGuardedBlockChain().getChain();
-
-            MarkBlock blk = chain;
-            while (blk != null) {
-                for (int i = 0; i < codes.size();) {
-                    if (codes.get(i).getCodeBinding().getStartPositionJavaDocument() <= blk.getEndOffset() && blk.getStartOffset() <= codes.get(i).getCodeBinding().getEndPositionJavaDocument()) {
-//                        System.out.println("Code(" + codes.get(i).getCodeBinding().getStartPositionJavaDocument() + ", " + codes.get(i).getCodeBinding().getEndPositionJavaDocument() + ") was removed from :" + file.getFilePath());
-                        codes.remove(i);
-                        continue;
-                    }
-                    i++;
-                }
-                blk = blk.getNext();
-            }
-        }
-        return true;
     }
 
     @ImportsManagement

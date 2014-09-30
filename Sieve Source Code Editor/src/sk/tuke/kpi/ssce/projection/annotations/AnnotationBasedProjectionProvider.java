@@ -25,7 +25,10 @@ import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvid
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.providers.StandardFoldingProvider;
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.providers.StandardGuardingProvider;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
+import sk.tuke.kpi.ssce.sieving.GuardedCodeSnippetsRemover;
+import sk.tuke.kpi.ssce.sieving.OverlappingSnippetsRemover;
 import sk.tuke.kpi.ssce.sieving.annotations.AnnotationBasedSiever;
+import sk.tuke.kpi.ssce.sieving.interfaces.PostProcessingSiever;
 
 /**
  *
@@ -57,8 +60,10 @@ public class AnnotationBasedProjectionProvider extends JPanel implements Project
             guards.add(new StandardGuardingProvider());
             List<FoldingProvider> folds = new LinkedList<FoldingProvider>();
             folds.add(new StandardFoldingProvider());
+            List<PostProcessingSiever<AnnotationBasedConcern>> postProcessors
+                    = new LinkedList<PostProcessingSiever<AnnotationBasedConcern>>();
             core = new SSCEditorCore<AnnotationBasedConcern>(getProjectContext(),
-                    extractor, siever, folds, guards);
+                    extractor, siever, folds, guards, postProcessors);
             core.getConfiguration().addCurrentProjectionChangeListener(siever);
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
