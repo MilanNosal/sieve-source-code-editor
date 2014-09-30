@@ -15,6 +15,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.View;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  * Trieda modeluje prepojenie jedneho java suboru s pomocnym suborom .sj.
@@ -23,7 +24,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
  */
 //SsceIntent:Model pre synchronizaciu kodu;
 @Model(model = RepresentationOf.VIEW)
-public class JavaFile {
+public class JavaFile<T extends Concern> {
 
     private boolean modified = false;
 
@@ -49,7 +50,7 @@ public class JavaFile {
     @ImportsManagement
     private Imports necessaryImports;
 
-    private List<CodeSnippet> codeSnippets;
+    private List<CodeSnippet<T>> codeSnippets;
 
     /**
      * Vytvori model prepojenia jedneho java suboru s pomocnym suborom .sj.
@@ -78,7 +79,7 @@ public class JavaFile {
     private void initialize() {
         this.allImports = new Imports();
         this.necessaryImports = new Imports();
-        this.codeSnippets = new ArrayList<CodeSnippet>();
+        this.codeSnippets = new ArrayList<CodeSnippet<T>>();
     }
 
     public BaseDocument getDocument() {
@@ -182,7 +183,7 @@ public class JavaFile {
      *
      * @return zoznam vsetkych modelovanych fragmentov kodu.
      */
-    public List<CodeSnippet> getCodeSnippets() {
+    public List<CodeSnippet<T>> getCodeSnippets() {
         return codeSnippets;
     }
 
@@ -191,7 +192,7 @@ public class JavaFile {
      *
      * @param codes zoznam vsetkych modelovanych fragmentov kodu.
      */
-    public void setCodeSnippets(List<CodeSnippet> codes) {
+    public void setCodeSnippets(List<CodeSnippet<T>> codes) {
         this.codeSnippets = codes;
     }
 

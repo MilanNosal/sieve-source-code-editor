@@ -25,6 +25,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.CodeAnalysis;
 import sk.tuke.kpi.ssce.annotations.concerns.ImportsManagement;
 import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import static sk.tuke.kpi.ssce.core.CompilationUtilities.getCompilationInfo;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
@@ -41,12 +42,12 @@ import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
  */
 //SsceIntent:Praca s java suborom;
 @CodeAnalysis(output = RepresentationOf.VIEW)
-public class ViewModelCreator {
+public class ViewModelCreator<T extends Concern> {
 
-    private final ConcernExtractor extractor;
-    private final CodeSiever siever;
+    private final ConcernExtractor<T> extractor;
+    private final CodeSiever<T> siever;
 
-    public ViewModelCreator(ConcernExtractor extractor, CodeSiever siever) {
+    public ViewModelCreator(ConcernExtractor<T> extractor, CodeSiever<T> siever) {
         this.extractor = extractor;
         this.siever = siever;
     }
@@ -63,8 +64,8 @@ public class ViewModelCreator {
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;Realizovanie projekcie zdrojoveho kodu;Model pre synchronizaciu kodu;
     @CodeAnalysis(output = RepresentationOf.VIEW)
-    public List<JavaFile> createJavaFiles(Set<String> javaFilePaths, CurrentProjection configuration) {
-        List<JavaFile> javaFiles = new ArrayList<JavaFile>();
+    public List<JavaFile<T>> createJavaFiles(Set<String> javaFilePaths, CurrentProjection<T> configuration) {
+        List<JavaFile<T>> javaFiles = new ArrayList<JavaFile<T>>();
         JavaFile jf;
         for (String pathFile : javaFilePaths) {
             jf = createJavaFile(new File(pathFile), configuration);
@@ -88,7 +89,7 @@ public class ViewModelCreator {
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;Realizovanie projekcie zdrojoveho kodu;Model pre synchronizaciu kodu;
     @CodeAnalysis(output = RepresentationOf.VIEW)
-    public JavaFile createJavaFile(File javaFile, CurrentProjection configuration) {
+    public JavaFile<T> createJavaFile(File javaFile, CurrentProjection<T> configuration) {
 //        System.out.println("\n------------------------------- " + javaFile.getName());
 
         FileObject fobj = FileUtil.toFileObject(javaFile);
@@ -110,7 +111,7 @@ public class ViewModelCreator {
     @CodeAnalysis(output = RepresentationOf.VIEW)
     @SourceCodeSieving
     @ImportsManagement
-    private JavaFile extractViewFromDocument(EditorCookie ec, CurrentProjection configuration) {
+    private JavaFile<T> extractViewFromDocument(EditorCookie ec, CurrentProjection<T> configuration) {
         BaseDocument doc;
         try {
             doc = (BaseDocument) ec.openDocument();
@@ -119,7 +120,7 @@ public class ViewModelCreator {
             return null;
         }
 
-        JavaFile javaFile;
+        JavaFile<T> javaFile;
 
         doc.readLock();
         try {
@@ -130,8 +131,8 @@ public class ViewModelCreator {
             }
 
             CompilationUnitTree cu = info.getCompilationUnit();
-            JavaFileVisitor scanner = new JavaFileVisitor(info, extractor, siever, configuration, doc);
-            javaFile = scanner.scan(cu, new JavaFile(FileUtil.toFile(info.getFileObject()).getPath(), info.getFileObject().getName(), ec, doc));
+            JavaFileVisitor<T> scanner = new JavaFileVisitor<T>(info, extractor, siever, configuration, doc);
+            javaFile = scanner.scan(cu, new JavaFile<T>(FileUtil.toFile(info.getFileObject()).getPath(), info.getFileObject().getName(), ec, doc));
 
             keepOnlyUnguardedCodes(javaFile, doc); //keeps codes which does not contain guarded blocks
 
@@ -178,8 +179,8 @@ public class ViewModelCreator {
 
     //SsceIntent:Realizovanie projekcie zdrojoveho kodu;
     @SourceCodeSieving(postProcessing = true)
-    private boolean keepOnlyRootCodes(JavaFile file) {
-        List<CodeSnippet> codes = file.getCodeSnippets();
+    private boolean keepOnlyRootCodes(JavaFile<T> file) {
+        List<CodeSnippet<T>> codes = file.getCodeSnippets();
         Collections.sort(codes);
         for (int i = 1; i < codes.size();) {
             if (codes.get(i - 1).getCodeBinding().getStartPositionJavaDocument() <= codes.get(i).getCodeBinding().getStartPositionJavaDocument()
@@ -194,9 +195,9 @@ public class ViewModelCreator {
 
     //SsceIntent:Realizovanie projekcie zdrojoveho kodu;
     @SourceCodeSieving(postProcessing = true)
-    private boolean keepOnlyUnguardedCodes(JavaFile file, BaseDocument doc) {
+    private boolean keepOnlyUnguardedCodes(JavaFile<T> file, BaseDocument doc) {
         if (doc instanceof GuardedDocument) {
-            List<CodeSnippet> codes = file.getCodeSnippets();
+            List<CodeSnippet<T>> codes = file.getCodeSnippets();
 //            GuardedDocument guardedDocument = (GuardedDocument) doc;
             MarkBlock chain = ((GuardedDocument) doc).getGuardedBlockChain().getChain();
 
@@ -217,8 +218,8 @@ public class ViewModelCreator {
     }
 
     @ImportsManagement
-    private boolean isInCodeArea(JavaFile jf, int offset) {
-        for (CodeSnippet code : jf.getCodeSnippets()) {
+    private boolean isInCodeArea(JavaFile<T> jf, int offset) {
+        for (CodeSnippet<T> code : jf.getCodeSnippets()) {
             if (code.getCodeBinding().getStartPositionJavaDocument() <= offset && offset < code.getCodeBinding().getEndPositionJavaDocument()) {
                 return true;
             }
@@ -227,7 +228,7 @@ public class ViewModelCreator {
     }
 
     @ImportsManagement
-    private boolean isInImportsArea(JavaFile jf, int offset) {
+    private boolean isInImportsArea(JavaFile<T> jf, int offset) {
         return jf.getImportsBinding().getStartPositionJavaDocument() <= offset && offset < jf.getImportsBinding().getEndPositionJavaDocument();
     }
 

@@ -11,14 +11,14 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
  */
 //SsceIntent:Model pre mapovanie zamerov;
 @Model(model = RepresentationOf.PROJECTION)
-public class JavaFileConcerns {
+public class JavaFileConcerns<T extends Concern> {
 
     //SsceIntent:Konstanta;
     private final String filePath;
     //SsceIntent:Konstanta;
     private final String fileName;
     private String packageName;
-    private List<CodeSnippetConcerns> codes;
+    private List<CodeSnippetConcerns<T>> codes;
 
     /**
      * Vytvori mapovanivanie zamerov pre jeden java subor.
@@ -32,14 +32,14 @@ public class JavaFileConcerns {
     }
 
     private void initialize() {
-        this.codes = new ArrayList<CodeSnippetConcerns>();
+        this.codes = new ArrayList<CodeSnippetConcerns<T>>();
     }
 
     /**
      * Vrati vsetky mapovania zamerov na fragmenty kodu patriace do tohto java suboru.
      * @return vsetky mapovania zamerov na fragmenty kodu patriace do tohto java suboru.
      */
-    public List<CodeSnippetConcerns> getCodes() {
+    public List<CodeSnippetConcerns<T>> getCodes() {
         return codes;
     }
 
@@ -47,7 +47,7 @@ public class JavaFileConcerns {
      * Nastavi vsetky mapovania zamerov na fragmenty kodu patriace do tohto java suboru.
      * @param codes vsetky mapovania zamerov na fragmenty kodu patriace do tohto java suboru.
      */
-    public void setCodes(List<CodeSnippetConcerns> codes) {
+    public void setCodes(List<CodeSnippetConcerns<T>> codes) {
         this.codes = codes;
     }
 
@@ -56,8 +56,8 @@ public class JavaFileConcerns {
      * @param offset offset v java subore, podla ktoreho sa ma vyhladat mapovanie zamerov pre jeden fragment kodu.
      * @return mapovanie zamerov pre jeden fragment kodu, alebo null ak sa nenajde.
      */
-    public CodeSnippetConcerns findForOffset(int offset) {
-        CodeSnippetConcerns code;
+    public CodeSnippetConcerns<T> findForOffset(int offset) {
+        CodeSnippetConcerns<T> code;
         for (int i = codes.size() - 1; i >= 0; i--) {// downto - uprednostnit mense useky pred vacsimi // vnorene elementy
             code = codes.get(i);
             if (code.getStartPositionJavaCode().getOffset() <= offset && offset <= code.getStartPositionJavaCode().getOffset() + code.getLengthJavaCode()) {
@@ -103,8 +103,8 @@ public class JavaFileConcerns {
      * Vrati mnozinu vsetkych zamerov priradenych fragmentov kodu v tomto java subore.
      * @return mnozinu vsetkych zamerov priradenych fragmentov kodu v tomto java subore.
      */
-    public Set<Concern> getAllConcerns() {
-        Set<Concern> concerns = new HashSet<Concern>();
+    public Set<T> getAllConcerns() {
+        Set<T> concerns = new HashSet<T>();
         for (CodeSnippetConcerns code : codes) {
             concerns.addAll(code.getConcerns());
         }

@@ -13,6 +13,7 @@ import org.netbeans.spi.editor.fold.FoldHierarchyTransaction;
 import org.netbeans.spi.editor.fold.FoldManager;
 import org.netbeans.spi.editor.fold.FoldManagerFactory;
 import org.netbeans.spi.editor.fold.FoldOperation;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.core.Constants;
 import sk.tuke.kpi.ssce.core.SSCEditorCore;
 import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
@@ -95,17 +96,17 @@ public class SSCEFoldManager implements FoldManager, CurrentProjection.CurrentPr
             }
             Document doc = operation.getHierarchy().getComponent().getDocument();
 
-            SSCEditorCore core = (SSCEditorCore) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
+            SSCEditorCore<? extends Concern> core = (SSCEditorCore<? extends Concern>) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
 
             //List<Integer> fromTo = new LinkedList<Integer>();
             operation.getHierarchy().lock();
 
             FoldHierarchyTransaction transaction = operation.openTransaction();
             List<FoldingRequest> folds = new LinkedList<FoldingRequest>();
-            ViewModel model = core.getModel();
+            ViewModel<Concern> model = core.getModel();
             for (FoldingProvider provider : core.getFoldingProviders()) {
                 folds.addAll(provider.createFolds(model));
-                for (JavaFile javaFile : model.getFiles()) {
+                for (JavaFile<Concern> javaFile : model.getFiles()) {
                     folds.addAll(provider.createFolds(javaFile));
                     for (CodeSnippet snippet : javaFile.getCodeSnippets()) {
                         folds.addAll(provider.createFolds(snippet));

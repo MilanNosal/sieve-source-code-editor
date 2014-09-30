@@ -13,7 +13,6 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import org.netbeans.api.java.source.CompilationInfo;
 import sk.tuke.kpi.ssce.concerns.annotations.AnnotationBasedConcern;
-import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
 import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
@@ -22,7 +21,8 @@ import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
  *
  * @author Milan
  */
-public class AnnotationBasedSiever implements CodeSiever, CurrentProjection.CurrentProjectionChangeListener {
+public class AnnotationBasedSiever implements CodeSiever<AnnotationBasedConcern>,
+        CurrentProjection.CurrentProjectionChangeListener<AnnotationBasedConcern> {
 
     private final Map<String, Map<String, Object>> cache = new HashMap<String, Map<String, Object>>();
     private final Map<String, List<ExecutableElement>> cache2 = new HashMap<String, List<ExecutableElement>>();
@@ -30,15 +30,16 @@ public class AnnotationBasedSiever implements CodeSiever, CurrentProjection.Curr
 
     @Override
     public boolean sieveCode(
-            Stack<Set<Concern>> contextOfConcerns,
-            CurrentProjection currentProjection,
-            ConcernExtractor extractor,
+            Stack<Set<AnnotationBasedConcern>> contextOfConcerns,
+            CurrentProjection<AnnotationBasedConcern> currentProjection,
+            ConcernExtractor<AnnotationBasedConcern> extractor,
             CompilationInfo info) {
-        List<Concern> codeConcerns = getConcernsForCode(contextOfConcerns);
+        List<AnnotationBasedConcern> codeConcerns = getConcernsForCode(contextOfConcerns);
 
         boolean match;
 
-        Set<Concern> selectedConcerns = new HashSet<Concern>(currentProjection.getCurrentlySelectedConcerns());
+        Set<AnnotationBasedConcern> selectedConcerns 
+                = new HashSet<AnnotationBasedConcern>(currentProjection.getCurrentlySelectedConcerns());
         if (selectedConcerns.isEmpty()) {
             match = false;
         } else {
@@ -50,7 +51,7 @@ public class AnnotationBasedSiever implements CodeSiever, CurrentProjection.Curr
                     }
                     selectedConcerns.remove(extractor.getNilConcern());
                 }
-                for (Concern selectedConcern : selectedConcerns) {
+                for (AnnotationBasedConcern selectedConcern : selectedConcerns) {
                     if (!conforms(codeConcerns, currentProjection.getParams(), selectedConcern, info)) {
                         match = false;
                         break;
@@ -65,7 +66,7 @@ public class AnnotationBasedSiever implements CodeSiever, CurrentProjection.Curr
                     // aby nam to potom pri porovnani nerobilo problemy
                     selectedConcerns.remove(extractor.getNilConcern());
                 }
-                for (Concern selectedConcern : selectedConcerns) {
+                for (AnnotationBasedConcern selectedConcern : selectedConcerns) {
                     if (conforms(codeConcerns, currentProjection.getParams(), selectedConcern, info)) {
                         match = true;
                         break;
@@ -76,7 +77,8 @@ public class AnnotationBasedSiever implements CodeSiever, CurrentProjection.Curr
         return match;
     }
 
-    private boolean conforms(List<Concern> codeConcerns, Map<String, Object> params, Concern selectedConcern, CompilationInfo info) {
+    private boolean conforms(List<AnnotationBasedConcern> codeConcerns, 
+            Map<String, Object> params, AnnotationBasedConcern selectedConcern, CompilationInfo info) {
         boolean match;
         
         int indexOfTested = codeConcerns.lastIndexOf(selectedConcern);
@@ -191,22 +193,22 @@ public class AnnotationBasedSiever implements CodeSiever, CurrentProjection.Curr
         }
     }
 
-    private List<Concern> getConcernsForCode(Stack<Set<Concern>> contextOfConcerns) {
-        List<Concern> concerns = new ArrayList<Concern>();
-        for (int i = 0; i < contextOfConcerns.size(); i++) {
-            concerns.addAll(contextOfConcerns.get(i));
+    private List<AnnotationBasedConcern> getConcernsForCode(Stack<Set<AnnotationBasedConcern>> contextOfConcerns) {
+        List<AnnotationBasedConcern> concerns = new ArrayList<AnnotationBasedConcern>();
+        for (Set<AnnotationBasedConcern> contextOfConcern : contextOfConcerns) {
+            concerns.addAll(contextOfConcern);
         }
         return concerns;
     }
 
     @Override
-    public void projectionChanged(CurrentProjection.CurrentProjectionChangedEvent event) {
+    public void projectionChanged(CurrentProjection.CurrentProjectionChangedEvent<AnnotationBasedConcern> event) {
         cache2.clear();
         cache.clear();
         
         Map<String, Object> params = event.getConfiguration().getParams();
         
-        for (Concern concern : event.getConfiguration().getCurrentlySelectedConcerns()) {
+        for (AnnotationBasedConcern concern : event.getConfiguration().getCurrentlySelectedConcerns()) {
             Map<String, Object> concernParams = new HashMap<String, Object>();
             String prefix = ((AnnotationBasedConcern) concern).getUniquePresentation();
             for (String key : params.keySet()) {

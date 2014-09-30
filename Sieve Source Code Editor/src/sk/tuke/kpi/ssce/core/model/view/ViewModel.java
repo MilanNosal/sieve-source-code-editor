@@ -1,17 +1,13 @@
 package sk.tuke.kpi.ssce.core.model.view;
 
-import sk.tuke.kpi.ssce.core.model.view.postprocessing.GuardingRequest;
-import sk.tuke.kpi.ssce.core.model.view.postprocessing.FoldingRequest;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import org.openide.cookies.EditorCookie;
 import sk.tuke.kpi.ssce.annotations.concerns.Model;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
-import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.FoldingProvider;
-import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvider;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  * Trieda predstavuje celkovy model prepojenia vsetkych java suborov s pomocnym suborom .sj.
@@ -19,12 +15,12 @@ import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvid
  */
 //SsceIntent:Model pre synchronizaciu kodu;
 @Model(model = RepresentationOf.VIEW)
-public class ViewModel {
+public class ViewModel<T extends Concern> {
 
     //SsceIntent:Praca s pomocnym suborom;
     private EditorCookie editorCookieSieveDocument;
 //    private DocumentListener javaDocumentListener;
-    private final List<JavaFile> files = new ArrayList<JavaFile>();
+    private final List<JavaFile<T>> files = new ArrayList<JavaFile<T>>();
 
     /**
      * Vytvori celkovy model prepojenia vsetkych java suborov s pomocnym suborom .sj.
@@ -70,12 +66,12 @@ public class ViewModel {
      * @param files nove modelovane java subory.
      * @return true, ak sa nastavia nove modelovane java subory, inak false.
      */
-    public boolean setFiles(List<JavaFile> files) {
+    public boolean setFiles(List<JavaFile<T>> files) {
         this.files.clear();
         return this.files.addAll(files);
     }
 
-    public List<JavaFile> getFiles() {
+    public List<JavaFile<T>> getFiles() {
         return files;
     }
 

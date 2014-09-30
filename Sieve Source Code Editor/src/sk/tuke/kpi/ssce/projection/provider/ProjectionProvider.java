@@ -5,6 +5,7 @@ import org.netbeans.api.project.Project;
 import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
 import sk.tuke.kpi.ssce.annotations.concerns.ProvidersPluginSystem;
 import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.core.SSCEditorCore;
 
 /**
@@ -12,10 +13,11 @@ import sk.tuke.kpi.ssce.core.SSCEditorCore;
  * this interface, only this little communication will be needed (as far
  * as we can tell now).
  * @author Milan
+ * @param <T>
  */
 @SSCE_UI
 @ProvidersPluginSystem
-public interface ProjectionProvider {
+public interface ProjectionProvider<T extends Concern> {
     /**
      * View of the provider that is used to manage projections.
      * @return 
@@ -24,7 +26,7 @@ public interface ProjectionProvider {
     
     public Project getProjectContext();
     
-    public SSCEditorCore getSSCECore();
+    public SSCEditorCore<T> getSSCECore();
     
     /**
      * Each projection provider is required to implement a dispose method that

@@ -12,15 +12,15 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
  */
 //SsceIntent:Model pre mapovanie zamerov;
 @Model(model = RepresentationOf.PROJECTION)
-public class CodeSnippetConcerns implements Comparable<CodeSnippetConcerns> {
+public class CodeSnippetConcerns<T extends Concern> implements Comparable<CodeSnippetConcerns> {
 
-    private final JavaFileConcerns parent;
+    private final JavaFileConcerns<T> parent;
     private final String codeHead;
     private final Position startPositionJavaCode;
     
     private final int lengthJavaCode;
     
-    private final Set<Concern> concerns;
+    private final Set<T> concerns;
 
     /**
      * Vytvori mapovanie zamerov na fragment kodu.
@@ -32,7 +32,7 @@ public class CodeSnippetConcerns implements Comparable<CodeSnippetConcerns> {
      */
     public CodeSnippetConcerns(JavaFileConcerns parent, String codeHead,
             Position startPositionJavaCode, int lengthJavaCode,
-            Set<Concern> concerns) {
+            Set<T> concerns) {
         this.parent = parent;
         this.codeHead = codeHead;
         this.startPositionJavaCode = startPositionJavaCode;
@@ -69,7 +69,7 @@ public class CodeSnippetConcerns implements Comparable<CodeSnippetConcerns> {
      * Vrati mnozinu zamerov priradenych tomutu fragmentu kodu.
      * @return mnozinu zamerov priradenych tomutu fragmentu kodu.
      */
-    public Set<Concern> getConcerns() {
+    public Set<T> getConcerns() {
         return concerns;
     }
 

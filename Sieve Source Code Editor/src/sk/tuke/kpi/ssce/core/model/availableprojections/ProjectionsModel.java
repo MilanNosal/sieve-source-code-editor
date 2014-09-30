@@ -13,12 +13,12 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
  */
 //SsceIntent:Model pre mapovanie zamerov;
 @Model(model = RepresentationOf.PROJECTION)
-public class ProjectionsModel {
+public class ProjectionsModel<T extends Concern> {
 
     //SsceIntent:Model pre mapovanie zamerov;
-    private final List<JavaFileConcerns> files = new ArrayList<JavaFileConcerns>();
+    private final List<JavaFileConcerns<T>> files = new ArrayList<JavaFileConcerns<T>>();
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    private final Set<ConcernsChangeListener> listeners = new HashSet<ConcernsChangeListener>();
+    private final Set<ConcernsChangeListener<T>> listeners = new HashSet<ConcernsChangeListener<T>>();
     private boolean outOfDate;
 
     /**
@@ -49,7 +49,7 @@ public class ProjectionsModel {
      * @return true, ak listener bol pridany, inak false.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    public boolean addChangeListener(ConcernsChangeListener listener) {
+    public boolean addChangeListener(ConcernsChangeListener<T> listener) {
         return listeners.add(listener);
     }
 
@@ -59,7 +59,7 @@ public class ProjectionsModel {
      * @return true, ak listener bol odobrany, inak false.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
-    public boolean removeChangeListener(ConcernsChangeListener listener) {
+    public boolean removeChangeListener(ConcernsChangeListener<T> listener) {
         return listeners.remove(listener);
     }
 
@@ -67,9 +67,9 @@ public class ProjectionsModel {
      * Vrati mnozinu vsetkych mapovanych zamerov.
      * @return mnozinu vsetkych mapovanych zamerov.
      */
-    public Set<Concern> getAllConcerns() {
-        Set<Concern> concerns = new HashSet<Concern>();
-        for (JavaFileConcerns fileConcerns : files) {
+    public Set<T> getAllConcerns() {
+        Set<T> concerns = new HashSet<T>();
+        for (JavaFileConcerns<T> fileConcerns : files) {
             for (CodeSnippetConcerns codeConcerns : fileConcerns.getCodes()) {
                 concerns.addAll(codeConcerns.getConcerns());
             }
@@ -90,7 +90,7 @@ public class ProjectionsModel {
      * @param index index java suboru.
      * @return mapovanie zamerov pre jeden java subor.
      */
-    public JavaFileConcerns get(int index) {
+    public JavaFileConcerns<T> get(int index) {
         return files.get(index);
     }
 
@@ -99,7 +99,7 @@ public class ProjectionsModel {
      * @param files mapovania zamerov pre java subory.
      * @return true, ak sa nastavia nove mapovania zamerov, inak false.
      */
-    public boolean setFiles(List<JavaFileConcerns> files) {
+    public boolean setFiles(List<JavaFileConcerns<T>> files) {
         try {
             this.files.clear();
             this.outOfDate = false;
@@ -129,11 +129,11 @@ public class ProjectionsModel {
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @AvailableProjectionsChange(propagation = false)
-    public JavaFileConcerns updateFile(JavaFileConcerns file) {
+    public JavaFileConcerns<T> updateFile(JavaFileConcerns<T> file) {
         try {
-            JavaFileConcerns javaFile;
+            JavaFileConcerns<T> javaFile;
             if ((javaFile = get(file.getFilePath())) != null) {
-                Set<Concern> oldAllConcerns = getAllConcerns();
+                Set<T> oldAllConcerns = getAllConcerns();
                 javaFile.copy(file);
                 fireConcernsConfigurationChangedEvent(prepareEvent(oldAllConcerns, getAllConcerns()));
             }
@@ -150,10 +150,10 @@ public class ProjectionsModel {
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @AvailableProjectionsChange(propagation = false)
-    public JavaFileConcerns updateOrInsertFile(JavaFileConcerns file) {
-        Set<Concern> oldAllIntents = getAllConcerns();
+    public JavaFileConcerns<T> updateOrInsertFile(JavaFileConcerns<T> file) {
+        Set<T> oldAllIntents = getAllConcerns();
         try {
-            JavaFileConcerns javaFile;
+            JavaFileConcerns<T> javaFile;
             if ((javaFile = get(file.getFilePath())) != null) {
                 javaFile.copy(file);
                 return javaFile;
@@ -177,11 +177,11 @@ public class ProjectionsModel {
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @AvailableProjectionsChange(propagation = false)
-    public JavaFileConcerns deleteFile(JavaFileConcerns file) {
+    public JavaFileConcerns<T> deleteFile(JavaFileConcerns<T> file) {
         try {
-            JavaFileConcerns javaFile;
+            JavaFileConcerns<T> javaFile;
             if ((javaFile = get(file.getFilePath())) != null) {
-                Set<Concern> oldAllConcerns = getAllConcerns();
+                Set<T> oldAllConcerns = getAllConcerns();
                 files.remove(javaFile);
                 fireConcernsConfigurationChangedEvent(prepareEvent(oldAllConcerns, getAllConcerns()));
                 return javaFile;
@@ -198,7 +198,7 @@ public class ProjectionsModel {
      * @return true, ak obsahuje, inak false.
      */
     public boolean contains(String javaFilePath) {
-        for (JavaFileConcerns jFC : files) {
+        for (JavaFileConcerns<T> jFC : files) {
             if (jFC.getFilePath().equals(javaFilePath)) {
                 return true;
             }
@@ -212,7 +212,7 @@ public class ProjectionsModel {
      * @return mapovanie zamerov pre java subor, ak toto mapovanie ho obsahuje, inak null.
      */
     public JavaFileConcerns get(String javaFilePath) {
-        for (JavaFileConcerns jFC : files) {
+        for (JavaFileConcerns<T> jFC : files) {
             if (jFC.getFilePath().equals(javaFilePath)) {
                 return jFC;
             }
@@ -225,7 +225,7 @@ public class ProjectionsModel {
      * @param javaFilePath cesta java suboru.
      * @return mapovanie zamerov pre nasledujuci java subor, ak toto mapovanie ho obsahuje, inak null.
      */
-    public JavaFileConcerns getNext(String javaFilePath) {
+    public JavaFileConcerns<T> getNext(String javaFilePath) {
         for (int i = 1; i < files.size(); i++) {
             if (files.get(i - 1).getFilePath().equals(javaFilePath)) {
                 return files.get(i);
@@ -239,7 +239,7 @@ public class ProjectionsModel {
      * @param javaFilePath cesta java suboru.
      * @return mapovanie zamerov pre predchadzajuci java subor, ak toto mapovanie ho obsahuje, inak null.
      */
-    public JavaFileConcerns getPrevious(String javaFilePath) {
+    public JavaFileConcerns<T> getPrevious(String javaFilePath) {
         for (int i = 1; i < files.size(); i++) {
             if (files.get(i).getFilePath().equals(javaFilePath)) {
                 return files.get(i - 1);
@@ -255,12 +255,12 @@ public class ProjectionsModel {
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @AvailableProjectionsChange(propagation = false)
-    public JavaFileConcerns insertFile(JavaFileConcerns file) {
+    public JavaFileConcerns insertFile(JavaFileConcerns<T> file) {
         try {
             if (get(file.getFilePath()) != null) {
                 return null;
             }
-            Set<Concern> oldAllConcerns = getAllConcerns();
+            Set<T> oldAllConcerns = getAllConcerns();
 
             if (files.add(file)) {
 //            Collections.sort(files, JavaFileIntents.SORT_BY_PACKAGES);
@@ -275,23 +275,23 @@ public class ProjectionsModel {
 
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @AvailableProjectionsChange(propagation = true)
-    private void fireConcernsConfigurationChangedEvent(ConcernsChangedEvent event) {
+    private void fireConcernsConfigurationChangedEvent(ConcernsChangedEvent<T> event) {
         this.outOfDate = false;
         if (event == null) {
             return;
         }
-        for (ConcernsChangeListener listener : listeners) {
+        for (ConcernsChangeListener<T> listener : listeners) {
             listener.concernsChanged(event);
         }
     }
 
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @AvailableProjectionsChange(propagation = true)
-    private ConcernsChangedEvent prepareEvent(Set<Concern> oldAllConcerns, Set<Concern> newAllConcerns) {
-        Set<Concern> removedConcerns = new HashSet<Concern>(oldAllConcerns);
+    private ConcernsChangedEvent<T> prepareEvent(Set<T> oldAllConcerns, Set<T> newAllConcerns) {
+        Set<T> removedConcerns = new HashSet<T>(oldAllConcerns);
         removedConcerns.removeAll(newAllConcerns);
 
-        Set<Concern> newConcerns = new HashSet<Concern>(newAllConcerns);
+        Set<T> newConcerns = new HashSet<T>(newAllConcerns);
         newConcerns.removeAll(oldAllConcerns);
 //        if (newIntents.isEmpty() && removedIntents.isEmpty()) {
 //            return null;
@@ -309,12 +309,12 @@ public class ProjectionsModel {
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @AvailableProjectionsChange(propagation = true)
-    public static class ConcernsChangedEvent {
+    public static class ConcernsChangedEvent<T extends Concern> {
 
 //        private final File file;
-        private final Set<Concern> newConcerns;
-        private final Set<Concern> removedConcerns;
-        private final Set<Concern> allConcerns;
+        private final Set<T> newConcerns;
+        private final Set<T> removedConcerns;
+        private final Set<T> allConcerns;
 
         /**
          * Vytvori event pre zmenu v mapovani zamerov na fragmenty kodu.
@@ -322,7 +322,7 @@ public class ProjectionsModel {
          * @param newConcerns  mnozina novo pridanych zamerov.
          * @param removedConcerns mnozina odobratych zamerov.
          */
-        public ConcernsChangedEvent(Set<Concern> allConcerns, Set<Concern> newConcerns, Set<Concern> removedConcerns) {
+        public ConcernsChangedEvent(Set<T> allConcerns, Set<T> newConcerns, Set<T> removedConcerns) {
             this.newConcerns = newConcerns;
             this.removedConcerns = removedConcerns;
             this.allConcerns = allConcerns;
@@ -340,7 +340,7 @@ public class ProjectionsModel {
          * Vrati mnozinu novo pridanych zamerov.
          * @return mnozinu novo pridanych zamerov.
          */
-        public Set<Concern> getNewConcerns() {
+        public Set<T> getNewConcerns() {
             return newConcerns;
         }
 
@@ -348,7 +348,7 @@ public class ProjectionsModel {
          * Vrati mnozinu odobratych zamerov.
          * @return mnozinu odobratych zamerov.
          */
-        public Set<Concern> getRemovedConcerns() {
+        public Set<T> getRemovedConcerns() {
             return removedConcerns;
         }
 
@@ -356,7 +356,7 @@ public class ProjectionsModel {
          * Vrati novu mnozinu vsetkych zamerov.
          * @return novu mnozinu vsetkych zamerov.
          */
-        public Set<Concern> getAllConcerns() {
+        public Set<T> getAllConcerns() {
             return allConcerns;
         }
     }
@@ -366,12 +366,12 @@ public class ProjectionsModel {
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
     @AvailableProjectionsChange(propagation = true)
-    public static interface ConcernsChangeListener extends EventListener {
+    public static interface ConcernsChangeListener<T extends Concern> extends EventListener {
 
         /**
          * Metoda je volana ak doslo k zmene v mapovani zamerov na fragmenty kodu.
          * @param event event
          */
-        public void concernsChanged(ProjectionsModel.ConcernsChangedEvent event);
+        public void concernsChanged(ProjectionsModel.ConcernsChangedEvent<T> event);
     }
 }

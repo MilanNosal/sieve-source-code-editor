@@ -3,15 +3,17 @@ package sk.tuke.kpi.ssce.projection.provider;
 import org.netbeans.api.project.Project;
 import sk.tuke.kpi.ssce.annotations.concerns.ProvidersPluginSystem;
 import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  * Public interface used for registering a new projections implementation.
  * Based on Netbeans OpenIDE Lookup API.
  * @author Milan
+ * @param <T>
  */
 @SSCE_UI
 @ProvidersPluginSystem
-public interface ProjectionProviderFactory {
+public interface ProjectionProviderFactory<T extends Concern> {
     
     public String getDisplayName();
     
@@ -21,5 +23,5 @@ public interface ProjectionProviderFactory {
      * @param projectContext
      * @return 
      */
-    public ProjectionProvider createProjectionProviderFor(Project projectContext);
+    public ProjectionProvider<T> createProjectionProviderFor(Project projectContext);
 }

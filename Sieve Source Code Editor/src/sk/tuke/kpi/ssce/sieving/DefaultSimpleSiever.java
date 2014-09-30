@@ -15,13 +15,13 @@ import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
  * @author Milan
  */
 @SourceCodeSieving
-public class DefaultSimpleSiever implements CodeSiever {
+public class DefaultSimpleSiever<T extends Concern> implements CodeSiever<T> {
 
     @Override
     public boolean sieveCode(
-            Stack<Set<Concern>> contextOfConcerns,
-            CurrentProjection currentProjection,
-            ConcernExtractor extractor,
+            Stack<Set<T>> contextOfConcerns,
+            CurrentProjection<T> currentProjection,
+            ConcernExtractor<T> extractor,
             CompilationInfo info) {
         Set<Concern> codeConcerns = getConcernsForCode(contextOfConcerns);
         
@@ -63,7 +63,7 @@ public class DefaultSimpleSiever implements CodeSiever {
         return match;
     }
     
-    private Set<Concern> getConcernsForCode(Stack<Set<Concern>> contextOfConcerns) {
+    private Set<Concern> getConcernsForCode(Stack<Set<T>> contextOfConcerns) {
         Set<Concern> concerns = new HashSet<Concern>();
         for (int i = 0; i < contextOfConcerns.size(); i++) {
             concerns.addAll(contextOfConcerns.get(i));
