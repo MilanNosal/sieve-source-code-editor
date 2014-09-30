@@ -148,6 +148,9 @@ public class Binding<T extends Concern> {
                         element.setCode(c);
                         buffer.append(c.getStartTextForSJDoc());
                         element.setStart(buffer.length());
+                        System.out.println(">> start " + c.getCodeBinding().getStartPositionJavaDocument());
+                        System.out.println(">> length " +  c.getCodeBinding().getLengthBindingAreaJavaDocument());
+                        System.out.println(">>> " + c.getFullElementName());
                         buffer.append(doc.getText(c.getCodeBinding().getStartPositionJavaDocument(), c.getCodeBinding().getLengthBindingAreaJavaDocument()));
 
                         element.setEnd(buffer.length() - 1);

@@ -48,6 +48,9 @@ import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.FoldingProvider;
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvider;
 import sk.tuke.kpi.ssce.nbinterface.SSCESieverTopComponent;
+import sk.tuke.kpi.ssce.sieving.GuardedCodeSnippetsRemover;
+import sk.tuke.kpi.ssce.sieving.OverlappingSnippetsRemover;
+import sk.tuke.kpi.ssce.sieving.interfaces.PostProcessingSiever;
 
 /**
  * Jadro celeho modulu, teda SSCE editora. Je vložene do documentu pre pomocny
@@ -141,11 +144,15 @@ public class SSCEditorCore<T extends Concern> {
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v java zdrojovom kode;Notifikacia na zmeny v pomocnom subore .sj;Monitorovanie java suborov;Model pre mapovanie zamerov;Prepojenie java suborov s pomocnym suborom .sj;Notifikacia na zmeny v priradenych zamerov;Model pre synchronizaciu kodu;
     public SSCEditorCore(final Project projectContext,
             ConcernExtractor<T> extractor, CodeSiever<T> siever,
-            List<FoldingProvider> foldingProviders, List<GuardingProvider> guardingProviders) throws IOException {
+            List<FoldingProvider> foldingProviders, List<GuardingProvider> guardingProviders,
+            List<PostProcessingSiever<T>> postProcessors) throws IOException {
 
         this.guardingProviders = guardingProviders;
         this.foldingProviders = foldingProviders;
         ProgressHandle handle = ProgressHandleFactory.createHandle("Building SSCE core");
+        
+        postProcessors.add(new GuardedCodeSnippetsRemover<T>());
+        postProcessors.add(new OverlappingSnippetsRemover<T>());
 
         this.projectContext = projectContext;
         handle.start(100);
@@ -204,7 +211,7 @@ public class SSCEditorCore<T extends Concern> {
         javaDocumentListener = new JavaDocumentListener();
         concernsMappingListener = new ProjectionsChangeListener();
         bindingUtilities
-                = new Binding(new ViewModelCreator(extractor, siever),
+                = new Binding(new ViewModelCreator(extractor, siever, postProcessors),
                         new ProjectionsModelCreator(extractor),
                         guardingProviders);
         this.viewModel.setEditorCookieSieveDocument(ec);
