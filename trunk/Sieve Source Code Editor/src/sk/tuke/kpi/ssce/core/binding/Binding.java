@@ -17,6 +17,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.View;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.core.model.creators.ProjectionsModelCreator;
 import sk.tuke.kpi.ssce.core.model.creators.ViewModelCreator;
 import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
@@ -34,7 +35,7 @@ import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvid
  */
 //SsceIntent:Praca s pomocnym suborom;Prepojenie java suborov s pomocnym suborom .sj;
 @Synchronization
-public class Binding {
+public class Binding<T extends Concern> {
 
     /**
      * Enum typ pre realizaciu aktualizacie pomocneho suboru .sj.
@@ -57,9 +58,9 @@ public class Binding {
     }
     //SsceIntent:Praca s java suborom;
     @Synchronization(direction = Direction.JAVATOSJ)
-    private final ViewModelCreator viewModelCreator;
+    private final ViewModelCreator<T> viewModelCreator;
 
-    private final ProjectionsModelCreator projectionsModelCreator;
+    private final ProjectionsModelCreator<T> projectionsModelCreator;
 
     private final List<GuardingProvider> guardingProviders;
 
@@ -67,7 +68,7 @@ public class Binding {
      * Vytvori nastroj pre realizovanie prepojenia medzi java subormi a pomocnym
      * suborom .sj.
      */
-    public Binding(ViewModelCreator viewModelCreator, ProjectionsModelCreator projectionsModelCreator,
+    public Binding(ViewModelCreator<T> viewModelCreator, ProjectionsModelCreator<T> projectionsModelCreator,
             List<GuardingProvider> guardingProviders) {
         this.viewModelCreator = viewModelCreator;
         this.projectionsModelCreator = projectionsModelCreator;
@@ -81,7 +82,7 @@ public class Binding {
      */
     //SsceIntent:Praca s java suborom;
     @Synchronization(direction = Direction.JAVATOSJ)
-    public ViewModelCreator getViewModelCreator() {
+    public ViewModelCreator<T> getViewModelCreator() {
         return viewModelCreator;
     }
 
@@ -91,7 +92,7 @@ public class Binding {
      * @return nastroj pre pracu s java subormi.
      */
     //SsceIntent:Praca s java suborom;
-    public ProjectionsModelCreator getProjectionsModelCreator() {
+    public ProjectionsModelCreator<T> getProjectionsModelCreator() {
         return projectionsModelCreator;
     }
 
@@ -108,11 +109,11 @@ public class Binding {
     @SievedDocument
     @View(aspect = ViewAspect.PRESENTATION)
     @Guarding
-    public boolean loadSieveDocument(final ViewModel model) {
+    public boolean loadSieveDocument(final ViewModel<T> model) {
         // toto predstavuje vysledny sj dokument
         final StringBuilder buffer = new StringBuilder();
 
-        JavaFile javaFile;
+        JavaFile<T> javaFile;
 
         // zoznam vsetkych sledovanych pozicii v sj subore, sklada ich z fileov a code snipettov
         List<SnippetToBeUpdated> updates = new ArrayList<SnippetToBeUpdated>();
@@ -142,7 +143,7 @@ public class Binding {
                     updates.add(element);
 
 //                    buffer.append("\n");
-                    for (CodeSnippet c : javaFile.getCodeSnippets()) {
+                    for (CodeSnippet<T> c : javaFile.getCodeSnippets()) {
                         element = new SnippetToBeUpdated();
                         element.setCode(c);
                         buffer.append(c.getStartTextForSJDoc());
@@ -240,7 +241,7 @@ public class Binding {
      */
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
-    public boolean updateSieveDocument(UpdateModelAction action, ViewModel model, JavaFile javaFile) {
+    public boolean updateSieveDocument(UpdateModelAction action, ViewModel<T> model, JavaFile<T> javaFile) {
         switch (action) {
             case UPDATE:
                 return updateSieveDocument_UpdateAction(model, javaFile);
@@ -256,12 +257,12 @@ public class Binding {
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
     @Guarding
-    private boolean updateSieveDocument_DeleteAction(ViewModel model, JavaFile javaFile) {
+    private boolean updateSieveDocument_DeleteAction(ViewModel<T> model, JavaFile<T> javaFile) {
 
         if (javaFile == null) {
             return false;
         }
-        JavaFile jF;
+        JavaFile<T> jF;
         if ((jF = model.deleteFile(javaFile)) == null) {
             return false;
         }
@@ -293,24 +294,17 @@ public class Binding {
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         }
-
-//        for (int i = 0; i < panes.length; i++) {
-//            if (jF.getStartFile() <= carets[i]) {
-//                carets[i] = panes[i].getCaretPosition();
-//            }
-//        }
         return false;
-
     }
 
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
     @Guarding
-    private boolean updateSieveDocument_UpdateAction(ViewModel model, JavaFile javaFile) {
+    private boolean updateSieveDocument_UpdateAction(ViewModel<T> model, JavaFile<T> javaFile) {
         if (javaFile == null) {
             return false;
         }
-        JavaFile jF;
+        JavaFile<T> jF;
         if (javaFile.getCodeSnippets() == null || javaFile.getCodeSnippets().isEmpty()) {
             return updateSieveDocument_DeleteAction(model, javaFile);
         } else if ((jF = model.updateFile(javaFile)) == null) {
@@ -348,7 +342,7 @@ public class Binding {
                 updates.add(element);
 
 //                buffer.append("\n");
-                for (CodeSnippet c : jF.getCodeSnippets()) {
+                for (CodeSnippet<T> c : jF.getCodeSnippets()) {
                     element = new SnippetToBeUpdated();
                     element.setCode(c);
                     buffer.append(c.getStartTextForSJDoc());
@@ -437,16 +431,16 @@ public class Binding {
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
     @Guarding
-    private boolean updateSieveDocument_InsertAction(ViewModel model, JavaFile javaFile) {
+    private boolean updateSieveDocument_InsertAction(ViewModel<T> model, JavaFile<T> javaFile) {
         StringBuilder buffer = new StringBuilder();
 
-        JavaFile jF;
+        JavaFile<T> jF;
         if ((jF = model.insertFileToModel(javaFile)) == null) {
             return false;
         }
 
         int startFileOffset;
-        JavaFile fileTmp;
+        JavaFile<T> fileTmp;
         if ((fileTmp = model.getFileNextTo(jF.getFilePath())) != null) {
             startFileOffset = fileTmp.getBeginInSJ();
         } else if ((fileTmp = model.getFilePreviousTo(jF.getFilePath())) != null) {
@@ -481,7 +475,7 @@ public class Binding {
                 updates.add(element);
 
 //                buffer.append("\n");
-                for (CodeSnippet c : jF.getCodeSnippets()) {
+                for (CodeSnippet<T> c : jF.getCodeSnippets()) {
                     element = new SnippetToBeUpdated();
                     element.setCode(c);
                     buffer.append(c.getStartTextForSJDoc());
@@ -543,13 +537,13 @@ public class Binding {
     @SievedDocument
     @Guarding
     @SourceCodeSieving(postProcessing = true)
-    public void processGuardingRequests(StyledDocument document, ViewModel model) {
+    public void processGuardingRequests(StyledDocument document, ViewModel<T> model) {
         List<GuardingRequest> guards = new LinkedList<GuardingRequest>();
         for (GuardingProvider provider : guardingProviders) {
             guards.addAll(provider.createGuards(model));
-            for (JavaFile javaFile : model.getFiles()) {
+            for (JavaFile<T> javaFile : model.getFiles()) {
                 guards.addAll(provider.createGuards(javaFile));
-                for (CodeSnippet snippet : javaFile.getCodeSnippets()) {
+                for (CodeSnippet<T> snippet : javaFile.getCodeSnippets()) {
                     guards.addAll(provider.createGuards(snippet));
                 }
             }
@@ -572,7 +566,7 @@ public class Binding {
      */
     //SsceIntent:Praca s java suborom;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.SJTOJAVA)
-    public boolean updateJavaDocument(ViewModel model, JavaFile javaFile, int offsetJF) {
+    public boolean updateJavaDocument(ViewModel<T> model, JavaFile<T> javaFile, int offsetJF) {
         BaseDocument sieveDoc;
         BaseDocument javaDoc;
         try {
@@ -658,7 +652,7 @@ public class Binding {
             return true;
         }
 
-        for (CodeSnippet code : javaFile.getCodeSnippets()) {
+        for (CodeSnippet<T> code : javaFile.getCodeSnippets()) {
             if (code.getCodeBinding().getStartPositionSieveDocument() <= offsetJF && offsetJF <= code.getCodeBinding().getEndPositionSieveDocument() + 1) {
                 String text;
                 sieveDoc.readLock();

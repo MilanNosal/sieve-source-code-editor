@@ -13,11 +13,11 @@ import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
  * @author Milan Nosal
  */
 @SourceCodeSieving
-public interface CodeSiever {
+public interface CodeSiever<T extends Concern> {
     public boolean sieveCode(
-            Stack<Set<Concern>> contextOfConcerns,
-            CurrentProjection currentProjection,
-            ConcernExtractor concernExtractor,
+            Stack<Set<T>> contextOfConcerns,
+            CurrentProjection<T> currentProjection,
+            ConcernExtractor<T> concernExtractor,
             CompilationInfo info
     );
 }

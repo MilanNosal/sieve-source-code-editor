@@ -16,6 +16,7 @@ import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.CodeAnalysis;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import static sk.tuke.kpi.ssce.core.CompilationUtilities.getCompilationInfo;
 import sk.tuke.kpi.ssce.core.model.availableprojections.JavaFileConcerns;
@@ -26,10 +27,10 @@ import sk.tuke.kpi.ssce.core.model.availableprojections.JavaFileConcernsVisitor;
  * @author Milan Nosal, Matej Nosal
  */
 @CodeAnalysis(output = RepresentationOf.PROJECTION)
-public class ProjectionsModelCreator {
-    private final ConcernExtractor extractor;
+public class ProjectionsModelCreator<T extends Concern> {
+    private final ConcernExtractor<T> extractor;
 
-    public ProjectionsModelCreator(ConcernExtractor extractor) {
+    public ProjectionsModelCreator(ConcernExtractor<T> extractor) {
         this.extractor = extractor;
     }
     
@@ -41,9 +42,9 @@ public class ProjectionsModelCreator {
      */
     //SsceIntent:Model pre mapovanie zamerov;
     @CodeAnalysis(output = RepresentationOf.PROJECTION)
-    public List<JavaFileConcerns> createJavaFilesConcerns(Set<String> javaFilePaths) {
-        List<JavaFileConcerns> javaFiles = new ArrayList<JavaFileConcerns>();
-        JavaFileConcerns jf;
+    public List<JavaFileConcerns<T>> createJavaFilesConcerns(Set<String> javaFilePaths) {
+        List<JavaFileConcerns<T>> javaFiles = new ArrayList<JavaFileConcerns<T>>();
+        JavaFileConcerns<T> jf;
         for (String pathFile : javaFilePaths) {
             jf = createJavaFileConcerns(new File(pathFile));
             if (jf.getCodes() != null) {
@@ -61,13 +62,13 @@ public class ProjectionsModelCreator {
      */
     //SsceIntent:Model pre mapovanie zamerov;
     @CodeAnalysis(output = RepresentationOf.PROJECTION)
-    public JavaFileConcerns createJavaFileConcerns(File javaFile) {
+    public JavaFileConcerns<T> createJavaFileConcerns(File javaFile) {
         FileObject fobj = FileUtil.toFileObject(javaFile);
         DataObject dobj;
         try {
             dobj = DataObject.find(fobj);
             if (dobj != null) {
-                EditorCookie ec = dobj.getCookie(EditorCookie.class);
+                EditorCookie ec = dobj.getLookup().lookup(EditorCookie.class);
                 return extractCodeConcernsFromDocument(ec);
             }
         } catch (DataObjectNotFoundException ex) {
@@ -79,7 +80,7 @@ public class ProjectionsModelCreator {
     //iba pre ziskanie vsetkych zamerov pre dokument
     //SsceIntent:Model pre mapovanie zamerov;
     @CodeAnalysis(output = RepresentationOf.PROJECTION)
-    private JavaFileConcerns extractCodeConcernsFromDocument(EditorCookie ec) {
+    private JavaFileConcerns<T> extractCodeConcernsFromDocument(EditorCookie ec) {
         BaseDocument doc;
         try {
             doc = (BaseDocument) ec.openDocument();
@@ -98,8 +99,8 @@ public class ProjectionsModelCreator {
             }
 
             CompilationUnitTree cu = info.getCompilationUnit();
-            JavaFileConcernsVisitor scanner = new JavaFileConcernsVisitor(extractor, info, doc);
-            javaFile = scanner.scan(cu, new JavaFileConcerns(
+            JavaFileConcernsVisitor<T> scanner = new JavaFileConcernsVisitor<T>(extractor, info, doc);
+            javaFile = scanner.scan(cu, new JavaFileConcerns<T>(
                     FileUtil.toFile(info.getFileObject()).getPath(),
                     info.getFileObject().getName()
             ));

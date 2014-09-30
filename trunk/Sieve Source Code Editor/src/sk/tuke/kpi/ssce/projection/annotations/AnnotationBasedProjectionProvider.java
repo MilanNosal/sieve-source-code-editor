@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import org.netbeans.api.project.Project;
 import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
+import sk.tuke.kpi.ssce.concerns.annotations.AnnotationBasedConcern;
 import sk.tuke.kpi.ssce.concerns.annotations.AnnotationBasedConcernExtractor;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
@@ -31,9 +32,9 @@ import sk.tuke.kpi.ssce.sieving.annotations.AnnotationBasedSiever;
  * @author Milan
  */
 @SSCE_UI(source = "annotations")
-public class AnnotationBasedProjectionProvider extends JPanel implements ProjectionProvider {
+public class AnnotationBasedProjectionProvider extends JPanel implements ProjectionProvider<AnnotationBasedConcern> {
 
-    private SSCEditorCore core;
+    private SSCEditorCore<AnnotationBasedConcern> core;
     private final ConcernsListModel listModel;
     private final Project projectContext;
 
@@ -56,8 +57,8 @@ public class AnnotationBasedProjectionProvider extends JPanel implements Project
             guards.add(new StandardGuardingProvider());
             List<FoldingProvider> folds = new LinkedList<FoldingProvider>();
             folds.add(new StandardFoldingProvider());
-            core = new SSCEditorCore(getProjectContext(), extractor, siever,
-            folds, guards);
+            core = new SSCEditorCore<AnnotationBasedConcern>(getProjectContext(),
+                    extractor, siever, folds, guards);
             core.getConfiguration().addCurrentProjectionChangeListener(siever);
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
@@ -65,7 +66,7 @@ public class AnnotationBasedProjectionProvider extends JPanel implements Project
     }
     
     @Override
-    public SSCEditorCore getSSCECore() {
+    public SSCEditorCore<AnnotationBasedConcern> getSSCECore() {
         return core;
     }
     
@@ -183,16 +184,16 @@ public class AnnotationBasedProjectionProvider extends JPanel implements Project
         core.dispose();
     }
 
-    private class ConcernsListModel extends AbstractListModel implements ProjectionsModel.ConcernsChangeListener {
+    private class ConcernsListModel extends AbstractListModel implements ProjectionsModel.ConcernsChangeListener<AnnotationBasedConcern> {
 
         private final ProjectionsModel model;
         // for buffering
-        private final List<Concern> currentModel;
+        private final List<AnnotationBasedConcern> currentModel;
 
         public ConcernsListModel(ProjectionsModel model) {
             this.model = model;
             this.model.addChangeListener(this);
-            currentModel = new ArrayList<Concern>(model.getAllConcerns());
+            currentModel = new ArrayList<AnnotationBasedConcern>(model.getAllConcerns());
         }
 
         @Override
@@ -206,7 +207,10 @@ public class AnnotationBasedProjectionProvider extends JPanel implements Project
         }
 
         @Override
-        public void concernsChanged(ProjectionsModel.ConcernsChangedEvent event) {
+        public void concernsChanged(ProjectionsModel.ConcernsChangedEvent<AnnotationBasedConcern> event) {
+            for(AnnotationBasedConcern concern : event.getAllConcerns()) {
+                System.out.println(concern.toString());
+            }
             if (event.isConcernsSetChanged()) {
                 int previousSize = currentModel.size();
                 currentModel.clear();

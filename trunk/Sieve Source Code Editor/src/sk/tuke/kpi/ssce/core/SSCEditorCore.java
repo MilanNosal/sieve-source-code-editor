@@ -32,6 +32,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Source;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Type;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import sk.tuke.kpi.ssce.core.binding.JavaFilesMonitor.JavaFileEvent;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
@@ -56,7 +57,7 @@ import sk.tuke.kpi.ssce.nbinterface.SSCESieverTopComponent;
  *
  * @author Matej Nosal
  */
-public class SSCEditorCore {
+public class SSCEditorCore<T extends Concern> {
 
     /**
      * Nastroj pre obojsmerne prepojovanie java suborov s pomocnym suborom.
@@ -100,7 +101,7 @@ public class SSCEditorCore {
      * Aktualna konfiguracia (dopyt) zamerov na zdrojovy kod.
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
-    private final CurrentProjection currentProjection;
+    private final CurrentProjection<T> currentProjection;
 
     private final Project projectContext;
 
@@ -111,7 +112,7 @@ public class SSCEditorCore {
 
     private final PropertyChangeListener closeListener;
 
-    private final CurrentProjection.CurrentProjectionChangeListener currentProjectionChangeListener;
+    private final CurrentProjection.CurrentProjectionChangeListener<T> currentProjectionChangeListener;
     private final List<FoldingProvider> foldingProviders;
     private final List<GuardingProvider> guardingProviders;
 
@@ -119,13 +120,13 @@ public class SSCEditorCore {
      * Model pre synchronizaciu java suborov a pomocneho suboru .sj.
      */
     //SsceIntent:Model pre synchronizaciu kodu;
-    private final ViewModel viewModel;
+    private final ViewModel<T> viewModel;
 
     /**
      * Mapovanie zamerov na fragmenty kodu.
      */
     //SsceIntent:Model pre mapovanie zamerov;Notifikacia na zmeny v priradenych zamerov;
-    private final ProjectionsModel projectionsModel;
+    private final ProjectionsModel<T> projectionsModel;
 
     /**
      * Vytvori jadro editora modulu SSCE. Realizuje zaujmovo-oreientovanu
@@ -139,7 +140,7 @@ public class SSCEditorCore {
      */
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v java zdrojovom kode;Notifikacia na zmeny v pomocnom subore .sj;Monitorovanie java suborov;Model pre mapovanie zamerov;Prepojenie java suborov s pomocnym suborom .sj;Notifikacia na zmeny v priradenych zamerov;Model pre synchronizaciu kodu;
     public SSCEditorCore(final Project projectContext,
-            ConcernExtractor extractor, CodeSiever siever,
+            ConcernExtractor<T> extractor, CodeSiever<T> siever,
             List<FoldingProvider> foldingProviders, List<GuardingProvider> guardingProviders) throws IOException {
 
         this.guardingProviders = guardingProviders;

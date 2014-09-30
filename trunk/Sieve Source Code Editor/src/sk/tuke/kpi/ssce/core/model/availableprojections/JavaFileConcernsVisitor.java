@@ -16,6 +16,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.CodeAnalysis;
 import sk.tuke.kpi.ssce.annotations.concerns.View;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 
 /**
@@ -28,7 +29,7 @@ import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 //SsceIntent:Model pre mapovanie zamerov;Praca s java suborom;
 @View(aspect = ViewAspect.CONCERN_EXTRACTION)
 @CodeAnalysis(output = RepresentationOf.PROJECTION)
-public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, JavaFileConcerns> {
+public class JavaFileConcernsVisitor<T extends Concern> extends TreePathScanner<JavaFileConcerns<T>, JavaFileConcerns<T>> {
 
     private final CompilationInfo info;
     private final CompilationUnitTree cu;
@@ -47,7 +48,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
      * @param doc dokument, z ktoreho sa vytvori mapovania zamerov na fragmenty
      * kodu pre jeden java subor (dokument).
      */
-    public JavaFileConcernsVisitor(ConcernExtractor extractor,
+    public JavaFileConcernsVisitor(ConcernExtractor<T> extractor,
             CompilationInfo info, BaseDocument doc) {
         this.info = info;
         this.cu = info.getCompilationUnit();
@@ -68,7 +69,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
     @CodeAnalysis(output = RepresentationOf.PROJECTION)
     @View(aspect = ViewAspect.CONCERN_EXTRACTION)
     @Override
-    public JavaFileConcerns visitClass(ClassTree node, JavaFileConcerns p) {
+    public JavaFileConcerns<T> visitClass(ClassTree node, JavaFileConcerns<T> p) {
         super.visitClass(node, p);
 
         int start = (int) sp.getStartPosition(cu, node);
@@ -105,7 +106,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
         builder.append(typeClass).append(" ").append(node.getSimpleName());
 
         try {
-            CodeSnippetConcerns code = new CodeSnippetConcerns(p, builder.toString(),
+            CodeSnippetConcerns<T> code = new CodeSnippetConcerns<T>(p, builder.toString(),
                     doc.createPosition(start), end - start,
                     extractor.getConcernsFor(node, info));
 
@@ -128,7 +129,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
     @CodeAnalysis(output = RepresentationOf.PROJECTION)
     @View(aspect = ViewAspect.CONCERN_EXTRACTION)
     @Override
-    public JavaFileConcerns visitMethod(MethodTree node, JavaFileConcerns p) {
+    public JavaFileConcerns<T> visitMethod(MethodTree node, JavaFileConcerns<T> p) {
         super.visitMethod(node, p);
 
         int start = (int) sp.getStartPosition(cu, node);
@@ -149,7 +150,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
         builder.append(")");
 
         try {
-            CodeSnippetConcerns code = new CodeSnippetConcerns(p,
+            CodeSnippetConcerns<T> code = new CodeSnippetConcerns<T>(p,
                     builder.toString(),
                     doc.createPosition(start), end - start,
                     extractor.getConcernsFor(node, info));
@@ -175,7 +176,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
     @CodeAnalysis(output = RepresentationOf.PROJECTION)
     @View(aspect = ViewAspect.CONCERN_EXTRACTION)
     @Override
-    public JavaFileConcerns visitVariable(VariableTree node, JavaFileConcerns p) {
+    public JavaFileConcerns<T> visitVariable(VariableTree node, JavaFileConcerns<T> p) {
         super.visitVariable(node, p);
 
         int start = (int) sp.getStartPosition(cu, node);
@@ -188,7 +189,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
         builder.append(node.getType()).append(" ").append(node.getName());
 
         try {
-            CodeSnippetConcerns code = new CodeSnippetConcerns(p,
+            CodeSnippetConcerns<T> code = new CodeSnippetConcerns<T>(p,
                     builder.toString(),
                     doc.createPosition(start), end - start,
                     extractor.getConcernsFor(node, info));
@@ -210,7 +211,7 @@ public class JavaFileConcernsVisitor extends TreePathScanner<JavaFileConcerns, J
      */
     @CodeAnalysis(output = RepresentationOf.PROJECTION)
     @Override
-    public JavaFileConcerns visitCompilationUnit(CompilationUnitTree node, JavaFileConcerns p) {
+    public JavaFileConcerns<T> visitCompilationUnit(CompilationUnitTree node, JavaFileConcerns<T> p) {
         super.visitCompilationUnit(node, p);
         if (node.getPackageName() != null) {
             p.setPackageName(node.getPackageName().toString());

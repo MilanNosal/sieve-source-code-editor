@@ -5,7 +5,7 @@ import javax.lang.model.type.DeclaredType;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
- * Implementacia searchable pre anotacny typ.
+ * Implementacia concernu pre anotacny typ.
  * @author Milan
  */
 public class AnnotationBasedConcern implements Concern {

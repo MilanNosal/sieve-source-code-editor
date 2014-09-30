@@ -19,11 +19,11 @@ import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
  */
 //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
 @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
-public class CurrentProjection implements Serializable {
+public class CurrentProjection<T extends Concern> implements Serializable {
 
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation=true)
-    private final Set<CurrentProjectionChangeListener> listeners = new HashSet<CurrentProjectionChangeListener>();
+    private final Set<CurrentProjectionChangeListener<T>> listeners = new HashSet<CurrentProjectionChangeListener<T>>();
 
     /**
      * Prida listener, ktory bude reagovat na zmeny v konfiguracii zamerov (dopytu na zdrojovy kod).
@@ -32,7 +32,7 @@ public class CurrentProjection implements Serializable {
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation=true)
-    public boolean addCurrentProjectionChangeListener(CurrentProjectionChangeListener listener) {
+    public boolean addCurrentProjectionChangeListener(CurrentProjectionChangeListener<T> listener) {
         return listeners.add(listener);
     }
 
@@ -43,13 +43,13 @@ public class CurrentProjection implements Serializable {
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation=true)
-    public boolean removeCurrentProjectionChangeListener(CurrentProjectionChangeListener listener) {
+    public boolean removeCurrentProjectionChangeListener(CurrentProjectionChangeListener<T> listener) {
         return listeners.remove(listener);
     }
 
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation=true)
-    private void fireCurrentProjectionChange(CurrentProjectionChangedEvent event) {
+    private void fireCurrentProjectionChange(CurrentProjectionChangedEvent<T> event) {
         if (event == null) {
             return;
         }
@@ -65,7 +65,7 @@ public class CurrentProjection implements Serializable {
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
     @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
     @SourceCodeSieving
-    private final Set<Concern> currentlySelectedConcerns = new HashSet<Concern>();
+    private final Set<T> currentlySelectedConcerns = new HashSet<T>();
 
     /**
      * Vrati zvolene zamery ako nemodifikovatelnu mnozinu.
@@ -74,7 +74,7 @@ public class CurrentProjection implements Serializable {
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
     @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
     @SourceCodeSieving
-    public Set<Concern> getCurrentlySelectedConcerns() {
+    public Set<T> getCurrentlySelectedConcerns() {
         return Collections.unmodifiableSet(currentlySelectedConcerns);
     }
 
@@ -85,7 +85,7 @@ public class CurrentProjection implements Serializable {
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
     @CurrentProjectionChange
-    public void setSelectedConcerns(Set<Concern> selectedConcerns) {
+    public void setSelectedConcerns(Set<T> selectedConcerns) {
         this.currentlySelectedConcerns.clear();
         this.currentlySelectedConcerns.addAll(selectedConcerns);
         fireCurrentProjectionChange(new CurrentProjectionChangedEvent(this));
@@ -115,7 +115,7 @@ public class CurrentProjection implements Serializable {
     
     @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
     @CurrentProjectionChange
-    public void setSelectedConcerns(Set<Concern> selectedConcerns, Map<String, Object> params) {
+    public void setSelectedConcerns(Set<T> selectedConcerns, Map<String, Object> params) {
         this.currentlySelectedConcerns.clear();
         this.currentlySelectedConcerns.addAll(selectedConcerns);
         this.params = params;
@@ -133,17 +133,17 @@ public class CurrentProjection implements Serializable {
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation = true)
-    public static class CurrentProjectionChangedEvent {
+    public static class CurrentProjectionChangedEvent<T extends Concern> {
 
         @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
-        private final CurrentProjection newCurrentProjection;
+        private final CurrentProjection<T> newCurrentProjection;
 
         /**
          * Vytvori event pre zmenu v konfiguracii zamerov.
          * @param newProjection nova konfiguracia zamerov.
          */
         @CurrentProjectionChange(propagation = true)
-        public CurrentProjectionChangedEvent(CurrentProjection newProjection) {
+        public CurrentProjectionChangedEvent(CurrentProjection<T> newProjection) {
             this.newCurrentProjection = newProjection;
         }
 
@@ -151,7 +151,7 @@ public class CurrentProjection implements Serializable {
          * Vrati novu konfiguraciu zamerov.
          * @return novu konfiguraciu zamerov.
          */
-        public CurrentProjection getConfiguration() {
+        public CurrentProjection<T> getConfiguration() {
             return newCurrentProjection;
         }
     }
@@ -162,12 +162,12 @@ public class CurrentProjection implements Serializable {
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation = true)
     @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
-    public static interface CurrentProjectionChangeListener extends EventListener {
+    public static interface CurrentProjectionChangeListener<T extends Concern> extends EventListener {
 
         /**
          * Volana ked dojde k zmene v konfiguracii zamerov.
          * @param event event
          */
-        public void projectionChanged(CurrentProjection.CurrentProjectionChangedEvent event);
+        public void projectionChanged(CurrentProjection.CurrentProjectionChangedEvent<T> event);
     }
 }

@@ -3,6 +3,7 @@ package sk.tuke.kpi.ssce.core.model.view.postprocessing.providers;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import sk.tuke.kpi.ssce.core.model.view.CodeSnippet;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
@@ -42,7 +43,7 @@ public class StandardGuardingProvider implements GuardingProvider {
     }
 
     @Override
-    public List<GuardingRequest> createGuards(JavaFile javaFile) {
+    public List<GuardingRequest> createGuards(JavaFile<? extends Concern> javaFile) {
         List<GuardingRequest> guards = new ArrayList<GuardingRequest>();
         guards.add(GuardingRequest.create(
                 javaFile.getBeginInSJ(), javaFile.getImportsBinding().getStartPositionSieveDocument()

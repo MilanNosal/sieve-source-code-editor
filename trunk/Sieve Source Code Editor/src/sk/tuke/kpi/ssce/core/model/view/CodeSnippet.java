@@ -1,10 +1,13 @@
 package sk.tuke.kpi.ssce.core.model.view;
 
+import java.util.Set;
+import java.util.Stack;
 import org.netbeans.editor.BaseDocument;
 import sk.tuke.kpi.ssce.annotations.concerns.Model;
 import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  * Trieda modeluje fragment kodu.
@@ -13,7 +16,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
  */
 //SsceIntent:Model pre synchronizaciu kodu;
 @Model(model = RepresentationOf.VIEW)
-public class CodeSnippet implements Comparable<CodeSnippet> {
+public class CodeSnippet<T extends Concern> implements Comparable<CodeSnippet> {
 
 //    private static final String START_TEXT = "#code :\n";
     //SsceIntent:Konstanta;
@@ -35,6 +38,8 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
     private final String codeElementName;
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
     private final String elementType;
+    
+    private final Stack<Set<T>> snippetsConcerns;
 
     private final BaseDocument document;
 
@@ -70,16 +75,21 @@ public class CodeSnippet implements Comparable<CodeSnippet> {
      */
     //SsceIntent:Zobrazenie fragmentu kodu v pomocnom subore;
     public CodeSnippet(String initialTab, String codeContext, String codeElementName,
-            String elementType, BaseDocument document) {
+            String elementType, Stack<Set<T>> concerns, BaseDocument document) {
         this.codeContext = codeContext;
         this.codeElementName = codeElementName;
         this.elementType = elementType;
         this.initialTab = initialTab;
         this.document = document;
+        this.snippetsConcerns = concerns;
     }
 
     public BaseDocument getDocument() {
         return document;
+    }
+
+    public Stack<Set<T>> getSnippetsConcerns() {
+        return snippetsConcerns;
     }
 
     /**

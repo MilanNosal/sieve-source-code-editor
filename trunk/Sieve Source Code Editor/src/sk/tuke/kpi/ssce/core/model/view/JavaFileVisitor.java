@@ -24,8 +24,6 @@ import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
-import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.FoldingProvider;
-import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvider;
 
 /**
  * Trieda reprezentuje skener prechadzajuci celou strukturou kompilacneho stromu
@@ -39,21 +37,21 @@ import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvid
 @View(aspect = ViewAspect.PRESENTATION)
 @SourceCodeSieving
 @CodeAnalysis(output = RepresentationOf.VIEW)
-public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
+public class JavaFileVisitor<T extends Concern> extends TreePathScanner<JavaFile<T>, JavaFile<T>> {
 
     private final CompilationInfo info;
     private final CompilationUnitTree cu;
     @View(aspect = ViewAspect.CONCERN_EXTRACTION)
-    private final ConcernExtractor extractor;
+    private final ConcernExtractor<T> extractor;
     private final SourcePositions sp;
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
-    private final CurrentProjection currentProjection;
+    private final CurrentProjection<T> currentProjection;
     private final BaseDocument doc;
     private final Stack<String> contextCounter;
-    private final Stack<Set<Concern>> contextOfConcerns;
+    private final Stack<Set<T>> contextOfConcerns;
     
     @SourceCodeSieving
-    private final CodeSiever codeSiever;
+    private final CodeSiever<T> codeSiever;
 
     /**
      * Vytvori novy skener pre kompilacne info a strom, dokument, konfiguraciu
@@ -67,8 +65,8 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
      * kodu na zaklade konfiguracie (dopytu) zamerov.
      */
     public JavaFileVisitor(CompilationInfo info,
-            ConcernExtractor extractor, CodeSiever siever,
-            CurrentProjection currentProjection, BaseDocument doc) {
+            ConcernExtractor<T> extractor, CodeSiever<T> siever,
+            CurrentProjection<T> currentProjection, BaseDocument doc) {
         this.info = info;
         this.cu = info.getCompilationUnit();
         this.sp = info.getTrees().getSourcePositions();
@@ -77,7 +75,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
         this.codeSiever = siever;
         this.doc = doc;
         this.contextCounter = new Stack<String>();
-        this.contextOfConcerns = new Stack<Set<Concern>>();
+        this.contextOfConcerns = new Stack<Set<T>>();
     }
 
     /**
@@ -92,7 +90,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
     @View(aspect = ViewAspect.PRESENTATION)
     @CodeAnalysis(output = RepresentationOf.VIEW)
     @Override
-    public JavaFile visitClass(ClassTree node, JavaFile p) {
+    public JavaFile visitClass(ClassTree node, JavaFile<T> p) {
         String nameElement = node.getSimpleName().toString();
 
         int start = (int) sp.getStartPosition(cu, node);
@@ -115,7 +113,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
                 } else {
                     System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
                 }
-                CodeSnippet codeSnippet = new CodeSnippet(initialTab, getContextForCode(), nameElement, "TYPE", doc);
+                CodeSnippet<T> codeSnippet = new CodeSnippet<T>(initialTab, getContextForCode(), nameElement, "TYPE", (Stack<Set<T>>) contextOfConcerns.clone(), doc);
                 codeSnippet.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
                 p.getCodeSnippets().add(codeSnippet);
             } catch (BadLocationException ex) {
@@ -139,7 +137,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
     @View(aspect = ViewAspect.PRESENTATION)
     @CodeAnalysis(output = RepresentationOf.VIEW)
     @Override
-    public JavaFile visitMethod(MethodTree node, JavaFile p) {
+    public JavaFile<T> visitMethod(MethodTree node, JavaFile<T> p) {
 
         StringBuilder builder = new StringBuilder();
         builder.append(node.getName()).append("(");
@@ -175,7 +173,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
                 } else {
                     System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
                 }
-                CodeSnippet code = new CodeSnippet(initialTab, getContextForCode(), nameElement, "METHOD", doc);
+                CodeSnippet<T> code = new CodeSnippet<T>(initialTab, getContextForCode(), nameElement, "METHOD", (Stack<Set<T>>) contextOfConcerns.clone(), doc);
                 code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
                 p.getCodeSnippets().add(code);
             } catch (BadLocationException ex) {
@@ -199,7 +197,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
     @View(aspect = ViewAspect.PRESENTATION)
     @CodeAnalysis(output = RepresentationOf.VIEW)
     @Override
-    public JavaFile visitVariable(VariableTree node, JavaFile p) {
+    public JavaFile<T> visitVariable(VariableTree node, JavaFile<T> p) {
         String nameElement = node.getName().toString();
 
         int start = (int) sp.getStartPosition(cu, node);
@@ -222,7 +220,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
                 } else {
                     System.err.println("Something went terribly wrong with the initial tab setting. lineNum: " + lineNum + " lineOffset: " + lineOffset + " start: " + start);
                 }
-                CodeSnippet code = new CodeSnippet(initialTab, getContextForCode(), nameElement, "FIELD", doc);
+                CodeSnippet<T> code = new CodeSnippet<T>(initialTab, getContextForCode(), nameElement, "FIELD", (Stack<Set<T>>) contextOfConcerns.clone(), doc);
                 code.setCodeBinding(new BindingPositions(doc.createPosition(start), end - start));
                 p.getCodeSnippets().add(code);
             } catch (BadLocationException ex) {
@@ -245,7 +243,7 @@ public class JavaFileVisitor extends TreePathScanner<JavaFile, JavaFile> {
     @View(aspect = ViewAspect.PRESENTATION)
     @CodeAnalysis(output = RepresentationOf.VIEW)
     @Override
-    public JavaFile visitCompilationUnit(CompilationUnitTree node, JavaFile p) {
+    public JavaFile<T> visitCompilationUnit(CompilationUnitTree node, JavaFile<T> p) {
         super.visitCompilationUnit(node, p);
         if (node.getPackageName() != null) {
             p.setPackageName(node.getPackageName().toString());
