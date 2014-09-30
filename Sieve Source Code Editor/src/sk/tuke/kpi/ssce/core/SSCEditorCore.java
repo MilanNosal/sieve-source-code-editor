@@ -488,19 +488,18 @@ public class SSCEditorCore<T extends Concern> {
         }
 
         private void processEvent(final DocumentEvent e) {
+            if (!active) {
+                return;
+            }
             SwingUtilities.invokeLater(new Runnable() {
 
                 @Override
                 public void run() {
-                    if (!active) {
-                        return;
-                    }
                     JavaFile javaFile = viewModel.getFileBySJOffset(e.getOffset());
                     if (javaFile == null) {
                         return;
                     }
 
-                    //System.out.println("Time = " + new Date().getTime());
                     javaDocumentListener.addIgnoredFilePath(javaFile.getFilePath());
 
                     bindingUtilities.updateJavaDocument(viewModel, javaFile, e.getOffset());
