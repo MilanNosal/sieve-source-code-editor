@@ -3,7 +3,9 @@ package sk.tuke.kpi.ssce.core.model.availableprojections;
 import java.util.*;
 import sk.tuke.kpi.ssce.annotations.concerns.AvailableProjectionsChange;
 import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
+import sk.tuke.kpi.ssce.annotations.concerns.Listening;
 import sk.tuke.kpi.ssce.annotations.concerns.Model;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.MonitoringRole;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
@@ -18,7 +20,11 @@ public class ProjectionsModel<T extends Concern> {
     //SsceIntent:Model pre mapovanie zamerov;
     private final List<JavaFileConcerns<T>> files = new ArrayList<JavaFileConcerns<T>>();
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
+    
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
+    @AvailableProjectionsChange(propagation = true)
     private final Set<ConcernsChangeListener<T>> listeners = new HashSet<ConcernsChangeListener<T>>();
+    
     private boolean outOfDate;
 
     /**
@@ -49,6 +55,8 @@ public class ProjectionsModel<T extends Concern> {
      * @return true, ak listener bol pridany, inak false.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
+    @AvailableProjectionsChange(propagation = true)
     public boolean addChangeListener(ConcernsChangeListener<T> listener) {
         return listeners.add(listener);
     }
@@ -59,6 +67,8 @@ public class ProjectionsModel<T extends Concern> {
      * @return true, ak listener bol odobrany, inak false.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
+    @AvailableProjectionsChange(propagation = true)
     public boolean removeChangeListener(ConcernsChangeListener<T> listener) {
         return listeners.remove(listener);
     }

@@ -1,11 +1,10 @@
 package sk.tuke.kpi.ssce.sieving.interfaces;
 
-import java.util.List;
 import org.netbeans.editor.BaseDocument;
-import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
+import sk.tuke.kpi.ssce.annotations.concerns.PostProcessing;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.PostProcessingType;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.core.model.view.JavaFile;
-import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
 
 /**
  * Provides additional sieving. The codeSnippets in the JavaFile can overlapp each other, the task
@@ -14,7 +13,7 @@ import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
  * none of the snippets should be included.
  * @author Milan
  */
-@SourceCodeSieving(postProcessing = true)
+@PostProcessing(type = PostProcessingType.SIEVING)
 public interface PostProcessingSiever<T extends Concern> {
     public JavaFile<T> process(JavaFile<T> file, BaseDocument doc);
 }

@@ -13,7 +13,7 @@ import javax.swing.AbstractListModel;
 import javax.swing.JPanel;
 import org.netbeans.api.project.Project;
 import org.openide.util.Exceptions;
-import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
+import sk.tuke.kpi.ssce.annotations.concerns.AnnotationBasedProjections;
 import sk.tuke.kpi.ssce.concerns.annotations.AnnotationBasedConcern;
 import sk.tuke.kpi.ssce.concerns.annotations.AnnotationBasedConcernExtractor;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
@@ -25,8 +25,6 @@ import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.GuardingProvid
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.providers.StandardFoldingProvider;
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.providers.StandardGuardingProvider;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
-import sk.tuke.kpi.ssce.sieving.GuardedCodeSnippetsRemover;
-import sk.tuke.kpi.ssce.sieving.OverlappingSnippetsRemover;
 import sk.tuke.kpi.ssce.sieving.annotations.AnnotationBasedSiever;
 import sk.tuke.kpi.ssce.sieving.interfaces.PostProcessingSiever;
 
@@ -34,7 +32,7 @@ import sk.tuke.kpi.ssce.sieving.interfaces.PostProcessingSiever;
  *
  * @author Milan
  */
-@SSCE_UI(source = "annotations")
+@AnnotationBasedProjections
 public class AnnotationBasedProjectionProvider extends JPanel implements ProjectionProvider<AnnotationBasedConcern> {
 
     private SSCEditorCore<AnnotationBasedConcern> core;

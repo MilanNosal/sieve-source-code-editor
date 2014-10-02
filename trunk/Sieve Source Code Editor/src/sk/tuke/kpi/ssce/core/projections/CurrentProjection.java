@@ -9,8 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjectionChange;
 import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
+import sk.tuke.kpi.ssce.annotations.concerns.Listening;
 import sk.tuke.kpi.ssce.annotations.concerns.ProjectionComposition;
 import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.MonitoringRole;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
@@ -23,6 +25,7 @@ public class CurrentProjection<T extends Concern> implements Serializable {
 
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation=true)
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
     private final Set<CurrentProjectionChangeListener<T>> listeners = new HashSet<CurrentProjectionChangeListener<T>>();
 
     /**
@@ -32,6 +35,7 @@ public class CurrentProjection<T extends Concern> implements Serializable {
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation=true)
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
     public boolean addCurrentProjectionChangeListener(CurrentProjectionChangeListener<T> listener) {
         return listeners.add(listener);
     }
@@ -43,12 +47,14 @@ public class CurrentProjection<T extends Concern> implements Serializable {
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation=true)
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
     public boolean removeCurrentProjectionChangeListener(CurrentProjectionChangeListener<T> listener) {
         return listeners.remove(listener);
     }
 
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation=true)
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
     private void fireCurrentProjectionChange(CurrentProjectionChangedEvent<T> event) {
         if (event == null) {
             return;

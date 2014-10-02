@@ -10,12 +10,13 @@ import javax.swing.text.StyledDocument;
 import org.netbeans.editor.BaseDocument;
 import org.openide.text.NbDocument;
 import org.openide.util.Exceptions;
-import sk.tuke.kpi.ssce.annotations.concerns.Guarding;
+import sk.tuke.kpi.ssce.annotations.concerns.PostProcessing;
 import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
 import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.View;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.PostProcessingType;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.core.model.creators.ProjectionsModelCreator;
@@ -62,6 +63,7 @@ public class Binding<T extends Concern> {
 
     private final ProjectionsModelCreator<T> projectionsModelCreator;
 
+    @PostProcessing(type = PostProcessingType.GUARDING)
     private final List<GuardingProvider> guardingProviders;
 
     /**
@@ -108,7 +110,7 @@ public class Binding<T extends Concern> {
     @SourceCodeSieving
     @SievedDocument
     @View(aspect = ViewAspect.PRESENTATION)
-    @Guarding
+    @PostProcessing(type = PostProcessingType.GUARDING)
     public boolean loadSieveDocument(final ViewModel<T> model) {
         // toto predstavuje vysledny sj dokument
         final StringBuilder buffer = new StringBuilder();
@@ -148,9 +150,6 @@ public class Binding<T extends Concern> {
                         element.setCode(c);
                         buffer.append(c.getStartTextForSJDoc());
                         element.setStart(buffer.length());
-                        System.out.println(">> start " + c.getCodeBinding().getStartPositionJavaDocument());
-                        System.out.println(">> length " +  c.getCodeBinding().getLengthBindingAreaJavaDocument());
-                        System.out.println(">>> " + c.getFullElementName());
                         buffer.append(doc.getText(c.getCodeBinding().getStartPositionJavaDocument(), c.getCodeBinding().getLengthBindingAreaJavaDocument()));
 
                         element.setEnd(buffer.length() - 1);
@@ -206,7 +205,7 @@ public class Binding<T extends Concern> {
 
 //                System.out.println(model.toString());
                 if (!model.isInitialized()) {
-                    throw new RuntimeException("Model is not consistent!");
+                    throw new RuntimeException("Model is not initialized!");
                 }
                 //TODO: dokoncit
                 processGuardingRequests((StyledDocument) sieveDocument, model);
@@ -259,7 +258,7 @@ public class Binding<T extends Concern> {
 
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
-    @Guarding
+    @PostProcessing(type = PostProcessingType.GUARDING)
     private boolean updateSieveDocument_DeleteAction(ViewModel<T> model, JavaFile<T> javaFile) {
 
         if (javaFile == null) {
@@ -302,7 +301,7 @@ public class Binding<T extends Concern> {
 
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
-    @Guarding
+    @PostProcessing(type = PostProcessingType.GUARDING)
     private boolean updateSieveDocument_UpdateAction(ViewModel<T> model, JavaFile<T> javaFile) {
         if (javaFile == null) {
             return false;
@@ -433,7 +432,7 @@ public class Binding<T extends Concern> {
 
     //SsceIntent:Zobrazenie projekcie kodu v pomocnom subore;Zobrazenie importov v pomocnom subore;Zobrazenie fragmentu kodu v pomocnom subore;Model pre synchronizaciu kodu;
     @Synchronization(direction = Direction.JAVATOSJ)
-    @Guarding
+    @PostProcessing(type = PostProcessingType.GUARDING)
     private boolean updateSieveDocument_InsertAction(ViewModel<T> model, JavaFile<T> javaFile) {
         StringBuilder buffer = new StringBuilder();
 
@@ -538,8 +537,7 @@ public class Binding<T extends Concern> {
     }
 
     @SievedDocument
-    @Guarding
-    @SourceCodeSieving(postProcessing = true)
+    @PostProcessing(type = PostProcessingType.GUARDING)
     public void processGuardingRequests(StyledDocument document, ViewModel<T> model) {
         List<GuardingRequest> guards = new LinkedList<GuardingRequest>();
         for (GuardingProvider provider : guardingProviders) {

@@ -7,8 +7,10 @@ import java.util.NoSuchElementException;
 import javax.swing.JComponent;
 import javax.swing.event.ChangeListener;
 import org.openide.WizardDescriptor;
+import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
 
+@SSCE_UI
 public final class ProjectionWizardIterator implements WizardDescriptor.Iterator<WizardDescriptor> {
 
     // Example of invoking this wizard:

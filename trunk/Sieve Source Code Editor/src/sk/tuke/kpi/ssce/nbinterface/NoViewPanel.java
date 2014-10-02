@@ -1,14 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package sk.tuke.kpi.ssce.nbinterface;
+
+import sk.tuke.kpi.ssce.annotations.concerns.ProjectionSelectionUI;
 
 /**
  *
  * @author Milan
  */
+@ProjectionSelectionUI
 public class NoViewPanel extends javax.swing.JPanel {
 
     /**

@@ -15,8 +15,10 @@ import org.openide.filesystems.*;
 import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
-import sk.tuke.kpi.ssce.annotations.concerns.ChangeMonitoring;
+import sk.tuke.kpi.ssce.annotations.concerns.DocumentChangeMonitoring;
 import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
+import sk.tuke.kpi.ssce.annotations.concerns.Listening;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.MonitoringRole;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Source;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Type;
 
@@ -26,8 +28,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.Type;
  *
  * @author Matej Nosal, Milan Nosal
  */
-//SsceIntent:Monitorovanie java suborov;
-@ChangeMonitoring(monitoredSource = Source.JAVA)
+@DocumentChangeMonitoring(monitoredSource = Source.JAVA)
 public class JavaFilesMonitor {
 
 //    private final String[] rootSourcePaths;
@@ -35,17 +36,20 @@ public class JavaFilesMonitor {
      * Premenna indikujuca ukoncenie monitorovania java suborov.
      */
     private boolean stop = false;
+    
     /**
      * Dokumenty, ktore su monitorovane.
      */
     //SsceIntent:Monitorovanie zmien v java dokumentoch;
-    @ChangeMonitoring(monitoredSource = Source.JAVA)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA)
     private final HashMap<String, Document> monitoredDocuments = new HashMap<String, Document>();
+    
     /**
      * Listener pre zmeny v suboroch.
      */
     //SsceIntent:Monitorovanie zmien v java suboroch;
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.FILES_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.FILES_CHANGE)
+    @Listening(monitoringRole = MonitoringRole.LISTENER)
     private final FileChangeListener changeListener = new FileChangeListener() {
 
         @Override
@@ -96,11 +100,7 @@ public class JavaFilesMonitor {
         //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
         @Override
         public void fileChanged(FileEvent fe) {
-            // TODO: toto by malo byt obsolete
-//            if ("java".equalsIgnoreCase(fe.getFile().getExt())) {
-//                JavaFilesMonitor.JavaFileEvent event = new JavaFilesMonitor.JavaFileEvent(FileUtil.toFile(fe.getFile()), JavaFilesMonitor.JavaFileEvent.Type.DOCUMENT_CHANGE_EVENT, fe.getTime());
-//                notifierTask.notifyEvent(event);
-//            }
+            
         }
 
         //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
@@ -160,7 +160,8 @@ public class JavaFilesMonitor {
      * Listener pre zmeny v dokumentoch.
      */
     //SsceIntent:Monitorovanie zmien v java dokumentoch;
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
+    @Listening(monitoringRole = MonitoringRole.LISTENER)
     private final DocumentListener changeDocumentListener = new DocumentListener() {
 
         @Override
@@ -196,7 +197,8 @@ public class JavaFilesMonitor {
      * Listenery, ktore bude JavaFilesMonitor informovat o zmenach.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
     private final Set<JavaFilesMonitor.JavaFileChangeListener> javaFileListeners = new HashSet<JavaFilesMonitor.JavaFileChangeListener>();
     /**
      * Priecinok, ktory je monitorovany.
@@ -224,7 +226,7 @@ public class JavaFilesMonitor {
      * @param properties hodnoty, ktore budu pridane do dokumentov.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;Monitorovanie java suborov;Monitorovanie zmien v java suboroch;Monitorovanie zmien v java dokumentoch;
-    @ChangeMonitoring(monitoredSource = Source.JAVA)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA)
     public JavaFilesMonitor(String path, Map<Object, Object> properties) {
         propertiesForDocs = properties;
         notifierThread = new Thread(notifierTask);
@@ -309,7 +311,7 @@ public class JavaFilesMonitor {
      * @return aktualne monitorovane java subory.
      */
     //SsceIntent:Monitorovanie zmien v java dokumentoch;
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
     public Set<String> getMonitoringJavaFilePaths() {
         return monitoredDocuments.keySet();
     }
@@ -393,7 +395,8 @@ public class JavaFilesMonitor {
      * @param listener listener sledujuci zmeny v java suborch.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;    
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
     public void addJavaFileListener(JavaFilesMonitor.JavaFileChangeListener listener) {
         this.javaFileListeners.add(listener);
     }
@@ -404,7 +407,8 @@ public class JavaFilesMonitor {
      * @param listener listener sledujuci zmeny v java suborch.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
     public void removeJavaFileListener(JavaFilesMonitor.JavaFileChangeListener listener) {
         this.javaFileListeners.remove(listener);
     }
@@ -441,7 +445,8 @@ public class JavaFilesMonitor {
      * namiesto mnohych.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;Monitorovanie java suborov;
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    @Listening
     private class NotifierTask implements Runnable {
 
         private final ArrayBlockingQueue<JavaFileEvent> queue;
@@ -500,6 +505,8 @@ public class JavaFilesMonitor {
          *
          * @param event udalost
          */
+        
+        @Listening
         private void notifyListeners(JavaFileEvent event) {
             switch (event.getTypeEvent()) {
                 case CREATE_EVENT:
@@ -553,7 +560,7 @@ public class JavaFilesMonitor {
      * Trieda predstavuje udalost na akukolvek zmenu java kodu (java suboru).
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;Monitorovanie java suborov;
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
     public static class JavaFileEvent {
 
         /**
@@ -618,7 +625,8 @@ public class JavaFilesMonitor {
      * Listener pre zmeny v java kode (java suboroch).
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;Monitorovanie java suborov;
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.DOCUMENT_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    @Listening
     public static interface JavaFileChangeListener extends EventListener {
 
         /**

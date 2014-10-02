@@ -13,8 +13,6 @@ import org.netbeans.api.lexer.Token;
 import org.netbeans.api.lexer.TokenHierarchy;
 import org.netbeans.api.lexer.TokenSequence;
 import org.netbeans.editor.BaseDocument;
-import org.netbeans.editor.GuardedDocument;
-import org.netbeans.editor.MarkBlock;
 import org.openide.cookies.EditorCookie;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
@@ -23,8 +21,12 @@ import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.CodeAnalysis;
 import sk.tuke.kpi.ssce.annotations.concerns.ImportsManagement;
+import sk.tuke.kpi.ssce.annotations.concerns.PostProcessing;
 import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
+import sk.tuke.kpi.ssce.annotations.concerns.View;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.PostProcessingType;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import static sk.tuke.kpi.ssce.core.CompilationUtilities.getCompilationInfo;
@@ -43,10 +45,17 @@ import sk.tuke.kpi.ssce.sieving.interfaces.PostProcessingSiever;
  */
 //SsceIntent:Praca s java suborom;
 @CodeAnalysis(output = RepresentationOf.VIEW)
+@View(aspect = ViewAspect.CONCERN_EXTRACTION)
+@SourceCodeSieving
 public class ViewModelCreator<T extends Concern> {
-
+    
+    @View(aspect = ViewAspect.CONCERN_EXTRACTION)
     private final ConcernExtractor<T> extractor;
+
+    @SourceCodeSieving
     private final CodeSiever<T> siever;
+    
+    @PostProcessing(type = PostProcessingType.SIEVING)
     private final List<PostProcessingSiever> postProcessors;
 
     public ViewModelCreator(ConcernExtractor<T> extractor, CodeSiever<T> siever,
@@ -115,6 +124,7 @@ public class ViewModelCreator<T extends Concern> {
     @CodeAnalysis(output = RepresentationOf.VIEW)
     @SourceCodeSieving
     @ImportsManagement
+    @PostProcessing(type = PostProcessingType.SIEVING)
     private JavaFile<T> extractViewFromDocument(EditorCookie ec, CurrentProjection<T> configuration) {
         BaseDocument doc;
         try {

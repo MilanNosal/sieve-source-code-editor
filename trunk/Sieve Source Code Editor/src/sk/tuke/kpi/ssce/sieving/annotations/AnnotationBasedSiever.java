@@ -12,6 +12,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import org.netbeans.api.java.source.CompilationInfo;
+import sk.tuke.kpi.ssce.annotations.concerns.AnnotationBasedProjections;
 import sk.tuke.kpi.ssce.concerns.annotations.AnnotationBasedConcern;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
@@ -21,6 +22,7 @@ import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
  *
  * @author Milan
  */
+@AnnotationBasedProjections
 public class AnnotationBasedSiever implements CodeSiever<AnnotationBasedConcern>,
         CurrentProjection.CurrentProjectionChangeListener<AnnotationBasedConcern> {
 

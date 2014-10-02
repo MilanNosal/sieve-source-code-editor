@@ -13,6 +13,7 @@ import org.netbeans.api.lexer.TokenSequence;
 import org.netbeans.editor.BaseDocument;
 import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.CodeAnalysis;
+import sk.tuke.kpi.ssce.annotations.concerns.Model;
 import sk.tuke.kpi.ssce.annotations.concerns.View;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;

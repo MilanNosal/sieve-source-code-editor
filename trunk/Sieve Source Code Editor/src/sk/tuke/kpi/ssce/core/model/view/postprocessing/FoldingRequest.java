@@ -5,13 +5,17 @@ import org.netbeans.api.editor.fold.FoldType;
 import org.netbeans.spi.editor.fold.FoldHierarchyTransaction;
 import org.netbeans.spi.editor.fold.FoldOperation;
 import org.openide.util.Exceptions;
-import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
+import sk.tuke.kpi.ssce.annotations.concerns.PostProcessing;
+import sk.tuke.kpi.ssce.annotations.concerns.View;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.PostProcessingType;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
 
 /**
  *
  * @author Milan Nosáľ
  */
-@SourceCodeSieving(postProcessing = true)
+@PostProcessing(type = PostProcessingType.FOLDING)
+@View(aspect = ViewAspect.PRESENTATION)
 public class FoldingRequest {
     private int startOffset;
     private int endOffset;

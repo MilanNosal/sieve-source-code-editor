@@ -2,8 +2,8 @@ package sk.tuke.kpi.ssce.annotations.concerns;
 
 /**
  *
- * @author Milan Nosal
+ * @author Milan
  */
-public @interface Guarding {
+public @interface IntegrationWithNetBeans {
     
 }

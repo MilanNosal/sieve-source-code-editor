@@ -2,12 +2,14 @@ package sk.tuke.kpi.ssce.concerns.annotations;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.DeclaredType;
+import sk.tuke.kpi.ssce.annotations.concerns.AnnotationBasedProjections;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 
 /**
  * Implementacia concernu pre anotacny typ.
  * @author Milan
  */
+@AnnotationBasedProjections
 public class AnnotationBasedConcern implements Concern {
     
     // so far only for later

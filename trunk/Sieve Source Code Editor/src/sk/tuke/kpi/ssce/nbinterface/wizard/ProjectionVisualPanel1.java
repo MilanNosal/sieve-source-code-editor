@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.List;
 import javax.swing.JPanel;
 import org.openide.util.Lookup;
+import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
 
+@SSCE_UI
 public final class ProjectionVisualPanel1 extends JPanel {
 
     private final Collection<? extends ProjectionProviderFactory> availableImplementations;
