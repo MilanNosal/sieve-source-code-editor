@@ -1,14 +1,16 @@
 package sk.tuke.kpi.ssce.core.model.view.postprocessing;
 
-import sk.tuke.kpi.ssce.annotations.concerns.Guarding;
-import sk.tuke.kpi.ssce.annotations.concerns.SourceCodeSieving;
+import sk.tuke.kpi.ssce.annotations.concerns.PostProcessing;
+import sk.tuke.kpi.ssce.annotations.concerns.View;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.PostProcessingType;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
 
 /**
  *
  * @author Milan Nosáľ
  */
-@SourceCodeSieving(postProcessing = true)
-@Guarding
+@PostProcessing(type = PostProcessingType.FOLDING)
+@View(aspect = ViewAspect.PRESENTATION)
 public class GuardingRequest {
     private int startOffset;
     private int endOffset;

@@ -13,6 +13,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import org.netbeans.api.java.source.CompilationInfo;
 import org.netbeans.editor.BaseDocument;
+import sk.tuke.kpi.ssce.annotations.concerns.AnnotationBasedProjections;
 import sk.tuke.kpi.ssce.concerns.interfaces.ConcernExtractor;
 import sk.tuke.kpi.ssce.core.CompilationUtilities;
 
@@ -20,6 +21,7 @@ import sk.tuke.kpi.ssce.core.CompilationUtilities;
  *
  * @author Milan
  */
+@AnnotationBasedProjections
 public class AnnotationBasedConcernExtractor implements ConcernExtractor<AnnotationBasedConcern> {
     
     @Override
@@ -76,8 +78,6 @@ public class AnnotationBasedConcernExtractor implements ConcernExtractor<Annotat
         CompilationInfo info = CompilationUtilities.getCompilationInfo(document);
         Trees trees = info.getTrees();
         TreePath path = TreePath.getPath(info.getCompilationUnit(), node);
-        System.out.println(">>>> " + document.toString());
-        System.out.println(">>>> " + node.toString());
         return trees.getElement(path);
     }
     

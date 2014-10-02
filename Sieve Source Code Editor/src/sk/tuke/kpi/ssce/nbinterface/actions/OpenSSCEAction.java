@@ -2,7 +2,6 @@ package sk.tuke.kpi.ssce.nbinterface.actions;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import static java.lang.System.out;
 import java.text.MessageFormat;
 import javax.swing.Action;
 import org.netbeans.api.project.Project;
@@ -19,8 +18,9 @@ import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
 import org.openide.util.NbBundle.Messages;
-import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+import sk.tuke.kpi.ssce.annotations.concerns.IntegrationWithNetBeans;
+import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 import sk.tuke.kpi.ssce.nbinterface.SSCESieverTopComponent;
 import sk.tuke.kpi.ssce.nbinterface.wizard.ProjectionWizardIterator;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
@@ -36,6 +36,8 @@ import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
     @ActionReference(path = "Projects/Actions", position = 475, separatorBefore = 450)
 })
 @Messages("CTL_OpenSSCEAction=Open SSCE")
+@IntegrationWithNetBeans
+@SSCE_UI
 public final class OpenSSCEAction implements ActionListener {
 
     /**

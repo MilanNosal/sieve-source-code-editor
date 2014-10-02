@@ -13,6 +13,10 @@ import org.netbeans.spi.editor.fold.FoldHierarchyTransaction;
 import org.netbeans.spi.editor.fold.FoldManager;
 import org.netbeans.spi.editor.fold.FoldManagerFactory;
 import org.netbeans.spi.editor.fold.FoldOperation;
+import sk.tuke.kpi.ssce.annotations.concerns.PostProcessing;
+import sk.tuke.kpi.ssce.annotations.concerns.View;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.PostProcessingType;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
 import sk.tuke.kpi.ssce.core.Constants;
 import sk.tuke.kpi.ssce.core.SSCEditorCore;
@@ -23,6 +27,8 @@ import sk.tuke.kpi.ssce.core.model.view.postprocessing.FoldingRequest;
 import sk.tuke.kpi.ssce.core.model.view.postprocessing.interfaces.FoldingProvider;
 import sk.tuke.kpi.ssce.core.projections.CurrentProjection;
 
+@PostProcessing(type = PostProcessingType.FOLDING)
+@View(aspect = ViewAspect.PRESENTATION)
 public class SSCEFoldManager implements FoldManager, CurrentProjection.CurrentProjectionChangeListener {
 
     private FoldOperation operation;

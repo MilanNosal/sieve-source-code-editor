@@ -6,6 +6,7 @@ import com.sun.source.tree.VariableTree;
 import java.util.Set;
 import org.netbeans.api.java.source.CompilationInfo;
 import org.netbeans.editor.BaseDocument;
+import sk.tuke.kpi.ssce.annotations.concerns.CodeAnalysis;
 import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection;
 import sk.tuke.kpi.ssce.annotations.concerns.View;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
@@ -16,6 +17,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.ViewAspect;
  */
 @CurrentProjection
 @View(aspect = ViewAspect.CONCERN_EXTRACTION)
+@CodeAnalysis
 public interface ConcernExtractor<T extends Concern> {
     
     public T getNilConcern();

@@ -17,11 +17,13 @@ import org.netbeans.modules.parsing.spi.Parser;
 import org.netbeans.modules.parsing.spi.ParserFactory;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
+import sk.tuke.kpi.ssce.annotations.concerns.CodeAnalysis;
 
 /**
  * XXX: toto treba zefektivnit
  * @author Matej Nosal, Milan Nosal
  */
+@CodeAnalysis
 public class CompilationUtilities {
     /**
      * Extrahuje kompilacne info pre zdrojovy kod v dokumente doc. Predtym to tahal

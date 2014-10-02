@@ -1,5 +1,6 @@
 package sk.tuke.kpi.ssce.annotations.concerns;
 
+import sk.tuke.kpi.ssce.annotations.concerns.enums.MonitoringRole;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Source;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Type;
 
@@ -8,7 +9,7 @@ import sk.tuke.kpi.ssce.annotations.concerns.enums.Type;
  * .sj files.
  * @author Milan Nosal
  */
-public @interface ChangeMonitoring {
+public @interface DocumentChangeMonitoring {
     public Source monitoredSource();
     
     public Type typeOfEvents() default Type.GENERAL_CHANGE;

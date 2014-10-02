@@ -5,6 +5,7 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import sk.tuke.kpi.ssce.annotations.concerns.ProjectionSelectionUI;
 import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
 
@@ -33,6 +34,7 @@ import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
     "HINT_SSCESieverTopComponent=This is a SSCESiever window"
 })
 @SSCE_UI
+@ProjectionSelectionUI
 public final class SSCESieverTopComponent extends TopComponent {
 
     private ProjectionProvider currentProjectionProvider;

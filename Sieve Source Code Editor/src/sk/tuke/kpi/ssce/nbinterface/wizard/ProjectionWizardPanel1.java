@@ -4,7 +4,9 @@ import javax.swing.event.ChangeListener;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.HelpCtx;
+import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 
+@SSCE_UI
 public class ProjectionWizardPanel1 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
     /**

@@ -41,8 +41,10 @@ public class JavaFileVisitor<T extends Concern> extends TreePathScanner<JavaFile
 
     private final CompilationInfo info;
     private final CompilationUnitTree cu;
+    
     @View(aspect = ViewAspect.CONCERN_EXTRACTION)
     private final ConcernExtractor<T> extractor;
+    
     private final SourcePositions sp;
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
     private final CurrentProjection<T> currentProjection;

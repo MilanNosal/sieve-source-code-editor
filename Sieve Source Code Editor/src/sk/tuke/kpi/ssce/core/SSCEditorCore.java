@@ -24,12 +24,18 @@ import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
-import sk.tuke.kpi.ssce.annotations.concerns.ChangeMonitoring;
+import sk.tuke.kpi.ssce.annotations.concerns.AvailableProjectionsChange;
+import sk.tuke.kpi.ssce.annotations.concerns.DocumentChangeMonitoring;
 import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjectionChange;
 import sk.tuke.kpi.ssce.annotations.concerns.Disposal;
+import sk.tuke.kpi.ssce.annotations.concerns.Listening;
+import sk.tuke.kpi.ssce.annotations.concerns.Model;
+import sk.tuke.kpi.ssce.annotations.concerns.PostProcessing;
 import sk.tuke.kpi.ssce.annotations.concerns.SievedDocument;
 import sk.tuke.kpi.ssce.annotations.concerns.Synchronization;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Direction;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.PostProcessingType;
+import sk.tuke.kpi.ssce.annotations.concerns.enums.RepresentationOf;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Source;
 import sk.tuke.kpi.ssce.annotations.concerns.enums.Type;
 import sk.tuke.kpi.ssce.concerns.interfaces.Concern;
@@ -66,26 +72,33 @@ public class SSCEditorCore<T extends Concern> {
      * Nastroj pre obojsmerne prepojovanie java suborov s pomocnym suborom.
      */
     //SsceIntent:Prepojenie java suborov s pomocnym suborom .sj;
+    @Synchronization
     private final Binding bindingUtilities;
     /**
      * Nastroj na monitorovanie zmien v zdrojovom kode.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;Monitorovanie java suborov;
+    @AvailableProjectionsChange
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA)
+    @Listening
     private final JavaFilesMonitor javaFilesMonitor;
     /**
      * Listener pre zmeny v pomocnom súbore .sj.
      */
     //SsceIntent:Notifikacia na zmeny v pomocnom subore .sj;
+    @DocumentChangeMonitoring(monitoredSource = Source.SJ)
     private final SieveDocumentListener sieveDocumentListener;
     /**
      * Listener pre zmeny v java zdrojovom kode.
      */
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA)
     private final JavaDocumentListener javaDocumentListener;
     /**
      * Listener pre zmenu v mapovani zamerov na fragmenty kodu.
      */
     //SsceIntent:Notifikacia na zmeny v priradenych zamerov;
+    @CurrentProjectionChange
     private final ProjectionsChangeListener concernsMappingListener;
     /**
      * Dokument pre predstavujuci pomocny subor.
@@ -104,6 +117,7 @@ public class SSCEditorCore<T extends Concern> {
      * Aktualna konfiguracia (dopyt) zamerov na zdrojovy kod.
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
+    @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
     private final CurrentProjection<T> currentProjection;
 
     private final Project projectContext;
@@ -115,20 +129,27 @@ public class SSCEditorCore<T extends Concern> {
 
     private final PropertyChangeListener closeListener;
 
+    @CurrentProjectionChange
     private final CurrentProjection.CurrentProjectionChangeListener<T> currentProjectionChangeListener;
+    
+    @PostProcessing(type = PostProcessingType.FOLDING)
     private final List<FoldingProvider> foldingProviders;
+    
+    @PostProcessing(type = PostProcessingType.GUARDING)
     private final List<GuardingProvider> guardingProviders;
 
     /**
      * Model pre synchronizaciu java suborov a pomocneho suboru .sj.
      */
     //SsceIntent:Model pre synchronizaciu kodu;
+    @Model(model = RepresentationOf.VIEW)
     private final ViewModel<T> viewModel;
 
     /**
      * Mapovanie zamerov na fragmenty kodu.
      */
     //SsceIntent:Model pre mapovanie zamerov;Notifikacia na zmeny v priradenych zamerov;
+    @Model(model = RepresentationOf.PROJECTION)
     private final ProjectionsModel<T> projectionsModel;
 
     /**
@@ -266,10 +287,12 @@ public class SSCEditorCore<T extends Concern> {
         handle.finish();
     }
 
+    @PostProcessing(type = PostProcessingType.FOLDING)
     public List<FoldingProvider> getFoldingProviders() {
         return foldingProviders;
     }
 
+    @PostProcessing(type = PostProcessingType.GUARDING)
     public List<GuardingProvider> getGuardingProviders() {
         return guardingProviders;
     }
@@ -279,6 +302,7 @@ public class SSCEditorCore<T extends Concern> {
     }
 
     //SsceIntent:Monitorovanie java suborov;Dopyt na zdrojovy kod, konfiguracia zamerov;Prepojenie java suborov s pomocnym suborom .sj;Model pre synchronizaciu kodu;
+    @Synchronization(direction = Direction.JAVATOSJ)
     private boolean reloadModel() {
 //        model.setFiles(this.javaFileUtilities.createJavaFiles(new String[]{projectContext.getProjectDirectory().getPath() + File.separator + "src"}, null));
         viewModel.setFiles(this.bindingUtilities.getViewModelCreator().createJavaFiles(this.javaFilesMonitor.getMonitoringJavaFilePaths(), currentProjection));
@@ -286,6 +310,7 @@ public class SSCEditorCore<T extends Concern> {
     }
 
     //SsceIntent:Monitorovanie java suborov;Model pre mapovanie zamerov;
+    @AvailableProjectionsChange
     private boolean reloadCurrentProjections() {
         projectionsModel.setFiles(this.bindingUtilities.getProjectionsModelCreator().createJavaFilesConcerns(this.javaFilesMonitor.getMonitoringJavaFilePaths()));
         return true;
@@ -293,6 +318,7 @@ public class SSCEditorCore<T extends Concern> {
 
     //SsceIntent:Praca s pomocnym suborom;Notifikacia na zmeny v pomocnom subore .sj;
     @SievedDocument
+    @Synchronization(direction = Direction.JAVATOSJ)
     private boolean reloadSieveDocument() {
         SwingUtilities.invokeLater(new Runnable() {
 
@@ -305,7 +331,8 @@ public class SSCEditorCore<T extends Concern> {
         });
         return true;
     }
-
+    
+    @Synchronization(direction = Direction.JAVATOSJ)
     public void tryToSaveModifiedJavaFiles() {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -462,7 +489,7 @@ public class SSCEditorCore<T extends Concern> {
 
     //SsceIntent:Notifikacia na zmeny v pomocnom subore .sj;
     @Synchronization(direction = Direction.SJTOJAVA)
-    @ChangeMonitoring(monitoredSource = Source.SJ, typeOfEvents = Type.GENERAL_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.SJ, typeOfEvents = Type.GENERAL_CHANGE)
     private class SieveDocumentListener implements DocumentListener {
 
         private boolean active = true;
@@ -520,7 +547,7 @@ public class SSCEditorCore<T extends Concern> {
 
     //SsceIntent:Notifikacia na zmeny v java zdrojovom kode;
     @Synchronization(direction = Direction.JAVATOSJ)
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
     private class JavaDocumentListener implements JavaFilesMonitor.JavaFileChangeListener {
 
         private final Map<String, Long> ignoreList = new HashMap<String, Long>();
@@ -597,8 +624,8 @@ public class SSCEditorCore<T extends Concern> {
     }
 
     //SsceIntent:Model pre mapovanie zamerov;Notifikacia na zmeny v priradenych zamerov;
-    @CurrentProjectionChange(propagation = true)
-    @ChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
+    @AvailableProjectionsChange
+    @DocumentChangeMonitoring(monitoredSource = Source.JAVA, typeOfEvents = Type.GENERAL_CHANGE)
     private class ProjectionsChangeListener implements JavaFilesMonitor.JavaFileChangeListener {
 
         @Override
