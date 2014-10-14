@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import sk.tuke.kpi.ssce.annotations.concerns.CurrentProjectionChange;
@@ -26,7 +28,7 @@ public class CurrentProjection<T extends Concern> implements Serializable {
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @CurrentProjectionChange(propagation=true)
     @Listening(monitoringRole = MonitoringRole.PUBLISHER)
-    private final Set<CurrentProjectionChangeListener<T>> listeners = new HashSet<CurrentProjectionChangeListener<T>>();
+    private final List<CurrentProjectionChangeListener<T>> listeners = new LinkedList<CurrentProjectionChangeListener<T>>();
 
     /**
      * Prida listener, ktory bude reagovat na zmeny v konfiguracii zamerov (dopytu na zdrojovy kod).
@@ -38,6 +40,13 @@ public class CurrentProjection<T extends Concern> implements Serializable {
     @Listening(monitoringRole = MonitoringRole.PUBLISHER)
     public boolean addCurrentProjectionChangeListener(CurrentProjectionChangeListener<T> listener) {
         return listeners.add(listener);
+    }
+    
+    @CurrentProjectionChange(propagation=true)
+    @Listening(monitoringRole = MonitoringRole.PUBLISHER)
+    public boolean addCurrentProjectionChangeListener(int position, CurrentProjectionChangeListener<T> listener) {
+        listeners.add(position, listener);
+        return true;
     }
 
     /**
@@ -85,19 +94,6 @@ public class CurrentProjection<T extends Concern> implements Serializable {
     }
 
     /**
-     * Nastavi novu mnozinu zamerov.
-     * @param selectedConcerns nova mnozina zamerov.
-     */
-    //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
-    @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
-    @CurrentProjectionChange
-    public void setSelectedConcerns(Set<T> selectedConcerns) {
-        this.currentlySelectedConcerns.clear();
-        this.currentlySelectedConcerns.addAll(selectedConcerns);
-        fireCurrentProjectionChange(new CurrentProjectionChangedEvent(this));
-    }
-
-    /**
      * Vrati mod konfiguracie zamerov (dopytu).
      * @return mod konfiguracie zamerov (dopytu).
      */
@@ -108,12 +104,28 @@ public class CurrentProjection<T extends Concern> implements Serializable {
     }
 
     /**
-     * Nastavi parametre konfiguracie zamerov (dopytu).
+     * Nastavi novu mnozinu zamerov.
+     * @param selectedConcerns nova mnozina zamerov.
+     */
+    //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
+    @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
+    @CurrentProjectionChange
+    @Deprecated
+    public void setSelectedConcerns(Set<T> selectedConcerns) {
+        this.currentlySelectedConcerns.clear();
+        this.currentlySelectedConcerns.addAll(selectedConcerns);
+        fireCurrentProjectionChange(new CurrentProjectionChangedEvent(this));
+    }
+
+    /**
+     * Nastavi parametre konfiguracie zamerov (dopytu). Prefer 
+     * setSelectedConcerns(Set<T> selectedConcerns, Map<String, Object> params).
      * @param params mod konfiguracie zamerov (dopytu).
      */
     //SsceIntent:Notifikacia zmeny dopytu na zdrojovy kod;
     @sk.tuke.kpi.ssce.annotations.concerns.CurrentProjection
     @CurrentProjectionChange
+    @Deprecated
     public void setParams(Map<String, Object> params) {
         this.params = params;
         fireCurrentProjectionChange(new CurrentProjectionChangedEvent(this));
