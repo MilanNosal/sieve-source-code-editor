@@ -26,9 +26,85 @@ import sk.tuke.kpi.ssce.sieving.interfaces.CodeSiever;
 public class AnnotationBasedSiever implements CodeSiever<AnnotationBasedConcern>,
         CurrentProjection.CurrentProjectionChangeListener<AnnotationBasedConcern> {
 
-    private final Map<String, Map<String, Object>> cache = new HashMap<String, Map<String, Object>>();
+    private AnnotationValue getAV(Map<? extends ExecutableElement, ? extends AnnotationValue> params, ExecutableElement get) {
+        for (ExecutableElement e : params.keySet()) {
+            if (e.getSimpleName().toString().equals(get.getSimpleName().toString())) {
+                return params.get(e);
+            }
+        }
+        return null;
+    }
+
+    public static enum OPERATION {
+
+        EQUALS("equals"),
+        EQUALS_IC("equalsIC"),
+        STARTS_WITH("startsWith"),
+        ENDS_WITH("endsWith"),
+        CONTAINS("contains"),
+        MATCHES("matches"),
+        TRY_GT(">"),
+        TRY_GE(">="),
+        TRY_LT("<"),
+        TRY_LE("<=");
+
+        OPERATION(String representation) {
+            this.representation = representation;
+        }
+
+        private final String representation;
+
+        public String getRepresentation() {
+            return this.representation;
+        }
+
+        public static OPERATION getValueOf(String operation) {
+            for (OPERATION op : OPERATION.values()) {
+                if (op.representation.equals(operation)) {
+                    return op;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return this.representation;
+        }
+    }
+
+    public static class Parameter {
+
+        private final String path;
+        private final OPERATION operation;
+        private final Object value;
+
+        public Parameter(String path, OPERATION operation, Object value) {
+            this.path = path;
+            this.operation = operation;
+            this.value = value;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public OPERATION getOperation() {
+            return operation;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return "Parameter{" + "path='" + path + "', operation=" + operation + ", value='" + value + "'}'";
+        }
+    }
+
+    private final Map<String, List<Parameter>> cache = new HashMap<String, List<Parameter>>();
     private final Map<String, List<ExecutableElement>> cache2 = new HashMap<String, List<ExecutableElement>>();
-    
 
     @Override
     public boolean sieveCode(
@@ -40,7 +116,7 @@ public class AnnotationBasedSiever implements CodeSiever<AnnotationBasedConcern>
 
         boolean match;
 
-        Set<AnnotationBasedConcern> selectedConcerns 
+        Set<AnnotationBasedConcern> selectedConcerns
                 = new HashSet<AnnotationBasedConcern>(currentProjection.getCurrentlySelectedConcerns());
         if (selectedConcerns.isEmpty()) {
             match = false;
@@ -79,10 +155,11 @@ public class AnnotationBasedSiever implements CodeSiever<AnnotationBasedConcern>
         return match;
     }
 
-    private boolean conforms(List<AnnotationBasedConcern> codeConcerns, 
-            Map<String, Object> params, AnnotationBasedConcern selectedConcern, CompilationInfo info) {
+    private boolean conforms(
+            List<AnnotationBasedConcern> codeConcerns, Map<String, Object> params,
+            AnnotationBasedConcern selectedConcern, CompilationInfo info) {
         boolean match;
-        
+
         int indexOfTested = codeConcerns.lastIndexOf(selectedConcern);
         if (indexOfTested == -1) {
             return false;
@@ -93,7 +170,7 @@ public class AnnotationBasedSiever implements CodeSiever<AnnotationBasedConcern>
 
         String prefix = ((AnnotationBasedConcern) selectedConcern).getUniquePresentation();
 
-        Map<String, Object> parameters = cache.get(prefix);
+        List<Parameter> parameters = cache.get(prefix);
         if (parameters == null || parameters.isEmpty()) {
             return true;
         }
@@ -102,23 +179,25 @@ public class AnnotationBasedSiever implements CodeSiever<AnnotationBasedConcern>
 
         if ("AND".equals(params.get("mode"))) {
             match = true; // otocit ak co i len jedno neplati
-            for (String key : parameters.keySet()) {
-                if (!cache2.containsKey(key)) {
-                    buildPath(key, info.getElements().getElementValuesWithDefaults(concernTested.getAnnotation()), info);
+            for (Parameter p : parameters) {
+                String pathOfparamater = p.path;
+                if (!cache2.containsKey(pathOfparamater)) {
+                    buildPath(pathOfparamater, info.getElements().getElementValuesWithDefaults(concernTested.getAnnotation()), info, concernTested);
                 }
-                path = cache2.get(key);
-                if (path == null || !parameterConforms(path, parameters.get(key), concernTested, info)) {
+                path = cache2.get(pathOfparamater);
+                if (path == null || !parameterConforms(path, p, concernTested, info)) {
                     return false;
                 }
             }
         } else {
             match = false; // otocit ak aspon jedno plati
-            for (String key : parameters.keySet()) {
-                if (!cache2.containsKey(key)) {
-                    buildPath(key, info.getElements().getElementValuesWithDefaults(concernTested.getAnnotation()), info);
+            for (Parameter p : parameters) {
+                String pathOfparamater = p.path;
+                if (!cache2.containsKey(pathOfparamater)) {
+                    buildPath(pathOfparamater, info.getElements().getElementValuesWithDefaults(concernTested.getAnnotation()), info, concernTested);
                 }
-                path = cache2.get(key);
-                if (path != null && parameterConforms(path, parameters.get(key), concernTested, info)) {
+                path = cache2.get(pathOfparamater);
+                if (path != null && parameterConforms(path, p, concernTested, info)) {
                     return true;
                 }
             }
@@ -126,30 +205,66 @@ public class AnnotationBasedSiever implements CodeSiever<AnnotationBasedConcern>
         return match;
     }
 
-    private boolean parameterConforms(List<ExecutableElement> path, Object value, AnnotationBasedConcern concern, CompilationInfo info) {
+    private boolean parameterConforms(List<ExecutableElement> path, Parameter parameter, AnnotationBasedConcern concern, CompilationInfo info) {
         if (path.isEmpty()) {
             return true;
         }
-        
+
         Map<? extends ExecutableElement, ? extends AnnotationValue> params = info.getElements().getElementValuesWithDefaults(concern.getAnnotation());
         AnnotationValue av = null;
         int size = path.size();
         for (int i = 0; i < size; i++) {
-            av = params.get(path.get(i));
+            av = getAV(params, path.get(i)); //params.get(path.get(i));
             if (i < size - 1) {
                 params = info.getElements().getElementValuesWithDefaults((AnnotationMirror) av);
             }
         }
-        
+
         if (av == null) {
             System.out.println(">>>>>>>>>>>>> Something really weird just happened.");
             return false;
         }
-        
-        return value.toString().equals(av.getValue().toString());
+        try {
+            switch (parameter.operation) {
+                case EQUALS: {
+                    return parameter.value.toString().equals(av.getValue().toString());
+                }
+                case EQUALS_IC: {
+                    return parameter.value.toString().equalsIgnoreCase(av.getValue().toString());
+                }
+                case CONTAINS: {
+                    return av.getValue().toString().contains(parameter.value.toString());
+                }
+                case STARTS_WITH: {
+                    return av.getValue().toString().startsWith(parameter.value.toString());
+                }
+                case ENDS_WITH: {
+                    return av.getValue().toString().endsWith(parameter.value.toString());
+                }
+                case MATCHES: {
+                    return av.getValue().toString().matches(parameter.value.toString());
+                }
+                case TRY_GT: {
+                    return Long.valueOf(av.getValue().toString()) > Long.valueOf(parameter.value.toString());
+                }
+                case TRY_GE: {
+                    return Long.valueOf(av.getValue().toString()) >= Long.valueOf(parameter.value.toString());
+                }
+                case TRY_LT: {
+                    return Long.valueOf(av.getValue().toString()) < Long.valueOf(parameter.value.toString());
+                }
+                case TRY_LE: {
+                    return Long.valueOf(av.getValue().toString()) <= Long.valueOf(parameter.value.toString());
+                }
+                default:
+                    throw new RuntimeException("Encountered unknown enum constant for annotation value comparison.");
+            }
+        } catch (NumberFormatException ex) {
+            return false;
+        }
     }
 
-    private void buildPath(String key, Map<? extends ExecutableElement, ? extends AnnotationValue> params, CompilationInfo info) {
+    private void buildPath(String key, Map<? extends ExecutableElement, ? extends AnnotationValue> params, CompilationInfo info, AnnotationBasedConcern ab) {
         try {
             List<ExecutableElement> retVal = new LinkedList<ExecutableElement>();
 
@@ -207,20 +322,14 @@ public class AnnotationBasedSiever implements CodeSiever<AnnotationBasedConcern>
     public void projectionChanged(CurrentProjection.CurrentProjectionChangedEvent<AnnotationBasedConcern> event) {
         cache2.clear();
         cache.clear();
-        
+
         Map<String, Object> params = event.getConfiguration().getParams();
-        
+
         for (AnnotationBasedConcern concern : event.getConfiguration().getCurrentlySelectedConcerns()) {
-            Map<String, Object> concernParams = new HashMap<String, Object>();
-            String prefix = ((AnnotationBasedConcern) concern).getUniquePresentation();
-            for (String key : params.keySet()) {
-                if(key.startsWith(prefix)) {
-                    concernParams.put(key, params.get(key));
-                }
-            }
-            if (!concernParams.isEmpty()) {
-                cache.put(prefix, concernParams);
-            }
+            //Map<String, Object> concernParams = new HashMap<String, Object>();
+            String prefix = concern.getUniquePresentation();
+            List<Parameter> parameters = (List<Parameter>) params.get(prefix);
+            cache.put(prefix, parameters);
         }
     }
 
