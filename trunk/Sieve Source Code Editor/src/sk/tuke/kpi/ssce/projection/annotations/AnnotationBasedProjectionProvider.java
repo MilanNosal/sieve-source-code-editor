@@ -46,8 +46,8 @@ public class AnnotationBasedProjectionProvider extends javax.swing.JPanel implem
     public AnnotationBasedProjectionProvider(Project projectContext) {
         this.projectContext = projectContext;
         startProjection();
-        tableModel.setNewContent(core.getAvailableProjections().getAllConcerns());
-        core.getAvailableProjections().addChangeListener(tableModel);
+        tableModel.setNewContent(core.getProjectionsModel().getAllConcerns());
+        core.getProjectionsModel().addChangeListener(tableModel);
         initComponents();
         TableColumn sportColumn = annotationsTable.getColumnModel().getColumn(2);
         JComboBox comboBox = new JComboBox();
@@ -76,7 +76,7 @@ public class AnnotationBasedProjectionProvider extends javax.swing.JPanel implem
                     = new LinkedList<PostProcessingSiever<AnnotationBasedConcern>>();
             core = new SSCEditorCore<AnnotationBasedConcern>(getProjectContext(),
                     extractor, siever, folds, guards, postProcessors);
-            core.getConfiguration().addCurrentProjectionChangeListener(0, siever);
+            core.getCurrentProjection().addCurrentProjectionChangeListener(0, siever);
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         }
@@ -100,6 +100,11 @@ public class AnnotationBasedProjectionProvider extends javax.swing.JPanel implem
     @Override
     public void dispose() {
         core.dispose();
+    }
+    
+    @Override
+    public String getDisplayName() {
+        return "Annotation-based projections";
     }
 
     /**
@@ -181,7 +186,7 @@ public class AnnotationBasedProjectionProvider extends javax.swing.JPanel implem
         }
 
         params.put("mode", andCheckBox.isSelected() ? "AND" : "OR");
-        core.getConfiguration().setSelectedConcerns(selectedConcerns, params);
+        core.getCurrentProjection().setSelectedConcerns(selectedConcerns, params);
     }//GEN-LAST:event_sieveButtonActionPerformed
 
 

@@ -28,6 +28,8 @@ public interface ProjectionProvider<T extends Concern> {
     
     public SSCEditorCore<T> getSSCECore();
     
+    public String getDisplayName();
+    
     /**
      * Each projection provider is required to implement a dispose method that
      * invalidates the projectional editing of a single project, the dispose

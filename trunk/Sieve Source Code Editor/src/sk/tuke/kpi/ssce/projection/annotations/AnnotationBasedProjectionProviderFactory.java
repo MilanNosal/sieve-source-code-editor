@@ -25,4 +25,8 @@ public class AnnotationBasedProjectionProviderFactory
         return new AnnotationBasedProjectionProvider(projectContext);
     }
 
+    @Override
+    public String toString() {
+        return getDisplayName();
+    }
 }
