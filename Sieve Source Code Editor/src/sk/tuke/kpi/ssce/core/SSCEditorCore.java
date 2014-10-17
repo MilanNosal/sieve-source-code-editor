@@ -454,7 +454,7 @@ public class SSCEditorCore<T extends Concern> {
      * @return konfiguraciu zamerov (dopyt na kod).
      */
     //SsceIntent:Dopyt na zdrojovy kod, konfiguracia zamerov;
-    public CurrentProjection getConfiguration() {
+    public CurrentProjection<T> getCurrentProjection() {
         return currentProjection;
     }
 
@@ -464,7 +464,7 @@ public class SSCEditorCore<T extends Concern> {
      * @return model pre prepojenie java suborov s pomocnym suborom.
      */
     //SsceIntent:Model pre synchronizaciu kodu;
-    public ViewModel getModel() {
+    public ViewModel getViewModel() {
         return viewModel;
     }
 
@@ -483,8 +483,16 @@ public class SSCEditorCore<T extends Concern> {
      * @return mapovanie zazmerov na fragmenty kodu.
      */
     //SsceIntent:Model pre mapovanie zamerov;
-    public ProjectionsModel getAvailableProjections() {
+    public ProjectionsModel getProjectionsModel() {
         return projectionsModel;
+    }
+
+    public BaseDocument getSieveDocument() {
+        return sieveDocument;
+    }
+
+    public boolean isDisposed() {
+        return disposed;
     }
 
     //SsceIntent:Notifikacia na zmeny v pomocnom subore .sj;

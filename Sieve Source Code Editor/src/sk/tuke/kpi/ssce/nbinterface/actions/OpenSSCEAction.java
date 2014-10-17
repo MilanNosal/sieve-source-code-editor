@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.MessageFormat;
 import javax.swing.Action;
+import javax.swing.SwingUtilities;
 import org.netbeans.api.project.Project;
 import org.netbeans.api.project.ProjectUtils;
 import org.openide.DialogDisplayer;
@@ -22,6 +23,7 @@ import org.openide.windows.WindowManager;
 import sk.tuke.kpi.ssce.annotations.concerns.IntegrationWithNetBeans;
 import sk.tuke.kpi.ssce.annotations.concerns.SSCE_UI;
 import sk.tuke.kpi.ssce.nbinterface.SSCESieverTopComponent;
+import sk.tuke.kpi.ssce.nbinterface.options.SSCEOptions;
 import sk.tuke.kpi.ssce.nbinterface.wizard.ProjectionWizardIterator;
 import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
 
@@ -40,6 +42,8 @@ import sk.tuke.kpi.ssce.projection.provider.ProjectionProviderFactory;
 @SSCE_UI
 public final class OpenSSCEAction implements ActionListener {
 
+    private static Project currentlyProjected;
+
     /**
      * Premenna uchovavajuca kontext (projekt). Sluzi pre testovanie, či zvoleny
      * projekt je podporovany.
@@ -56,34 +60,53 @@ public final class OpenSSCEAction implements ActionListener {
         this.context = context;
     }
 
-//    @Override
-//    public boolean isEnabled() {
-//        return false;
-//    }
     /**
-     * Metoda realizuje spustenie SSCE editora. Vytvori SsceCore a vlozi ho do
-     * dokumentu pomocneho suboru ako proprety.
+     * Metoda realizuje spustenie SSCE editora.
      *
      * @param ev udalost, ktora vyvolala tuto akciu.
      */
     //SsceIntent:Spustenie SSC Editora;
+    @Override
     public void actionPerformed(ActionEvent ev) {
-        ProjectionWizardIterator iterator = new ProjectionWizardIterator();
-        WizardDescriptor wiz = new WizardDescriptor(iterator);
-        // {0} will be replaced by WizardDescriptor.Panel.getComponent().getName()
-        // {1} will be replaced by WizardDescriptor.Iterator.name()
-        wiz.setTitleFormat(new MessageFormat("{0}"));
-        wiz.setTitle("Start Projection for " + ProjectUtils.getInformation(context).getDisplayName());
-        if (DialogDisplayer.getDefault().notify(wiz) == WizardDescriptor.FINISH_OPTION) {
-            ProjectionProviderFactory factory = iterator.getProviderFactory();
-            SSCESieverTopComponent outputWindow = (SSCESieverTopComponent) WindowManager.getDefault().findTopComponent("SSCESieverTopComponent");
-            if (outputWindow != null && !outputWindow.isOpened()) {
-                outputWindow.open();
+        if (context.equals(currentlyProjected)) {
+            // simple workaround not to allow rerun of the projections upon the same project
+            return;
+        }
+        ProjectionProviderFactory factory = null;
+        if (SSCEOptions.useDefaultImplementation()) {
+            factory = SSCEOptions.getDefaultImplementation();
+        } else {
+            ProjectionWizardIterator iterator = new ProjectionWizardIterator();
+            WizardDescriptor wiz = new WizardDescriptor(iterator);
+            // {0} will be replaced by WizardDescriptor.Panel.getComponent().getName()
+            // {1} will be replaced by WizardDescriptor.Iterator.name()
+            wiz.setTitleFormat(new MessageFormat("{0}"));
+            wiz.setTitle("Start Projection for " + ProjectUtils.getInformation(context).getDisplayName());
+            if (DialogDisplayer.getDefault().notify(wiz) == WizardDescriptor.FINISH_OPTION) {
+                factory = iterator.getProviderFactory();
             }
-            if (outputWindow != null) {
-                outputWindow.requestActive();
-                outputWindow.startProjection(factory.createProjectionProviderFor(context));
-            }
+        }
+        if (factory != null) {
+            currentlyProjected = context;
+            startProjections(factory);
+        }
+    }
+
+    private void startProjections(final ProjectionProviderFactory factory) {
+        final SSCESieverTopComponent outputWindow = (SSCESieverTopComponent) WindowManager.getDefault().findTopComponent("SSCESieverTopComponent");
+        if (outputWindow != null && !outputWindow.isOpened()) {
+            outputWindow.open();
+        }
+        if (outputWindow != null) {
+            outputWindow.dispose();
+            outputWindow.requestActive();
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    outputWindow.startProjection(factory.createProjectionProviderFor(context));
+                }
+            });
+            
         }
     }
 

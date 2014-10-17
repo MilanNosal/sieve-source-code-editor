@@ -1,5 +1,7 @@
 package sk.tuke.kpi.ssce.nbinterface;
 
+import java.util.LinkedList;
+import java.util.List;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -37,6 +39,8 @@ import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
 @ProjectionSelectionUI
 public final class SSCESieverTopComponent extends TopComponent {
 
+    private final List<ProjectionsChangeListener> listeners = new LinkedList<ProjectionsChangeListener>();
+
     private ProjectionProvider currentProjectionProvider;
 
     public SSCESieverTopComponent() {
@@ -46,21 +50,52 @@ public final class SSCESieverTopComponent extends TopComponent {
     }
 
     public void startProjection(ProjectionProvider provider) {
+        ProjectionProvider oldProvider = currentProjectionProvider;
         if (currentProjectionProvider != null) {
             currentProjectionProvider.dispose();
         }
         currentProjectionProvider = provider;
         this.content.setViewportView(currentProjectionProvider.getView());
+        fireCurrentProjectionChange(
+                new ProjectionsChangedEvent(
+                        oldProvider, currentProjectionProvider, ProjectionsChangedEvent.Type.PROJECTION_STARTED
+                ));
     }
 
     public void dispose() {
+        ProjectionProvider oldProvider = currentProjectionProvider;
         if (currentProjectionProvider != null) {
             currentProjectionProvider.dispose();
             currentProjectionProvider = null;
         }
         this.content.setViewportView(new NoViewPanel());
+        fireCurrentProjectionChange(
+                new ProjectionsChangedEvent(
+                        oldProvider, null, ProjectionsChangedEvent.Type.PROJECTION_ENDED
+                ));
+    }
+   
+    public boolean addCurrentProjectionChangeListener(ProjectionsChangeListener listener) {
+        return listeners.add(listener);
     }
     
+    public boolean addCurrentProjectionChangeListener(int position, ProjectionsChangeListener listener) {
+        listeners.add(position, listener);
+        return true;
+    }
+
+    public boolean removeCurrentProjectionChangeListener(ProjectionsChangeListener listener) {
+        return listeners.remove(listener);
+    }
+    
+    private void fireCurrentProjectionChange(ProjectionsChangedEvent event) {
+        if (event == null) {
+            return;
+        }
+        for (ProjectionsChangeListener listener : listeners) {
+            listener.projectionsChanged(event);
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -109,5 +144,51 @@ public final class SSCESieverTopComponent extends TopComponent {
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
+    }
+    
+    public static interface ProjectionsChangeListener {
+
+        /**
+         * Volana ked dojde k zmene v konfiguracii zamerov.
+         * @param event event
+         */
+        public void projectionsChanged(ProjectionsChangedEvent event);
+    }
+    
+    public static class ProjectionsChangedEvent {
+        
+        public enum Type {
+            PROJECTION_STARTED,
+            PROJECTION_ENDED
+        }
+        
+        private final Type type;
+        private final ProjectionProvider newProvider;
+        private final ProjectionProvider oldProvider;
+
+        /**
+         * Vytvori event pre zmenu v konfiguracii zamerov.
+         * @param newProjection nova konfiguracia zamerov.
+         */
+        public ProjectionsChangedEvent(
+                ProjectionProvider oldProvider,
+                ProjectionProvider newProvider,
+                Type type) {
+            this.type = type;
+            this.newProvider = newProvider;
+            this.oldProvider = oldProvider;
+        }
+
+        public Type getType() {
+            return type;
+        }
+
+        public ProjectionProvider getNewProvider() {
+            return newProvider;
+        }
+
+        public ProjectionProvider getOldProvider() {
+            return oldProvider;
+        }
     }
 }

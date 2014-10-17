@@ -44,7 +44,7 @@ public class SSCEFoldManager implements FoldManager, CurrentProjection.CurrentPr
     public void initFolds(FoldHierarchyTransaction fht) {
         Document doc = operation.getHierarchy().getComponent().getDocument();
         SSCEditorCore core = (SSCEditorCore) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
-        core.getConfiguration().addCurrentProjectionChangeListener(this);
+        core.getCurrentProjection().addCurrentProjectionChangeListener(this);
         SwingUtilities.invokeLater(new AddFolds());
     }
 
@@ -82,7 +82,7 @@ public class SSCEFoldManager implements FoldManager, CurrentProjection.CurrentPr
     public void release() {
         Document doc = operation.getHierarchy().getComponent().getDocument();
         SSCEditorCore core = (SSCEditorCore) doc.getProperty(Constants.SSCE_CORE_OBJECT_PROP);
-        core.getConfiguration().removeCurrentProjectionChangeListener(this);
+        core.getCurrentProjection().removeCurrentProjectionChangeListener(this);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class SSCEFoldManager implements FoldManager, CurrentProjection.CurrentPr
 
             FoldHierarchyTransaction transaction = operation.openTransaction();
             List<FoldingRequest> folds = new LinkedList<FoldingRequest>();
-            ViewModel<Concern> model = core.getModel();
+            ViewModel<Concern> model = core.getViewModel();
             for (FoldingProvider provider : core.getFoldingProviders()) {
                 folds.addAll(provider.createFolds(model));
                 for (JavaFile<Concern> javaFile : model.getFiles()) {
