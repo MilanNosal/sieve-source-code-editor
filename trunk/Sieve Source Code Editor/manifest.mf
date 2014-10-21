@@ -1,5 +1,6 @@
 Manifest-Version: 1.0
 OpenIDE-Module: sk.tuke.kpi.ssce
+OpenIDE-Module-Install: sk/tuke/kpi/monitor/MonitorCleanUp.class
 OpenIDE-Module-Layer: sk/tuke/kpi/ssce/layer.xml
 OpenIDE-Module-Localizing-Bundle: sk/tuke/kpi/ssce/Bundle.properties
 OpenIDE-Module-Requires: org.openide.windows.WindowManager

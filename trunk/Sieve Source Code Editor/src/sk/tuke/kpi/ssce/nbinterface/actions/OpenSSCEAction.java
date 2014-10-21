@@ -3,21 +3,15 @@ package sk.tuke.kpi.ssce.nbinterface.actions;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.MessageFormat;
-import javax.swing.Action;
 import javax.swing.SwingUtilities;
 import org.netbeans.api.project.Project;
 import org.netbeans.api.project.ProjectUtils;
 import org.openide.DialogDisplayer;
-import org.openide.ErrorManager;
 import org.openide.WizardDescriptor;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
-import org.openide.cookies.InstanceCookie;
-import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileUtil;
-import org.openide.loaders.DataObject;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.WindowManager;
 import sk.tuke.kpi.ssce.annotations.concerns.IntegrationWithNetBeans;
@@ -108,38 +102,5 @@ public final class OpenSSCEAction implements ActionListener {
             });
             
         }
-    }
-
-    /**
-     * Metoda najde akciu podla mena akcie.
-     *
-     * @param actionName meno hladanej akcie.
-     * @return hladanu akciu, ak ju najde, v opacnom pripade vrati null.
-     */
-    //SsceIntent:Vyhladanie akcie;
-    public Action findAction(String actionName) {
-        FileObject myActionsFolder = FileUtil.getConfigFile("Actions/Window");
-        FileObject[] myActionsFolderKids = myActionsFolder.getChildren();
-        for (FileObject fileObject : myActionsFolderKids) {
-            //Probably want to make this more robust,
-            //but the point is that here we find a particular Action:
-            if (fileObject.getName().contains(actionName)) {
-                try {
-                    DataObject dob = DataObject.find(fileObject);
-                    InstanceCookie ic = dob.getLookup().lookup(InstanceCookie.class);
-                    if (ic != null) {
-                        Object instance = ic.instanceCreate();
-                        if (instance instanceof Action) {
-                            Action a = (Action) instance;
-                            return a;
-                        }
-                    }
-                } catch (Exception e) {
-                    ErrorManager.getDefault().notify(ErrorManager.WARNING, e);
-                    return null;
-                }
-            }
-        }
-        return null;
     }
 }
