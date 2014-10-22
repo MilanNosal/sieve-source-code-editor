@@ -105,7 +105,8 @@ public final class RunInteractionMonitor implements ActionListener {
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
             if (TopComponent.Registry.PROP_ACTIVATED.equals(evt.getPropertyName()) 
-                    && !evt.getNewValue().getClass().getCanonicalName().equals("org.netbeans.core.multiview.MultiViewCloneableTopComponent")) {
+                    && !(evt.getNewValue().getClass().getCanonicalName().equals("org.netbeans.core.multiview.MultiViewCloneableTopComponent")
+                    || evt.getNewValue().getClass().getCanonicalName().equals("org.openide.text.CloneableEditor"))) {
                 logger.logEntry(Logger.EventType.FOCUS_GAINED, null /* Global, no relationship with a project */,
                         evt.getNewValue().getClass().getCanonicalName());
             }
