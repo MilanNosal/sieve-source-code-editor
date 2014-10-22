@@ -12,6 +12,7 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
+import org.openide.awt.StatusDisplayer;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.WindowManager;
 import sk.tuke.kpi.ssce.annotations.concerns.IntegrationWithNetBeans;
@@ -43,6 +44,8 @@ public final class OpenSSCEAction implements ActionListener {
      * projekt je podporovany.
      */
     private final Project context;
+    
+    private boolean enabled = true;
 
     /**
      * Vytvori novu akciu OpenSSCEAction, ktora sluzi pre spustenie SSCE
@@ -62,6 +65,11 @@ public final class OpenSSCEAction implements ActionListener {
     //SsceIntent:Spustenie SSC Editora;
     @Override
     public void actionPerformed(ActionEvent ev) {
+        if (!enabled) {
+            StatusDisplayer.getDefault().setStatusText("Projections are already starting, please be patient...");
+            return;
+        }
+        enabled = false;
         if (context.equals(currentlyProjected)) {
             // simple workaround not to allow rerun of the projections upon the same project
             return;
@@ -87,6 +95,8 @@ public final class OpenSSCEAction implements ActionListener {
     }
 
     private void startProjections(final ProjectionProviderFactory factory) {
+        StatusDisplayer.getDefault().setStatusText("Starting projections, please wait...");
+
         final SSCESieverTopComponent outputWindow = (SSCESieverTopComponent) WindowManager.getDefault().findTopComponent("SSCESieverTopComponent");
         if (outputWindow != null && !outputWindow.isOpened()) {
             outputWindow.open();
@@ -98,9 +108,11 @@ public final class OpenSSCEAction implements ActionListener {
                 @Override
                 public void run() {
                     outputWindow.startProjection(factory.createProjectionProviderFor(context));
+                    StatusDisplayer.getDefault().setStatusText("Projections are ready!");
+                    enabled = true;
                 }
             });
-            
+
         }
     }
 }
