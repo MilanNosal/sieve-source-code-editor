@@ -7,11 +7,17 @@ import org.openide.util.NbPreferences;
 public final class UserInteractionMonitorPanel extends javax.swing.JPanel {
 
     private final UserInteractionMonitorOptionsPanelController controller;
-    
-    public static final String OUTPUT_PATH_CONS = "outputFilePath";
-    
+
+    private static final String OUTPUT_PATH_CONS = "outputFilePath";
+    private static final String SNAPSHOT_PATH_CONS = "snapshotFilePath";
+    private static final String CURRENT_PROJECTION_CONS = "currentProjectionEventListening";
+    private static final String PROJECTION_PROVIDER_CONS = "projectionProviderEventListening";
+    private static final String TOPCOMPONENT_CONS = "topComponentFocusEventListening";
+    private static final String EDITOR_CONS = "editorFocusEventListening";
+    private static final String DOCUMENT_CONS = "documentEditEventListening";
+
     private final JFileChooser fc = new JFileChooser();
-    
+
     UserInteractionMonitorPanel(UserInteractionMonitorOptionsPanelController controller) {
         this.controller = controller;
         initComponents();
@@ -28,13 +34,21 @@ public final class UserInteractionMonitorPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
         outputFileTextField = new javax.swing.JTextField();
         browseButton = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        snapshotTextBox = new javax.swing.JTextField();
+        jButton1 = new javax.swing.JButton();
+        jPanel3 = new javax.swing.JPanel();
+        currentProjectionCheckbox = new javax.swing.JCheckBox();
+        projectionProviderCheckBox = new javax.swing.JCheckBox();
+        topComponentCheckBox = new javax.swing.JCheckBox();
+        editorCheckBox = new javax.swing.JCheckBox();
+        documentCheckBox = new javax.swing.JCheckBox();
+        jPanel4 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.jPanel1.border.title"))); // NOI18N
-
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.jLabel1.text")); // NOI18N
 
         outputFileTextField.setText(org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.outputFileTextField.text")); // NOI18N
 
@@ -49,12 +63,10 @@ public final class UserInteractionMonitorPanel extends javax.swing.JPanel {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(outputFileTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 333, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(outputFileTextField)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(browseButton)
                 .addContainerGap())
         );
@@ -63,9 +75,120 @@ public final class UserInteractionMonitorPanel extends javax.swing.JPanel {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
                     .addComponent(outputFileTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(browseButton))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.jPanel2.border.title"))); // NOI18N
+
+        snapshotTextBox.setText(org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.snapshotTextBox.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(jButton1, org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.jButton1.text")); // NOI18N
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(snapshotTextBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton1)
+                .addContainerGap())
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(snapshotTextBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jButton1))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.jPanel3.border.title"))); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(currentProjectionCheckbox, org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.currentProjectionCheckbox.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(projectionProviderCheckBox, org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.projectionProviderCheckBox.text")); // NOI18N
+        projectionProviderCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                projectionProviderCheckBoxActionPerformed(evt);
+            }
+        });
+
+        org.openide.awt.Mnemonics.setLocalizedText(topComponentCheckBox, org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.topComponentCheckBox.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(editorCheckBox, org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.editorCheckBox.text")); // NOI18N
+        editorCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                editorCheckBoxActionPerformed(evt);
+            }
+        });
+
+        org.openide.awt.Mnemonics.setLocalizedText(documentCheckBox, org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.documentCheckBox.text")); // NOI18N
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addGap(21, 21, 21)
+                        .addComponent(currentProjectionCheckbox)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(topComponentCheckBox)
+                            .addComponent(editorCheckBox)
+                            .addComponent(projectionProviderCheckBox)
+                            .addGroup(jPanel3Layout.createSequentialGroup()
+                                .addGap(21, 21, 21)
+                                .addComponent(documentCheckBox)))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(projectionProviderCheckBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(currentProjectionCheckbox)
+                .addGap(6, 6, 6)
+                .addComponent(topComponentCheckBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(editorCheckBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(documentCheckBox))
+        );
+
+        jPanel4.setBackground(new java.awt.Color(255, 204, 204));
+        jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.jPanel4.border.title"), javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(255, 0, 51))); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(UserInteractionMonitorPanel.class, "UserInteractionMonitorPanel.jLabel1.text")); // NOI18N
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1)
+                .addContainerGap(58, Short.MAX_VALUE))
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -75,14 +198,24 @@ public final class UserInteractionMonitorPanel extends javax.swing.JPanel {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -95,14 +228,42 @@ public final class UserInteractionMonitorPanel extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_browseButtonActionPerformed
 
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        fc.setCurrentDirectory(new File(getOutputPath()));
+        int returnVal = fc.showOpenDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            this.snapshotTextBox.setText(fc.getSelectedFile().getAbsolutePath());
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void projectionProviderCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_projectionProviderCheckBoxActionPerformed
+        currentProjectionCheckbox.setEnabled(projectionProviderCheckBox.isSelected());
+    }//GEN-LAST:event_projectionProviderCheckBoxActionPerformed
+
+    private void editorCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editorCheckBoxActionPerformed
+        documentCheckBox.setEnabled(editorCheckBox.isSelected());
+    }//GEN-LAST:event_editorCheckBoxActionPerformed
+
     void load() {
         outputFileTextField.setText(getOutputPath());
+        snapshotTextBox.setText(getSnapshotPath());
+        currentProjectionCheckbox.setSelected(isCurrentProjectionChangeListening());
+        projectionProviderCheckBox.setSelected(isProjectionProviderChangeListening());
+        topComponentCheckBox.setSelected(isTopComponentFocusChangeListening());
+        editorCheckBox.setSelected(isEditorFocusChangeListening());
+        documentCheckBox.setSelected(isDocumentEditListening());
     }
 
     void store() {
         NbPreferences.forModule(UserInteractionMonitorPanel.class).put(OUTPUT_PATH_CONS, outputFileTextField.getText());
+        NbPreferences.forModule(UserInteractionMonitorPanel.class).put(SNAPSHOT_PATH_CONS, snapshotTextBox.getText());
+        NbPreferences.forModule(UserInteractionMonitorPanel.class).putBoolean(CURRENT_PROJECTION_CONS, currentProjectionCheckbox.isSelected());
+        NbPreferences.forModule(UserInteractionMonitorPanel.class).putBoolean(PROJECTION_PROVIDER_CONS, projectionProviderCheckBox.isSelected());
+        NbPreferences.forModule(UserInteractionMonitorPanel.class).putBoolean(TOPCOMPONENT_CONS, topComponentCheckBox.isSelected());
+        NbPreferences.forModule(UserInteractionMonitorPanel.class).putBoolean(EDITOR_CONS, editorCheckBox.isSelected());
+        NbPreferences.forModule(UserInteractionMonitorPanel.class).putBoolean(DOCUMENT_CONS, documentCheckBox.isSelected());
     }
-    
+
     public static String getOutputPath() {
         String path = System.getProperty("user.home");
         path += path.endsWith(System.getProperty("file.separator")) ? "" : System.getProperty("file.separator");
@@ -112,6 +273,35 @@ public final class UserInteractionMonitorPanel extends javax.swing.JPanel {
         return realPath;
     }
 
+    public static String getSnapshotPath() {
+        String path = System.getProperty("user.home");
+        path += path.endsWith(System.getProperty("file.separator")) ? "" : System.getProperty("file.separator");
+        path += "annotationsSnapshot.txt";
+        String realPath = NbPreferences.forModule(UserInteractionMonitorPanel.class).get(SNAPSHOT_PATH_CONS, path);
+        realPath += realPath.endsWith(System.getProperty("file.separator")) ? "annotationsSnapshot.xml" : "";
+        return realPath;
+    }
+
+    public static boolean isCurrentProjectionChangeListening() {
+        return NbPreferences.forModule(UserInteractionMonitorPanel.class).getBoolean(CURRENT_PROJECTION_CONS, true);
+    }
+
+    public static boolean isProjectionProviderChangeListening() {
+        return NbPreferences.forModule(UserInteractionMonitorPanel.class).getBoolean(PROJECTION_PROVIDER_CONS, true);
+    }
+
+    public static boolean isTopComponentFocusChangeListening() {
+        return NbPreferences.forModule(UserInteractionMonitorPanel.class).getBoolean(TOPCOMPONENT_CONS, true);
+    }
+
+    public static boolean isEditorFocusChangeListening() {
+        return NbPreferences.forModule(UserInteractionMonitorPanel.class).getBoolean(EDITOR_CONS, true);
+    }
+
+    public static boolean isDocumentEditListening() {
+        return NbPreferences.forModule(UserInteractionMonitorPanel.class).getBoolean(DOCUMENT_CONS, true);
+    }
+
     boolean valid() {
         // TODO check whether form is consistent and complete
         return true;
@@ -119,8 +309,18 @@ public final class UserInteractionMonitorPanel extends javax.swing.JPanel {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton browseButton;
+    private javax.swing.JCheckBox currentProjectionCheckbox;
+    private javax.swing.JCheckBox documentCheckBox;
+    private javax.swing.JCheckBox editorCheckBox;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JTextField outputFileTextField;
+    private javax.swing.JCheckBox projectionProviderCheckBox;
+    private javax.swing.JTextField snapshotTextBox;
+    private javax.swing.JCheckBox topComponentCheckBox;
     // End of variables declaration//GEN-END:variables
 }
