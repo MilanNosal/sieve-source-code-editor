@@ -57,7 +57,7 @@ public final class RunInteractionMonitor implements ActionListener {
     }
 
     // <editor-fold desc="Current projection listener" defaultstate="collapsed">
-    private final CurrentProjectionChangeListener projectionChangeListener = new CurrentProjection.CurrentProjectionChangeListener() {
+    private final CurrentProjectionChangeListener currentProjectionChangeListener = new CurrentProjection.CurrentProjectionChangeListener() {
         @Override
         public void projectionChanged(CurrentProjection.CurrentProjectionChangedEvent event) {
             String project = ProjectUtils.getInformation(watchedProvider.getProjectContext()).getDisplayName();
@@ -68,14 +68,14 @@ public final class RunInteractionMonitor implements ActionListener {
 
     // <editor-fold desc="Current projections provider listener" defaultstate="collapsed">
     private ProjectionProvider watchedProvider;
-    
-    private final PropertyChangeListener currentProjectionsProviderListener = new PropertyChangeListener() {
+
+    private final PropertyChangeListener projectionsProviderListener = new PropertyChangeListener() {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
             if (evt.getNewValue() != null) {
                 if (watchedProvider != null) {
-                    watchedProvider.getSSCECore().getCurrentProjection().removeCurrentProjectionChangeListener(projectionChangeListener);
+                    watchedProvider.getSSCECore().getCurrentProjection().removeCurrentProjectionChangeListener(currentProjectionChangeListener);
                     watchedProvider = null;
                 }
                 ProjectionProvider pp = (ProjectionProvider) evt.getNewValue();
@@ -83,13 +83,32 @@ public final class RunInteractionMonitor implements ActionListener {
                         ProjectUtils.getInformation(pp.getProjectContext()).getDisplayName(),
                         pp.getDisplayName());
                 watchedProvider = pp;
-                watchedProvider.getSSCECore().getCurrentProjection().addCurrentProjectionChangeListener(projectionChangeListener);
+                watchedProvider.getSSCECore().getCurrentProjection().addCurrentProjectionChangeListener(currentProjectionChangeListener);
 
             } else if (evt.getOldValue() != null) {
                 if (watchedProvider != null) {
-                    watchedProvider.getSSCECore().getCurrentProjection().removeCurrentProjectionChangeListener(projectionChangeListener);
+                    watchedProvider.getSSCECore().getCurrentProjection().removeCurrentProjectionChangeListener(currentProjectionChangeListener);
                     watchedProvider = null;
                 }
+                ProjectionProvider pp = (ProjectionProvider) evt.getOldValue();
+                logger.logEntry(Logger.EventType.PROJECTIONS_ENDED,
+                        ProjectUtils.getInformation(pp.getProjectContext()).getDisplayName(),
+                        pp.getDisplayName());
+            }
+        }
+    };
+
+    private final PropertyChangeListener projectionsProviderWithoutCurrentProjectionListener = new PropertyChangeListener() {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (evt.getNewValue() != null) {
+                ProjectionProvider pp = (ProjectionProvider) evt.getNewValue();
+                logger.logEntry(Logger.EventType.PROJECTIONS_STARTED,
+                        ProjectUtils.getInformation(pp.getProjectContext()).getDisplayName(),
+                        pp.getDisplayName());
+
+            } else if (evt.getOldValue() != null) {
                 ProjectionProvider pp = (ProjectionProvider) evt.getOldValue();
                 logger.logEntry(Logger.EventType.PROJECTIONS_ENDED,
                         ProjectUtils.getInformation(pp.getProjectContext()).getDisplayName(),
@@ -104,7 +123,7 @@ public final class RunInteractionMonitor implements ActionListener {
 
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
-            if (TopComponent.Registry.PROP_ACTIVATED.equals(evt.getPropertyName()) 
+            if (TopComponent.Registry.PROP_ACTIVATED.equals(evt.getPropertyName())
                     && !(evt.getNewValue().getClass().getCanonicalName().equals("org.netbeans.core.multiview.MultiViewCloneableTopComponent")
                     || evt.getNewValue().getClass().getCanonicalName().equals("org.openide.text.CloneableEditor"))) {
                 logger.logEntry(Logger.EventType.FOCUS_GAINED, null /* Global, no relationship with a project */,
@@ -175,6 +194,21 @@ public final class RunInteractionMonitor implements ActionListener {
             }
         }
     };
+
+    private final PropertyChangeListener editorFocusWithoutChangeListener = new PropertyChangeListener() {
+
+        @Override
+        public void propertyChange(PropertyChangeEvent evt) {
+            if (EditorRegistry.FOCUS_GAINED_PROPERTY.equals(evt.getPropertyName())) {
+                JTextComponent jTextComponent = (JTextComponent) evt.getNewValue();
+                DataObject dobj = NbEditorUtilities.getDataObject(jTextComponent.getDocument());
+                Project owner = FileOwnerQuery.getOwner(dobj.getPrimaryFile());
+                String projectName = (owner == null) ? null : ProjectUtils.getInformation(owner).getDisplayName();
+
+                logger.logEntry(Logger.EventType.EDITOR_FOCUS_GAINED, projectName, dobj.getPrimaryFile().getPath());
+            }
+        }
+    };
     // </editor-fold>
 
     @Override
@@ -191,22 +225,24 @@ public final class RunInteractionMonitor implements ActionListener {
     void endLogging() {
         if (logger != null) {
             EditorRegistry.removePropertyChangeListener(editorFocusListener);
+            EditorRegistry.removePropertyChangeListener(editorFocusWithoutChangeListener);
             TopComponent.getRegistry().removePropertyChangeListener(topComponentActivatedListener);
-            
+
             final TopComponent outputWindow = WindowManager.getDefault().findTopComponent("SSCESieverTopComponent");
             if (outputWindow != null) {
-                outputWindow.removePropertyChangeListener("currentProjectionProvider", currentProjectionsProviderListener);
+                outputWindow.removePropertyChangeListener("currentProjectionProvider", projectionsProviderListener);
+                outputWindow.removePropertyChangeListener("currentProjectionProvider", projectionsProviderWithoutCurrentProjectionListener);
             }
             JTextComponent jTextComponent = EditorRegistry.lastFocusedComponent();
             if (jTextComponent != null) {
                 jTextComponent.getDocument().removeDocumentListener(documentListener);
             }
-            
+
             if (watchedProvider != null) {
-                watchedProvider.getSSCECore().getCurrentProjection().removeCurrentProjectionChangeListener(projectionChangeListener);
+                watchedProvider.getSSCECore().getCurrentProjection().removeCurrentProjectionChangeListener(currentProjectionChangeListener);
                 watchedProvider = null;
             }
-                    
+
             logger.endSession();
             logger.endLogging();
             logger = null;
@@ -234,12 +270,25 @@ public final class RunInteractionMonitor implements ActionListener {
             logger.startSession(System.getProperty("user.name"), userInput);
 
             final TopComponent outputWindow = WindowManager.getDefault().findTopComponent("SSCESieverTopComponent");
-            if (outputWindow != null) {
-                outputWindow.addPropertyChangeListener("currentProjectionProvider", currentProjectionsProviderListener);
+            if (outputWindow != null && UserInteractionMonitorPanel.isProjectionProviderChangeListening()) {
+                if (UserInteractionMonitorPanel.isCurrentProjectionChangeListening()) {
+                    outputWindow.addPropertyChangeListener("currentProjectionProvider", projectionsProviderListener);
+                } else {
+                    outputWindow.addPropertyChangeListener("currentProjectionProvider", projectionsProviderWithoutCurrentProjectionListener);
+                }
             }
 
-            TopComponent.getRegistry().addPropertyChangeListener(topComponentActivatedListener);
-            EditorRegistry.addPropertyChangeListener(editorFocusListener);
+            if (UserInteractionMonitorPanel.isTopComponentFocusChangeListening()) {
+                TopComponent.getRegistry().addPropertyChangeListener(topComponentActivatedListener);
+            }
+
+            if (UserInteractionMonitorPanel.isEditorFocusChangeListening()) {
+                if (UserInteractionMonitorPanel.isDocumentEditListening()) {
+                    EditorRegistry.addPropertyChangeListener(editorFocusListener);
+                } else {
+                    EditorRegistry.addPropertyChangeListener(editorFocusWithoutChangeListener);
+                }
+            }
         }
     }
     // </editor-fold>
