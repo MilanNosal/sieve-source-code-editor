@@ -117,6 +117,7 @@ final class OptimalizedLogger extends Logger {
                     }
                     raf.write(builder.toString().getBytes("UTF-8"));
                     builder.setLength(0);
+                    raf.close();
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
