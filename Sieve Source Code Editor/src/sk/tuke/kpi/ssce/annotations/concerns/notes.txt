@@ -7,4 +7,6 @@ Z hladiska navrhu by bolo zaujimave zhodnotit ci spravit v subore triedu s viace
 Vyrazne zaujimave su kombinacie anotacii. Kym jedna anotacia je tiez zaujimava, kombinaciou anotacii a ich parametrov je mozne lacnejsie robit dalsie zaujimave projekcie (Sync + changeMonitor).
 Problem je sledovat neopakovanie sa, napr v jednom mam parameter postprocessing, a uz som spravil anotaciu postprocessing
 
-Teraz ked upravujem a opravujem veci tak mi pomahaju orientovat sa v kode a otvarat spravne subory, davam si hladat find usages. Napr. pri opravovani saveovania si hladan synchronizaciu, lebo ona sa stara o prenos udajov a teda tam sa bude dat zistit co bolo zmenene a co treba ulozit.
+(autor)    Teraz ked upravujem a opravujem veci tak mi pomahaju orientovat sa v kode a otvarat spravne subory, davam si hladat find usages. Napr. pri opravovani saveovania si hladan synchronizaciu, lebo ona sa stara o prenos udajov a teda tam sa bude dat zistit co bolo zmenene a co treba ulozit.
+(neautor)  Zoznam vsetkych anotacii mi umozni vidiet vsetky pojmy, s ktorymi si autor dany kod asocioval. Hladas pojem ale nevies ako ho autor nazaval v anotaciach, tak si zobrazis vsetky a hladas bud synonymum, alebo nieco co sa toho tyka (synonymum, part-of, generalisation, specialization).
+(neautor)  Ak nepozna vyznam pri chapani kodu, tak si vie pozriet kde sa dana anotacia vsade nachadza, lebo videnim vsetkych miest si mozem vediet dovodit nejaku spojitost medzi tym kodom a tak aj pochopit vyznam tej anotacie.

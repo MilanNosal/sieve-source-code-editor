@@ -1,0 +1,105 @@
+LineTally Project List
+
+ANY EDITS THAT ARE DONE TO THIS FILE ARE DONE AT YOUR OWN RISK.
+
+31214729602::FN
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\monitor\logging\Logger.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\monitor\logging\LoggerFactory.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\monitor\logging\OptimalizedLogger.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\monitor\logging\SOUTLogger.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\monitor\MonitorCleanUp.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\monitor\RunInteractionMonitor.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\monitor\Snapshooter.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\monitor\UserInteractionMonitorOptionsPanelController.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\monitor\UserInteractionMonitorPanel.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\AnnotationBasedProjections.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\AvailableProjectionsChange.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\CodeAnalysis.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\CurrentProjection.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\CurrentProjectionChange.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\Disposal.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\DocumentChangeMonitoring.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\enums\Direction.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\enums\MonitoringRole.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\enums\PostProcessingType.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\enums\RepresentationOf.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\enums\Source.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\enums\Type.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\enums\ViewAspect.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\Folding.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\ImportsManagement.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\IntegrationWithNetBeans.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\Listening.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\Model.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\PostProcessing.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\ProjectionComposition.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\ProjectionSelectionUI.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\ProvidersPluginSystem.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\SievedDocument.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\SourceCodeSieving.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\SSCE_UI.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\Synchronization.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\annotations\concerns\View.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\concerns\annotations\AnnotationBasedConcern.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\concerns\annotations\AnnotationBasedConcernExtractor.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\concerns\interfaces\Concern.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\concerns\interfaces\ConcernExtractor.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\binding\Binding.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\binding\JavaFilesMonitor.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\binding\SnippetToBeUpdated.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\CompilationUtilities.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\Constants.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\availableprojections\CodeSnippetConcerns.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\availableprojections\JavaFileConcerns.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\availableprojections\JavaFileConcernsVisitor.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\availableprojections\ProjectionsModel.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\creators\ProjectionsModelCreator.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\creators\ViewModelCreator.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\BindingPositions.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\CodeSnippet.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\importshandling\Import.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\importshandling\Imports.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\JavaFile.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\JavaFileVisitor.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\postprocessing\FoldingRequest.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\postprocessing\GuardingRequest.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\postprocessing\interfaces\FoldingProvider.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\postprocessing\interfaces\GuardingProvider.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\postprocessing\providers\StandardFoldingProvider.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\postprocessing\providers\StandardGuardingProvider.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\model\view\ViewModel.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\projections\CurrentProjection.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\core\SSCEditorCore.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\actions\OpenSSCEAction.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\folding\SSCEFoldManager.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\lexer\FontAndColors.xml
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\lexer\JavadocLexer.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\lexer\JavadocTokenId.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\lexer\JavaLexer.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\lexer\JavaStringLexer.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\lexer\JavaStringTokenId.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\lexer\SieveJavaBracesMatcherFactory.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\lexer\SieveJavaLanguage.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\lexer\SieveJavaTokenId.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\NoViewPanel.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\options\SSCEOptions.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\options\SSCEOptionsPanelController.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\SSCESieverTopComponent.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\wizard\ProjectionVisualPanel1.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\wizard\ProjectionWizardIterator.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\nbinterface\wizard\ProjectionWizardPanel1.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\projection\annotations\AnnotationBasedProjectionProvider.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\projection\annotations\AnnotationBasedProjectionProviderFactory.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\projection\provider\ProjectionProvider.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\projection\provider\ProjectionProviderFactory.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\sieving\annotations\AnnotationBasedSiever.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\sieving\DefaultSimpleSiever.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\sieving\GuardedCodeSnippetsRemover.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\sieving\interfaces\CodeSiever.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\sieving\interfaces\PostProcessingSiever.java
+D:\Zaloha\NetBeansProjects\Sieve Source Code Editor\src\sk\tuke\kpi\ssce\sieving\OverlappingSnippetsRemover.java
+31214729604::PN
+Unspecified
+
+
+31214729604::END
