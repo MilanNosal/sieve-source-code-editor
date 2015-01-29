@@ -44,7 +44,7 @@ public final class OpenSSCEAction implements ActionListener {
      * projekt je podporovany.
      */
     private final Project context;
-    
+
     private boolean enabled = true;
 
     /**
@@ -71,8 +71,11 @@ public final class OpenSSCEAction implements ActionListener {
         }
         enabled = false;
         if (context.equals(currentlyProjected)) {
-            // simple workaround not to allow rerun of the projections upon the same project
-            return;
+            final SSCESieverTopComponent outputWindow = (SSCESieverTopComponent) WindowManager.getDefault().findTopComponent("SSCESieverTopComponent");
+            if (outputWindow != null && !outputWindow.isDisposed()) {
+                // simple workaround not to allow rerun of the projections upon the same project
+                return;
+            }
         }
         ProjectionProviderFactory factory = null;
         if (SSCEOptions.useDefaultImplementation()) {

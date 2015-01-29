@@ -8,3 +8,5 @@
     - vsetky objekty musia byt disposable on demand                                 -- dispose spraveny na core
     - zatvorenie suboru a uprava sledovanych suborov sposobi samozrejme problem     -- listening na zatvaranie, davam tam dispose a zmazanie suboru
 - custom guard + fold       -- done
+
+- fix restart
