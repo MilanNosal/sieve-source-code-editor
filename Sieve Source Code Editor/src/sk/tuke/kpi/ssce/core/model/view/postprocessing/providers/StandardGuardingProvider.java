@@ -26,7 +26,7 @@ public class StandardGuardingProvider implements GuardingProvider {
 
     @Override
     public void injectCurrentProjection(CurrentProjection projection) {
-        // we dont need it here
+        // we dont need it here, but just in case we have left it here
     }
 
     @Override

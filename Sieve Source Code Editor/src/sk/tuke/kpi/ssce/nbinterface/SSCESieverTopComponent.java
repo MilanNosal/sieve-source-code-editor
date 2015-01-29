@@ -38,8 +38,14 @@ import sk.tuke.kpi.ssce.projection.provider.ProjectionProvider;
 public final class SSCESieverTopComponent extends TopComponent {
     
     private static final String CURRENT_PROJECTION_PROVIDER = "currentProjectionProvider";
+    
+    private boolean disposed = false;
 
     private ProjectionProvider currentProjectionProvider;
+
+    public boolean isDisposed() {
+        return disposed;
+    }
 
     public SSCESieverTopComponent() {
         initComponents();
@@ -54,6 +60,7 @@ public final class SSCESieverTopComponent extends TopComponent {
         }
         currentProjectionProvider = provider;
         this.content.setViewportView(currentProjectionProvider.getView());
+        this.disposed = false;
         firePropertyChange(CURRENT_PROJECTION_PROVIDER, oldProvider, currentProjectionProvider);
     }
 
@@ -64,6 +71,7 @@ public final class SSCESieverTopComponent extends TopComponent {
             currentProjectionProvider = null;
         }
         this.content.setViewportView(new NoViewPanel());
+        this.disposed = true;
         firePropertyChange(CURRENT_PROJECTION_PROVIDER, oldProvider, currentProjectionProvider);
     }
    
@@ -99,10 +107,7 @@ public final class SSCESieverTopComponent extends TopComponent {
 
     @Override
     public void componentClosed() {
-        if (currentProjectionProvider != null) {
-            currentProjectionProvider.dispose();
-            currentProjectionProvider = null;
-        }
+        this.dispose();
     }
 
     void writeProperties(java.util.Properties p) {
