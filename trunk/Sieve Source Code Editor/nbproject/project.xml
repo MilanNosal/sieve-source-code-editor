@@ -38,7 +38,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>3</release-version>
-                        <specification-version>1.79.1.5.22.43</specification-version>
+                        <specification-version>1.78.1.5.22.43</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
