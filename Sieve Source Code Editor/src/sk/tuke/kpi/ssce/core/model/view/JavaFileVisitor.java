@@ -13,6 +13,7 @@ import org.netbeans.api.java.source.CompilationInfo;
 import org.netbeans.api.lexer.TokenHierarchy;
 import org.netbeans.api.lexer.TokenSequence;
 import org.netbeans.editor.BaseDocument;
+import org.openide.awt.StatusDisplayer;
 import org.openide.text.NbDocument;
 import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.CodeAnalysis;
@@ -155,7 +156,7 @@ public class JavaFileVisitor<T extends Concern> extends TreePathScanner<JavaFile
         String nameElement = builder.toString();
 
         int start = (int) sp.getStartPosition(cu, node);
-        int end = (int) sp.getEndPosition(cu, node);        
+        int end = (int) sp.getEndPosition(cu, node);
 
         contextOfConcerns.push(extractor.getConcernsFor(node, info));
         contextCounter.push(nameElement);
