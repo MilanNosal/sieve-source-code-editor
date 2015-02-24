@@ -8,6 +8,7 @@ import javax.swing.JEditorPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.StyledDocument;
 import org.netbeans.editor.BaseDocument;
+import org.openide.awt.StatusDisplayer;
 import org.openide.text.NbDocument;
 import org.openide.util.Exceptions;
 import sk.tuke.kpi.ssce.annotations.concerns.PostProcessing;

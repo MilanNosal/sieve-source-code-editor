@@ -157,7 +157,10 @@ public class BindingPositions {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("startSieve=").append(startPositionSieveDocument.getOffset()).append(" endSieve=").append(endPositionSieveDocument.getOffset()).append(" StartJava=").append(startPositionJavaDocument.getOffset()).append(" lengthJava=").append(lengthJavaDocument).append(")");
+        builder.append("startSieve=").append((startPositionSieveDocument == null) ? "null" : startPositionSieveDocument.getOffset());
+        builder.append(" endSieve=").append((endPositionSieveDocument == null) ? "null" : endPositionSieveDocument.getOffset());
+        builder.append(" StartJava=").append((startPositionJavaDocument == null) ? "null" : startPositionJavaDocument.getOffset());
+        builder.append(" lengthJava=").append(lengthJavaDocument).append(")");
         return builder.toString();
     }
 }

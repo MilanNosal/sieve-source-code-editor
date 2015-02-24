@@ -23,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,6 +30,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.swing.SwingUtilities;
 import org.netbeans.api.java.source.CompilationInfo;
 import org.netbeans.api.project.Project;
@@ -447,7 +447,7 @@ public final class Snapshooter implements ActionListener {
             Trees trees = info.getTrees();
             TreePath path = TreePath.getPath(info.getCompilationUnit(), node);
             Element element = trees.getElement(path);
-            String elementName = element.toString();
+            String elementName = tryToBuildFullName(element);
             Set<String> annotationsFor = null;
             if (elementModel.containsKey(elementName)) {
                 annotationsFor = elementModel.get(elementName);
@@ -470,6 +470,17 @@ public final class Snapshooter implements ActionListener {
                     annModel.get(annTypeName).add(new Pair(annotationMirrorName, elementName));
                 }
             }
+        }
+        
+        private String tryToBuildFullName(Element element) {
+            String fullName = "";
+            boolean firstIteration = true;
+            while (element != null && !element.getKind().equals(ElementKind.PACKAGE)) {
+                fullName = element.toString() + (firstIteration ? "" : ".") + fullName;
+                firstIteration = false;
+                element = element.getEnclosingElement();
+            }
+            return fullName;
         }
     }
     // </editor-fold>
